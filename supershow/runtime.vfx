@@ -67,7 +67,7 @@ init-supershow
 
 : boot-supershow ( - )
     init-supershow 
-    c" main" find if execute else drop then ;
+    run-main ;
 
 ' boot-supershow is boot
 

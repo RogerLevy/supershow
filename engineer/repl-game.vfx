@@ -39,8 +39,7 @@ create gds 2 mb allot
     system-controls
     display al_flip_display
     spin
-    <esc> pressed? if >vfx then
-;
+    <esc> pressed? if >vfx then ;
 
 \ Single frame execution for REPL mode (no throw, catches errors)
 variable _err
@@ -78,6 +77,9 @@ fast}
 : install-repl-game-hook ( - )
     ['] game-busyidle is BusyIdle ;
 
+: uninstall-repl-game-hook ( - )
+    'original-busyidle is BusyIdle ;
+
 : repl-game-installed? ( - flag )
     ['] BusyIdle >body @ ['] game-busyidle = ;
 
@@ -93,6 +95,7 @@ fast}
 
 \ Start game in REPL mode - IDE stays responsive
 : repl-go ( - )
+    install-repl-game-hook
     going @ if
         cr ." Game already running." cr exit
     then
@@ -109,10 +112,8 @@ fast}
     going @ if repl-post then
     cr ." Game stopped." cr ;
 
-\ Initialize on load
-install-repl-game-hook
-cr ." REPL-Game integration loaded." cr
-cr ." Use 'repl-go' to start game with IDE responsive." cr
+\ cr ." REPL-Game integration loaded." cr
+\ cr ." Use 'repl-go' to start game with IDE responsive." cr
 
 redef : go 
     debug @ if 

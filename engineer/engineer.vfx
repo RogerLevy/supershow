@@ -76,37 +76,41 @@ create fresh-rootec  rootec EC_MAX_SIZE move,
 \ Entry Points  
 \ =============================================================================
 
-|| : init-vfx-console
+: init-vfx-console
     -1 line# !
     hWndMain to vfx-hwnd
     vfx-hwnd z" VFX Console" SetWindowText drop 
     consoledev op-handle ! ;
 
-|| : vfxforth-entrypoint ( hinst hpinst lpcommand nshow -- res )
+: vfxforth-entrypoint ( hinst hpinst lpcommand nshow -- res )
     [ ' EntryPoint >body @ compile, ] ;
 
 borrow nib2>> init-nibs
 
-|| : empty-engineer ( - )
+: run-main ( - )
+    c" main" find if execute else drop then ;
+
+: init-engineer ( - )
     reset-format-buffers
     reset-strout-buffers
+    identity 
+    vga-8x8 fnt! 
+    reset-rootec
+    'show off ;
+
+: reset-engineer ( - )
     init-nibs
     reset-system-classifiers
-    reset-rootec
-    vga-8x8 fnt! 
-    ['] noop is boot
     ['] noop is onSwitchIn
-    'show off
-    honing off 
-    identity ;
+    ['] run-main is boot
+    honing off ;
 
 redef : empty ( - )
-    \ debug @ -exit
     rs
-    empty-engineer
+    init-engineer
+    reset-engineer
     only forth definitions
     empty ; 
-    \ s" anew gildpoint" evaluate ;
 
 \ Isolation tool - for verifying that modules in a project can be loaded
 \ individually.
@@ -115,7 +119,7 @@ REDEF : MODULE  isolation @ if empty then require ;
 
 : cartridge ( - )
     \ Load user program
-    empty page hold off
+    empty hold off
     s" main.vfx" fileExist? if s" main.vfx" floaded then 
     repl-game-installed? if repl-go then ;
 
@@ -129,7 +133,7 @@ previous
 : init-xrefs  +xrefs  256 1024 * xref-kb ;
 : init-vfxland5-path  s" %bin%\.." expand vfxland5$ place ;
 : init-paths  init-vfxland5-path  ;
-: dev-init  empty init-xrefs init-paths ;
+: dev-init  init-xrefs init-paths ;
 : init-home-path  ?.. wd@ home$ place ;
 
 : frigid ( - )
@@ -142,15 +146,14 @@ previous
     init-allegro
     *display
     init-vga-font
-    \ builtin-font fnt! 
     0d to ustime 
-;
+    init-engineer ;
 
-redef : main ( - )
+: release-entrypoint ( - )
     \ Release cold start sequence - initialize all systems and begin execution
-    frigid boot go ;
+    debug off frigid boot  blocking-go ;
 
-: debug-cold ( - )
+: debug-entrypoint ( - )
     vfxforth-entrypoint init-vfx-console ;
 
 \ =============================================================================
@@ -158,17 +161,17 @@ redef : main ( - )
 \ =============================================================================
 
 : save-release ( - <path> )
-    ['] main is EntryPoint
+    ['] release-entrypoint is EntryPoint
     fullscreen?
         debug @ hold @
-            ide off
-            repl off
             debug off
             hold off
             fullscreen
             esc-quits off
             0 to GenINI?
             0 to InitSupport?
+            uninstall-repl-game-hook
+            going off
             save-exe cr
         hold ! debug !
     if fullscreen else windowed then 
@@ -176,18 +179,19 @@ redef : main ( - )
     esc-quits on ;
 
 : save-debug ( - <path> )
-    ['] debug-cold is EntryPoint
+    ['] debug-entrypoint is EntryPoint
     fullscreen?
         ide @ repl @ debug @ hold @
-            ide off
-            repl off
             debug off \ This disables Engineer-only initialization.
                       \ Counter-intuitive because we want to debug the game not Engineer.
             hold off
             windowed
+            repl-stop
+            uninstall-repl-game-hook
             ['] (.cold) is .cold
             -1 to GenINI?
             0 to InitSupport?
+            'show off
             save-exe cr
         hold ! debug ! repl ! ide !
     if fullscreen else windowed then ;
@@ -238,15 +242,10 @@ public
     >vfx 
     backup remember ;
 
-' engineer-entrypoint is EntryPoint
-' engineer.cold is .cold
+['] engineer-entrypoint is EntryPoint
+['] engineer.cold is .cold
 
 gild-nib
-
-\ TODO: gild the system classifiers
-\ || : gild  gild-nib s" redef marker gildpoint" evaluate ;
-
-\ gild
-
+['] main >name hidename
 only forth definitions
 freeze 

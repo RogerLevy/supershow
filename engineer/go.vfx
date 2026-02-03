@@ -109,10 +109,13 @@ public
     >vfx 
     global as ;
 
-: go ( - ) 
+: blocking-go ( - )
     going @ ?exit pre 
     alpha-mode
     begin ['] frame catch ?dup until 
     post throw ;
+
+: go ( - ) 
+    blocking-go ;
 
 continuation: show> ( - ) ( - ) 'show ! ; 
