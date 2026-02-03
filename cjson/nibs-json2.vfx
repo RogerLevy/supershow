@@ -110,6 +110,9 @@ borrow nib2>> prop+
     cjson } 
 ;
 
+: _load-script
+    ['] load-script catch ?dup if nip nip .throw then ;
+
 : read-props ( cjson obj - )
     {: cjson obj | property0 :}
     obj {
@@ -122,7 +125,7 @@ borrow nib2>> prop+
                 then
             then
         loop drop
-        cjson "script" ?j>z ?dup if zcount load-script then
+        cjson "script" ?j>z ?dup if zcount _load-script then
         cjson "forth" ?j>z ?dup if zcount suppose then 
         cjson me on-deserialize
     } ;
