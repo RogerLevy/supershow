@@ -112,14 +112,11 @@ fast}
     going @ if repl-post then
     cr ." Game stopped." cr ;
 
-\ cr ." REPL-Game integration loaded." cr
-\ cr ." Use 'repl-go' to start game with IDE responsive." cr
-
 redef : go 
     debug @ if 
         repl-go 
         >display
     else 
         esc-quits on 
-        go 
+        blocking-go 
     then ;

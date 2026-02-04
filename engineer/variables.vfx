@@ -2,6 +2,7 @@ variable 'show ( - ) \ app logic and rendering
 ' noop 'show !
 \ defer desktop ( - ) \ default behavior of SHOW (restored on EMPTY)
 defer boot ( - ) \ app startup code like loading assets
+['] noop is boot
 defer onSwitchIn ( - ) \ Window gets focus
 variable going
 create funcs 256 12 * allot&erase

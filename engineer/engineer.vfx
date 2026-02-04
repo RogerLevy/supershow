@@ -118,10 +118,9 @@ VARIABLE isolation
 REDEF : MODULE  isolation @ if empty then require ;
 
 : cartridge ( - )
-    \ Load user program
     empty hold off
     s" main.vfx" fileExist? if s" main.vfx" floaded then 
-    repl-game-installed? if repl-go then ;
+    repl-go ;
 
 also substitutions 
     aka vfxland5$ vfxland5
@@ -140,7 +139,6 @@ previous
     \ Initialize runtime environment 
     rs
     hold off
-    debug @ if dev-init then
     init-home-path
     init-mersenne
     init-allegro
@@ -162,50 +160,29 @@ previous
 
 : save-release ( - <path> )
     ['] release-entrypoint is EntryPoint
-    fullscreen?
-        debug @ hold @
-            debug off
-            hold off
-            fullscreen
-            esc-quits off
-            0 to GenINI?
-            0 to InitSupport?
-            uninstall-repl-game-hook
-            going off
-            save-exe cr
-        hold ! debug !
-    if fullscreen else windowed then 
-    repl on
+    debug off
+    hold off
+    fullscreen
+    esc-quits off
+    0 to GenINI?
+    0 to InitSupport?
+    repl-stop
+    uninstall-repl-game-hook
+    save-exe cr
     esc-quits on ;
 
 : save-debug ( - <path> )
     ['] debug-entrypoint is EntryPoint
-    fullscreen?
-        ide @ repl @ debug @ hold @
-            debug off \ This disables Engineer-only initialization.
-                      \ Counter-intuitive because we want to debug the game not Engineer.
-            hold off
-            windowed
-            repl-stop
-            uninstall-repl-game-hook
-            ['] (.cold) is .cold
-            -1 to GenINI?
-            0 to InitSupport?
-            'show off
-            save-exe cr
-        hold ! debug ! repl ! ide !
-    if fullscreen else windowed then ;
-
-: save-dev ( - <path> )
-    fullscreen?
-        ide @ repl @ hold @
-            \ ide on
-            \ repl on
-            hold off
-            windowed
-            save-exe cr
-        hold ! repl ! ide !
-    if fullscreen else windowed then ;
+    debug on
+    hold off
+    windowed
+    repl-stop
+    uninstall-repl-game-hook
+    ['] (.cold) is .cold
+    -1 to GenINI?
+    0 to InitSupport?
+    'show off
+    save-exe cr ;
 
 \ =============================================================================
 \ Development tool commands
@@ -222,28 +199,42 @@ include %vfxland5%/forge/lib/back.vfx           \ Backward compatibility shim
 \ =============================================================================
 public
 
-: engineer-entrypoint ( hinst hpinst lpcommand nshow -- res )
+: dev-entrypoint ( hinst hpinst lpcommand nshow -- res )
     init-nibs
     over zcount zcommand zplace
     vfxforth-entrypoint ;
 
-: engineer.cold ( - )
+: cmdline-params  zcommand zcount strip-exe ;
+
+: dev-cold ( - )
     \ Main Engineer entry point - initialize and run with command line args
     init-vfx-console
     (.cold)
-    ."  ~~~ Engineer v2 (regress) ~~~ " cr
-    frigid 
-    freeze  \ TODO: Needed because otherwise we get dictionary corruption if we call EMPTY in engineer.exe
-            \       Gotta maybe report this as a bug.
-\    init-ide
-    \ zcommand zcount strip-exe interpret-string \ ide-interpret
-    \ ?dup if .throw else ( go ) then 
+    ." ~~~ Engineer v2 (regress) ~~~ " cr cr
+    dev-init
+    frigid
+    freeze  \ Avoids dictionary corruption after calling EMPTY
+    boot 
+    backup remember 
+    ." Starting engine..." cr
     repl-go 
-    >vfx 
-    backup remember ;
+    >vfx ;
 
-['] engineer-entrypoint is EntryPoint
-['] engineer.cold is .cold
+['] dev-entrypoint is EntryPoint
+['] dev-cold is .cold
+
+: save-dev ( - <path> )
+    ['] dev-entrypoint is EntryPoint
+    ['] dev-cold is .cold
+    repl-stop
+    uninstall-repl-game-hook
+    hold off
+    windowed
+    'show off
+    backup off
+    -1 to GenINI?
+    -1 to InitSupport?
+    save-exe cr ;
 
 gild-nib
 ['] main >name hidename
