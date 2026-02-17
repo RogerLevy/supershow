@@ -4,17 +4,9 @@
 
 : -file ( a len - a len' ) slashes '\' <scan ;
 
-aka file-exists? fileexists?
-
 || create buf 256 allot
 : wd@ ( - a len )
     buf 256 buf GetCurrentDirectory ;
-
-: ?notfound ( fp len - )
-    {: fp len :} 
-    fp len file-exists? not if
-        fp len f" File not found: %s" -1 -rot .abort
-    then ;
 
 : bytes-left  ( id - n )
     >r r@ file-size abort" Get file size error" drop
@@ -22,8 +14,17 @@ aka file-exists? fileexists?
     - ;
 
 || : expanded ( a len - a' len' ) 
-    over buf 1 + = ?exit
+    over buf 1 + = abort" EXPANDED : Source string is the buffer!"
     >pad buf $expand  buf count ;
+
+: file-exists? ( fp len - flag ) 
+    expanded fileexists? ;
+
+: ?notfound ( fp len - )
+    {: fp len :} 
+    fp len file-exists? not if
+        fp len f" File not found: %s" -1 -rot .abort
+    then ;
 
 : file, ( fn len - )
     expanded
@@ -35,7 +36,7 @@ aka file-exists? fileexists?
     #1 close-file drop 0 , ;
 
 : fsize ( fn len - n )
-    r/o open-file abort" File open error" 
+    expanded r/o open-file abort" File open error" 
     dup file-size throw drop swap close-file throw ;
 
 : dir-exists? ( a n - f )
@@ -96,7 +97,7 @@ extern int SHCreateDirectoryExA( void * hwnd, void * zpath, void * psa );
 
 : load-file ( fn len - a len ) 
     \ returns allocated memory that has to be freed
-    expanded {: fn len | mem size :}
+    {: fn len | mem size :}
     fn len fsize to size 
     size allocate throw to mem
     mem size fn len read 
