@@ -487,7 +487,7 @@ extern "C" void * al_get_target_bitmap( );
 extern "C" void al_get_text_dimensions( void * font, void * text, void * bbx, void * bby, void * bbw, void * bbh );
 extern "C" int al_get_text_width( void * font, void * str );
 \ extern "C" al_get_thread_should_stop( );
-\ extern "C" al_get_time( );
+extern "C" float al_get_time( );
 \ extern "C" al_get_timer_count( );
 extern "C" void * al_get_timer_event_source( void * timer );
 \ extern "C" al_get_timer_speed( );
@@ -590,7 +590,7 @@ extern "C" void * al_load_font( void * filepath, int size, int flags );
 extern "C" void * al_load_sample( void * filepath );
 extern "C" al_load_sample_f(void * fp, void * ident);
 extern "C" void * al_load_ttf_font( void * zstr, int size, int flags );
-\ extern "C" al_load_ttf_font_f( );
+extern "C" void * al_load_ttf_font_f( void *file, void *filename, int size, int flags)
 \ extern "C" al_load_ttf_font_stretch( );
 \ extern "C" al_load_ttf_font_stretch_f( );
 extern "C" void * al_lock_bitmap( void * bmp, int format, int flags );
