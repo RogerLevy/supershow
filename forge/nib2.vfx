@@ -1105,6 +1105,8 @@ redef : ; ( - )
     then
 ;
 
+: subclass:  class: derive ;
+
 : :apply ( trait  - ) ( trait dest-class - )
     dup >cla @ %trait <> 
         abort" :APPLY : Can only define on-apply hooks for traits! (Did you pass a class?)"
@@ -1210,6 +1212,8 @@ aka prop property
 : :cstring ( - )
     ?no-property
     TYPE_CSTRING current-property classifier >property-type ! ;
+
+: cstring-prop ( <name> - ) 256 nprop :cstring <save ;
 
 : :lstring ( - )
     ?no-property
