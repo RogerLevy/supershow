@@ -3,14 +3,15 @@
 \ =============================================================================
 
 : -file ( a len - a len' ) slashes '\' <scan ;
+: ext ( a len - a' len' ) '.' ending ;
 
 || create buf 256 allot
 : wd@ ( - a len )
     buf 256 buf GetCurrentDirectory ;
 
 : bytes-left  ( id - n )
-    >r r@ file-size abort" Get file size error" drop
-    r> file-position abort" Get file position error" drop
+    >r r@ file-size abort" BYTES-LEFT : Get file size error" drop
+    r> file-position abort" BYTES-LEFT : Get file position error" drop
     - ;
 
 || : expanded ( a len - a' len' ) 
@@ -28,15 +29,15 @@
 
 : file, ( fn len - )
     expanded
-    r/o open-file abort" File open error"
+    r/o open-file abort" FILE, : File open error"
     | #1 |
     here 
     #1 bytes-left allot
-    #1 bytes-left #1 read-file abort" File read error" drop
+    #1 bytes-left #1 read-file abort" FILE, : File read error" drop
     #1 close-file drop 0 , ;
 
 : fsize ( fn len - n )
-    expanded r/o open-file abort" File open error" 
+    expanded r/o open-file abort" FSIZE : File open error" 
     dup file-size throw drop swap close-file throw ;
 
 : dir-exists? ( a n - f )
@@ -70,18 +71,19 @@ extern int SHCreateDirectoryExA( void * hwnd, void * zpath, void * psa );
 : write ( src len path len - )
 \    2dup file-exists? if 2dup delete-file throw then
     expanded
-    2dup w/o create-file abort" File create error" >r
+    2dup w/o create-file if drop f" File create error: %s" -1 -rot .abort then 
+    >r
     f" File write: %s" type cr
-    r@ write-file abort" File write error"
+    r@ write-file abort" WRITE : File write error"
     r> close-file drop ;
 
 : read ( dest len path len - )
     expanded
-    2dup r/o open-file if f" File open error: %s" -1 -rot .abort then
+    2dup r/o open-file if drop f" File open error: %s" -1 -rot .abort then
     >r
     f" File read: %s" type cr
     ( dest len ) r@ file-size drop drop min
-    r@ read-file nip abort" File read error"
+    r@ read-file nip abort" READ : File read error"
     r> close-file drop ;
 
 : _?read ( dest len path len - )
@@ -98,6 +100,7 @@ extern int SHCreateDirectoryExA( void * hwnd, void * zpath, void * psa );
 : load-file ( fn len - a len ) 
     \ returns allocated memory that has to be freed
     {: fn len | mem size :}
+    fn len f" LOAD-FILE %s" type cr
     fn len fsize to size 
     size allocate throw to mem
     mem size fn len read 
