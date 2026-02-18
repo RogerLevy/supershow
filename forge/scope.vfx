@@ -5,7 +5,7 @@
 \ ------------------------------------------------------------------------------
 
 \ Public/private
-create wl$ 32 allot
+create wl$ 64 allot
 variable public-xt  ' forth public-xt !
 
 : wlname
@@ -14,7 +14,7 @@ variable public-xt  ' forth public-xt !
 
 : the-wordlist  wl$ count search-context if >body @ else 0 then ;
 
-: scope ( - )
+: _scope ( - )
     only forth definitions
     s" vocabulary " >pad wl$ count $+ count evaluate
     does> only forth definitions also @ context ! ;
@@ -22,15 +22,14 @@ variable public-xt  ' forth public-xt !
 : ?wordlist ( a n - wl )
     wl$ place
     the-wordlist ?dup if exit then
-    scope 
+    _scope
 
     \ backward compatibility: also create `SCOPE/`
-    s" synonym " >pad 
+    s" synonym " >pad
     wl$ count 2 - $+
-    s" /" $+
-    s"  " $+
+    s" / " $+
     wl$ count $+
-    count 
+    count
     evaluate
 
     the-wordlist ;
@@ -52,15 +51,6 @@ variable public-xt  ' forth public-xt !
 : public ( - )
     only forth (public) ;
 
-: || ( - ) 
-    \ push-order 
-    private 
-    0 parse evaluate 
-    public ; 
-    \ pop-order 
-    \ the-wordlist ?+order ; 
-immediate
-
 \ Importing words from other files
 : borrow ( - <vocabulary> <word> )
     push-order 
@@ -70,8 +60,51 @@ immediate
     s" synonym " >pad -rot $+ s"  " $+ -rot $+ count evaluate
     pop-order ;
 
+\ New system 2026.02.17
+\ SCOPE creates a wordlist if it doesn't already exist
+\ and adds it to the search order
+\ PRIVATE: PRIVATE; make the wordlist current
+\ A variant of the scope named like [SCOPE] evaluates the next word
+\ from the given scope.
+\ Note: The new system is not compatible with BORROW, which is deprecated.
+
+\ Side note:
+\ Making things "global" is a separate topic, as "global" as a concept
+\ ought to have two levels:
+\ - Extensions to Forth as a language
+\ - Words that are global or common to an application
+
+: the-wordlist2  wl$ count search-context if >body else 0 then ;
+
+: private:  push-order the-wordlist2 +order definitions ;
+: private;  pop-order ;
+
+: wlname2
+    \ create `SCOPEING`
+    CurrSourceName -path -ext wl$ place
+    wl$ s" ing" $+ count ;
+
+: [wlname2]
+    s" [" >pad wlname2 $+ s" ]" $+ count ;
+
+: scope
+    wlname2 sfind if execute +order exit else drop then 
+    wlname2 screate wordlist dup +order 
+    [wlname2] screate , immediate 
+    does> @ dup >r +order ' execute r> -order ;
+
+: find-in  ( a len wid - xt|0 )
+    search-wordlist dup if drop then ;
+    
+: [wlname2]?  [wlname2] sfind nip ;
+
+: || ( - ) 
+    [wlname2]? if private: else private then 
+    0 parse evaluate 
+    [wlname2]? if private; else public then ; immediate
+
 \ Extend include words to preserve the search order
-|| : /order only forth definitions ;
+: /order only forth definitions ;
 
 : floaded included ;
 : fload getPathSpec included ;
@@ -81,5 +114,3 @@ redef : require  push-order /order getPathSpec required pop-order ;
 redef : required push-order /order required pop-order ;
 : ?included  2dup fileExist? if included else 2drop then ;
 : ?required  2dup fileExist? if required else 2drop then ;
-
-only forth definitions
