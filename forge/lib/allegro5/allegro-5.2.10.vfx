@@ -37,7 +37,7 @@ extern "C" void al_build_transform( void * trans, float x, float y,
 \ extern "C" al_calloc_with_context( );
 \ extern "C" al_change_directory( );
 \ extern "C" al_check_inverse( );
-\ extern "C" al_clear_depth_buffer( );
+extern "C" void al_clear_depth_buffer( float z );
 extern "C" void al_clear_keyboard_state( * state );
 extern "C" void al_clear_to_color( int float-r, int float-g, int float-b, int float-a );
 \ extern "C" al_clipboard_has_text( );
@@ -756,7 +756,7 @@ extern "C" void al_set_new_display_option( int option, int value, int importance
 \ extern "C" al_set_path_extension( );
 \ extern "C" al_set_path_filename( );
 \ extern "C" al_set_physfs_file_interface( );
-\ extern "C" al_set_render_state( );
+extern "C" void al_set_render_state( int state, int value );
 \ extern "C" al_set_sample( );
 \ extern "C" al_set_sample_instance_channel_matrix( );
 \ extern "C" al_set_sample_instance_gain( );
@@ -995,6 +995,31 @@ $40 constant ALLEGRO_CHANNEL_CONF_4
 $51 constant ALLEGRO_CHANNEL_CONF_5_1
 $61 constant ALLEGRO_CHANNEL_CONF_6_1
 $71 constant ALLEGRO_CHANNEL_CONF_7_1
+
+\ Render states
+$10 constant ALLEGRO_ALPHA_TEST
+$11 constant ALLEGRO_WRITE_MASK
+$12 constant ALLEGRO_DEPTH_TEST
+$13 constant ALLEGRO_DEPTH_FUNCTION
+
+\ Depth/alpha test functions
+0 constant ALLEGRO_RENDER_NEVER
+1 constant ALLEGRO_RENDER_ALWAYS
+2 constant ALLEGRO_RENDER_LESS
+3 constant ALLEGRO_RENDER_EQUAL
+4 constant ALLEGRO_RENDER_LESS_EQUAL
+5 constant ALLEGRO_RENDER_GREATER
+6 constant ALLEGRO_RENDER_NOT_EQUAL
+7 constant ALLEGRO_RENDER_GREATER_EQUAL
+
+\ Write mask flags
+1 constant ALLEGRO_MASK_RED
+2 constant ALLEGRO_MASK_GREEN
+4 constant ALLEGRO_MASK_BLUE
+8 constant ALLEGRO_MASK_ALPHA
+$10 constant ALLEGRO_MASK_DEPTH
+7 constant ALLEGRO_MASK_RGB
+$F constant ALLEGRO_MASK_RGBA
 
 -1 constant ALLEGRO_DEFAULT_DISPLAY_ADAPTER
 4 cells constant /ALLEGRO_MONITOR_INFO
