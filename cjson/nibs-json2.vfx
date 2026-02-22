@@ -60,7 +60,7 @@ private
         cla @ >property-type @ cells des-json-table + @ execute ;
 
     : suppose ( a len - )
-        ['] evaluate catch ?dup if  .throw  2drop  then ;    
+        ['] .evaluate catch ?dup if  .throw  2drop  then ;    
 
 public
 also cjson2>>

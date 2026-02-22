@@ -103,6 +103,15 @@ redef : cls ( - )
 : inverse ( - )
     m al_invert_transform ;
 
+: translate3d ( f:x f:y f:z - )
+    m al_translate_transform_3d  m al_use_transform ;
+
+: rotate3d ( f:cx f:cy f:cz f:angle - )
+    m al_rotate_transform_3d  m al_use_transform ;
+
+: scale3d ( f:sx f:sy f:sz - )
+    m al_scale_transform_3d  m al_use_transform ;
+
 \ =============================================================================
 \ Text
 \ =============================================================================
