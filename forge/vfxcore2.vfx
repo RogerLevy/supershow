@@ -50,6 +50,11 @@ Target_386_Windows [if]
         LIBRARY: allegro_monolith-debug-5.2.dll
         allegro_monolith-debug-5.2.dll 0= 
             s" Allegro failed to load" .abort
+
+        LIBRARY: opengl32.dll
+        opengl32.dll 0= 
+            s" OpenGL failed to load" .abort
+
     \ [else]
     \     LIBRARY: allegro_monolith-5.2.dll
     \     allegro_monolith-5.2.dll 0= 

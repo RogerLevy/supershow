@@ -14,7 +14,7 @@ variable zoom  2 zoom !
 0 value display
 
 0
-\ ALLEGRO_OPENGL or     \ slows down random bitmap drawing by a lot
+ALLEGRO_OPENGL or     \ slows down random bitmap drawing by a lot
 ALLEGRO_OPENGL_3_0 or
 ALLEGRO_PROGRAMMABLE_PIPELINE or
 ALLEGRO_GENERATE_EXPOSE_EVENTS or
@@ -115,7 +115,8 @@ extern BOOL SetThreadPriority( hthread, priority );
 : create-display
     ALLEGRO_VSYNC  1  ALLEGRO_SUGGEST al_set_new_display_option
     ALLEGRO_DEPTH_SIZE 16  ALLEGRO_SUGGEST al_set_new_display_option
-    
+    ALLEGRO_STENCIL_SIZE 8 ALLEGRO_SUGGEST al_set_new_display_option 
+
     fullscreen? if
         monw to winw  monh to winh
     else
@@ -128,7 +129,8 @@ extern BOOL SetThreadPriority( hthread, priority );
     al_set_new_display_flags
     
     winw winh al_create_display to display
-        
+    display al_set_current_opengl_context
+
     al_create_event_queue to queue
     queue  display       al_get_display_event_source  al_register_event_source
     queue                al_get_mouse_event_source    al_register_event_source

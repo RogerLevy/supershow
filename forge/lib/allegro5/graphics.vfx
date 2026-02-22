@@ -113,24 +113,37 @@ redef : cls ( - )
     m al_scale_transform_3d  m al_use_transform ;
 
 \ =============================================================================
-\ Depth-buffer quad clipping
+\ Stencil-buffer quad clipping
 \ =============================================================================
+\ Requires display created with ALLEGRO_STENCIL_SIZE set (e.g., 8)
 
-: clip{ ( w. h. - )
-    1e al_clear_depth_buffer
-    ALLEGRO_WRITE_MASK ALLEGRO_MASK_DEPTH al_set_render_state
-    ALLEGRO_DEPTH_TEST 1 al_set_render_state
-    ALLEGRO_DEPTH_FUNCTION ALLEGRO_RENDER_ALWAYS al_set_render_state 
+: clip{ ( x. y. w. h. - )
+    2swap atp e{
+    \ Clear stencil to 0 (enable writes first, reset clipping rect)
+    $FF glStencilMask
+    al_reset_clipping_rectangle
+    GL_STENCIL_BUFFER_BIT glClear
+    \ Enable stencil test
+    GL_STENCIL_TEST glEnable
+    \ Always pass, write 1 to stencil
+    GL_ALWAYS 1 $FF glStencilFunc
+    GL_KEEP GL_KEEP GL_REPLACE glStencilOp
+    $FF glStencilMask
+    \ Disable color writes for mask
+    ALLEGRO_WRITE_MASK 0 al_set_render_state
+    \ Draw mask rectangle (writes 1 to stencil where drawn)
     -1 rgba8
     at@f   at@p 2+ 2p>f   rgba@fds al_draw_filled_rectangle
+    \ Re-enable color writes
     ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA al_set_render_state
-    ALLEGRO_DEPTH_FUNCTION ALLEGRO_RENDER_GREATER al_set_render_state 
-    m{ 0e 0e 0.5e translate3d ;
+    \ Only pass where stencil == 1
+    GL_EQUAL 1 $FF glStencilFunc
+    GL_KEEP GL_KEEP GL_KEEP glStencilOp
+    0 glStencilMask ;
 
 : clip} ( - )
-    m}
-    ALLEGRO_DEPTH_TEST 0 al_set_render_state
-    ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA ALLEGRO_MASK_DEPTH or al_set_render_state ;
+    GL_STENCIL_TEST glDisable
+    e} ;
 
 \ =============================================================================
 \ Text

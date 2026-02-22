@@ -4,6 +4,31 @@
 
 $05020A01 constant ALLEGRO_VERSION
 
+\ OpenGL functions (from opengl32.dll, StdCall convention)
+extern stdcall void glDepthRange( double nearVal, double farVal );
+extern stdcall void glEnable( int cap );
+extern stdcall void glDisable( int cap );
+extern stdcall void glClear( int mask );
+extern stdcall void glStencilFunc( int func, int ref, int mask );
+extern stdcall void glStencilOp( int sfail, int dpfail, int dppass );
+extern stdcall void glStencilMask( int mask );
+extern stdcall void * glGetString( int name );
+extern stdcall int glGetError( );
+extern stdcall int glIsEnabled( int cap );
+extern stdcall void glGetIntegerv( int pname, void * params );
+extern stdcall void glViewport( int x, int y, int w, int h );
+
+$0BA2 constant GL_VIEWPORT
+$1F02 constant GL_VERSION
+
+\ OpenGL constants
+$0B90 constant GL_STENCIL_TEST
+$0400 constant GL_STENCIL_BUFFER_BIT
+$0207 constant GL_ALWAYS
+$0202 constant GL_EQUAL
+$1E00 constant GL_KEEP
+$1E01 constant GL_REPLACE
+
 \ extern "C" al_acknowledge_drawing_halt( );
 \ extern "C" al_acknowledge_drawing_resume( );
 extern "C" void al_acknowledge_resize( void * display );
@@ -436,13 +461,13 @@ extern "C" int al_get_num_display_modes( );
 extern "C" int al_get_num_video_adapters( );
 \ extern "C" al_get_opengl_extension_list( );
 \ extern "C" al_get_opengl_fbo( );
-\ extern "C" al_get_opengl_proc_address( );
+extern "C" void * al_get_opengl_proc_address( void * name );
 \ extern "C" al_get_opengl_program_object( );
 \ extern "C" al_get_opengl_texture( );
 \ extern "C" al_get_opengl_texture_position( );
 \ extern "C" al_get_opengl_texture_size( );
 \ extern "C" al_get_opengl_variant( );
-\ extern "C" al_get_opengl_version( );
+extern "C" int al_get_opengl_version( );
 \ extern "C" al_get_org_name( );
 extern "C" void * al_get_parent_bitmap( void * bitmap );
 \ extern "C" al_get_path_basename( );
@@ -706,7 +731,7 @@ extern "C" void al_set_blender( int op, int src, int dst );
 \ extern "C" al_set_clipboard_text( );
 extern "C" void al_set_clipping_rectangle( int x1, int y1, int w, int h );
 \ extern "C" al_set_config_value( );
-\ extern "C" al_set_current_opengl_context( );
+extern "C" void al_set_current_opengl_context( void * display );
 \ extern "C" al_set_d3d_device_release_callback( );
 \ extern "C" al_set_d3d_device_restore_callback( );
 extern "C" bool al_set_default_mixer( void * mixer );
