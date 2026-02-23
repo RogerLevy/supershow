@@ -17,9 +17,18 @@ extern stdcall int glGetError( );
 extern stdcall int glIsEnabled( int cap );
 extern stdcall void glGetIntegerv( int pname, void * params );
 extern stdcall void glViewport( int x, int y, int w, int h );
+extern stdcall void glTexParameteri( int target, int pname, int param );
+extern stdcall void glTexParameterf( int target, int pname, float param );
+extern stdcall void glBindTexture( int target, int texture );
 
 $0BA2 constant GL_VIEWPORT
 $1F02 constant GL_VERSION
+$0DE1 constant GL_TEXTURE_2D
+$2800 constant GL_TEXTURE_MAG_FILTER
+$2801 constant GL_TEXTURE_MIN_FILTER
+$2600 constant GL_NEAREST
+$2601 constant GL_LINEAR
+$84FE constant GL_TEXTURE_MAX_ANISOTROPY
 
 \ OpenGL constants
 $0B90 constant GL_STENCIL_TEST
@@ -391,7 +400,7 @@ extern "C" int al_get_fs_entry_mtime( void * entry );
 extern "C" void * al_get_fs_entry_name( void * e );
 \ extern "C" al_get_fs_entry_size( );
 \ extern "C" al_get_fs_interface( );
-\ extern "C" al_get_glyph( );
+extern "C" int al_get_glyph( void * font, int prev_codepoint, int codepoint, void * glyph );
 \ extern "C" al_get_glyph_advance( );
 \ extern "C" al_get_glyph_dimensions( );
 \ extern "C" al_get_glyph_width( );
@@ -463,7 +472,7 @@ extern "C" int al_get_num_video_adapters( );
 \ extern "C" al_get_opengl_fbo( );
 extern "C" void * al_get_opengl_proc_address( void * name );
 \ extern "C" al_get_opengl_program_object( );
-\ extern "C" al_get_opengl_texture( );
+extern "C" int al_get_opengl_texture( void * bitmap );
 \ extern "C" al_get_opengl_texture_position( );
 \ extern "C" al_get_opengl_texture_size( );
 \ extern "C" al_get_opengl_variant( );
@@ -1226,6 +1235,18 @@ struct /ALLEGRO_VERTEX
   field: ALLEGRO_VERTEX.g
   field: ALLEGRO_VERTEX.b
   field: ALLEGRO_VERTEX.a
+end-struct
+
+struct /ALLEGRO_GLYPH
+  field: ALLEGRO_GLYPH.bitmap
+  field: ALLEGRO_GLYPH.x
+  field: ALLEGRO_GLYPH.y
+  field: ALLEGRO_GLYPH.w
+  field: ALLEGRO_GLYPH.h
+  field: ALLEGRO_GLYPH.kerning
+  field: ALLEGRO_GLYPH.offset_x
+  field: ALLEGRO_GLYPH.offset_y
+  field: ALLEGRO_GLYPH.advance
 end-struct
 
 $01 constant ALLEGRO_FILECHOOSER_FILE_MUST_EXIST

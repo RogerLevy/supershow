@@ -108,6 +108,41 @@ variable next-bmp#  1 next-bmp# !
 
 
 \ =============================================================================
+\ Texture filtering
+\ =============================================================================
+
+: tfilter! ( filter-constant bmpid - )
+    id>albmp dup 0= if 2drop exit then
+    al_get_opengl_texture
+    GL_TEXTURE_2D swap glBindTexture
+    GL_TEXTURE_2D GL_TEXTURE_MIN_FILTER rot dup >r glTexParameteri
+    GL_TEXTURE_2D GL_TEXTURE_MAG_FILTER r> glTexParameteri ;
+
+: tfilter ( filter-constant - )
+    next-bmp# @ 1 do dup i tfilter! loop drop ;
+
+: font-tfilter! ( filter-constant font - )
+    {: filter font | glyph[ /ALLEGRO_GLYPH ] :}
+    font 0 'A' glyph[ al_get_glyph 0= if exit then
+    glyph[ ALLEGRO_GLYPH.bitmap @ dup 0= if drop exit then
+    dup al_get_parent_bitmap ?dup if nip then
+    al_get_opengl_texture
+    GL_TEXTURE_2D swap glBindTexture
+    GL_TEXTURE_2D GL_TEXTURE_MIN_FILTER filter glTexParameteri
+    GL_TEXTURE_2D GL_TEXTURE_MAG_FILTER filter glTexParameteri ;
+
+: aniso! ( level bmpid - )
+    id>albmp dup 0= if 2drop exit then
+    al_get_opengl_texture
+    GL_TEXTURE_2D swap glBindTexture
+    s>f GL_TEXTURE_2D GL_TEXTURE_MAX_ANISOTROPY rot 
+    dup 0= if drop 1 then
+    glTexParameterf ;
+
+: aniso ( level - )
+    next-bmp# @ 1 do dup i aniso! loop drop ;
+
+\ =============================================================================
 \ Backward compatibility
 \ =============================================================================
 

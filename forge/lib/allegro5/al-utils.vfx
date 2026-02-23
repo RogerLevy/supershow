@@ -115,7 +115,9 @@ extern BOOL SetThreadPriority( hthread, priority );
 : create-display
     ALLEGRO_VSYNC  1  ALLEGRO_SUGGEST al_set_new_display_option
     ALLEGRO_DEPTH_SIZE 16  ALLEGRO_SUGGEST al_set_new_display_option
-    ALLEGRO_STENCIL_SIZE 8 ALLEGRO_SUGGEST al_set_new_display_option 
+    ALLEGRO_STENCIL_SIZE 8 ALLEGRO_SUGGEST al_set_new_display_option
+    \ ALLEGRO_SAMPLE_BUFFERS 1 ALLEGRO_SUGGEST al_set_new_display_option
+    \ ALLEGRO_SAMPLES 8 ALLEGRO_SUGGEST al_set_new_display_option 
 
     fullscreen? if
         monw to winw  monh to winh
