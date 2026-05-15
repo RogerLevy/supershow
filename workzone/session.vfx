@@ -1,0 +1,58 @@
+\ -- Save/Load ----------------------------------------------------------------
+
+[undefined] sessionpath$ [if]
+    cstring sessionpath$
+[then]
+
+also cjson2>>
+
+: goto-sessionpath  sessionpath$ count -file $cwd ;
+: session-relpath  s" ." 2swap >relpath ;
+
+: asset>json ( asset - json|0 )
+    as>
+    [defined] %bitmap [if]
+        me %bitmap is? if 
+            srcpath$ count session-relpath f" bitmap %s" 
+            >zpad new-string exit 
+        then
+    [then]
+    [defined] %tileset [if]
+        me %tileset is? if 
+            me body>name` tw 2@ swap`` bmp @ id>bmp body>name` f" %s %n %n tileset-from %s" 
+            >zpad new-string exit 
+        then 
+    [then]
+    [defined] %sample [if]
+        me %sample is? if 
+            srcpath$ count session-relpath f" sample %s" 
+            >zpad new-string exit 
+        then 
+    [then]
+    0
+;
+
+: autoloads>json ( - json )
+    new-array {: jarray :}
+    autoloads list-count for
+        list-next asset>json 0 jarray add-item
+    loop drop 
+    jarray ;
+
+: save-all 
+    session sessionpath$ count  save-gui
+    sessionpath$ count load-json >r 
+    autoloads>json "autoloads" r@ add-item 
+    r> sessionpath$ count save-json 
+    [: [ here ]   dup save   literal swap each ;] session each
+    save-bitmaps ;
+
+: load-all ( - )
+    0 to the-dhud
+    selection vacate
+    goto-sessionpath  
+    sessionpath$ count load-json   dup load-gui to session   
+    destroy-json ;
+
+: load-session ( fp len - )
+    sessionpath$ place  load-all ;

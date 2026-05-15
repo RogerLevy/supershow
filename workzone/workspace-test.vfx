@@ -1,0 +1,5 @@
+REQUIRE %idir%/workspace.vfx
+
+fullscreen winmode >vfx
+load-all
+\ ['] close hud each 

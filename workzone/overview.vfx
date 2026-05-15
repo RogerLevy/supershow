@@ -1,0 +1,71 @@
+scope
+
+16 %addr array ov-bmps
+variable ov-tilt  0.75 ov-tilt !
+
+create proj-m  16 cells allot
+create ortho-m  16 cells allot
+
+$40 $80 or $2 or constant OV-BMP-FLAGS  \ MIN_LINEAR | MAG_LINEAR | MIPMAP
+
+: ov-create-bmp ( - albmp )
+    al_get_new_bitmap_flags >r
+    OV-BMP-FLAGS al_set_new_bitmap_flags
+    4096 4096 al_create_bitmap 
+    r> al_set_new_bitmap_flags ;
+
+: ov-bmp  ov-bmps el@ ;
+
+: ov-render ( n - )
+    {: n :}
+    n ov-bmp al_set_target_bitmap
+    black rgba@fds al_clear_to_color
+    0 0 at  session ?dup if draw then
+    display al_get_backbuffer al_set_target_bitmap ;
+
+: ov-zoom ( - n. ) <z> held? if 0.2 else 0.5 then ;
+
+: ov-set-projection ( - )
+    ortho-m al_get_current_projection_transform al_copy_transform
+    proj-m al_identity_transform
+    proj-m`
+    winw ov-zoom p* negate s>f  winh ov-zoom p* negate s>f  600e``
+    winw ov-zoom p* s>f         winh ov-zoom p* s>f  32768e``
+    al_perspective_transform
+    proj-m al_use_projection_transform ;
+
+: ov-restore-projection ( - )
+    ortho-m al_use_projection_transform ;
+
+: draw-overview ( - )
+    GL_STENCIL_BUFFER_BIT glClear  \ clear stencil at frame start
+    ov-set-projection
+    m{
+        identity
+        -500e -1000e -1000e translate3d
+        1e 0e 0e ov-tilt @ p>f rotate3d       \ tilt around X axis
+        session ?dup if draw then
+    m}
+    ov-restore-projection
+    ;
+
+|| : +tilt ov-tilt @ + 0 0.85 clamp ov-tilt ! ;
+|| : +xy  desktop >x 2+! ;
+
+: overview-nav ( - )
+    <left>  held? <a> held? or if  32. 0.  +xy then
+    <right> held? <d> held? or if  -32. 0. +xy  then
+    <up>    held? <w> held? or if  0. 32.  +xy then
+    <down>  held? <s> held? or if  0. -32. +xy  then
+    <pgup>  held? if  0.02 +tilt   then
+    <pgdn>  held? if  -0.02 +tilt  then ;
+
+: ?overview-toggle ( - )
+    <f9> pressed? -exit
+    overview toggle 
+    overview @ if GL_LINEAR else GL_NEAREST then 
+    dup tfilter 
+    dup habbo.ttf font-tfilter! 
+    vga-8x8 font-tfilter! 
+    overview @ if 16 else 1 then 
+    aniso ;

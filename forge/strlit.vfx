@@ -1,7 +1,6 @@
 \ String Literal Recognizer 
-\ currently only supports z-terminated strings expressed as "asdf".
-\ later it'll recognize z"asdf" c"asdf" and s"asdf", and have a context variable
-\ for how to compile "asdf".
+\ compiles z-terminated strings expressed as "asdf".
+\ it is meant to make string keys easier to read.  "asdf" instead of z" asdf"
 
 : intzstr  here >r z$, r> ;
 

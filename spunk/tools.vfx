@@ -1,8 +1,0 @@
-include %idir%\te\te.vfx      \ Tile Editor
-include %idir%\le\le.vfx      \ Level Editor
-include %idir%\be\be.vfx      \ Bitmap Editor
-
-s" game" <f1> func
-s" te" <f2> func
-s" le" <f3> func
-s" be" <f4> func

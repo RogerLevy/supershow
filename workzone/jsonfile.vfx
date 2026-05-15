@@ -1,0 +1,23 @@
+REQUIRE %vfxland5%/supershow/traits.vfx
+REQUIRE %vfxland5%/supershow/autoload.vfx
+REQUIRE %vfxland5%/cjson/cjson2.vfx
+
+public
+
+class: %jsonfile
+    %asset derive
+    is-a %autoload
+    is-a %loadable
+    prop json :addr
+
+    : _load-json ( - )
+        me @data parse-json json ! ;
+
+    :: on-startup ( - )
+        ." Loading JSON data " me .name cr
+        _load-json ;
+
+class;
+
+: JSONFILE ( <path> - )
+    bl parse 2dup -path %jsonfile ASSET { embed _load-json } ;

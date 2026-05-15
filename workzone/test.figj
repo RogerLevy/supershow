@@ -1,0 +1,24 @@
+{
+	"root":	{
+		"class":	"%FIGURE",
+		"X":	1380,
+		"Y":	105.5,
+		"FLAGS":	4,
+		"W":	200,
+		"H":	200,
+		"CLR":	2097344,
+		"SRCPATH$":	"test.figj",
+		"children":	[{
+				"class":	"%LABEL",
+				"X":	80.50006103515625,
+				"Y":	83.00006103515625,
+				"FLAGS":	0,
+				"W":	40,
+				"H":	8,
+				"TXT":	"Testy",
+				"CLR":	-1,
+				"EDITABLE":	-1,
+				"CLEAR-ON-EDIT":	0
+			}]
+	}
+}

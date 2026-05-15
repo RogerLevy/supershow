@@ -1,0 +1,43 @@
+REQUIRE %vfxland5%\supershow\supershow.vfx
+REQUIRE %idir%/workspace.vfx
+REQUIRE %idir%/jsonfile.vfx
+
+: load-wsj-dialog ( - a len )
+    0 z" Load Workspace" z" *.wsj" load-dialog ;
+
+: get-workspace-path ( a len|0 )
+    {: | zcmd zcmd-len :}
+    zcommand zcount to zcmd-len to zcmd 
+    zcmd-len -exit
+    zcmd zcmd-len -path f" %s.wsj" file-exists? if
+        zcmd zcmd-len 
+    else
+        \ load-wsj-dialog 
+        s" "
+    then ;
+
+jsonfile %idir%/default.wsj
+
+: new
+    s" " sessionpath$ place 
+    s" %BIN%/default.wsj" expand file-exists? if
+        s" %BIN%/default.wsj" load-session
+    else
+        s" default.wsj" expand file-exists? if
+            s" default.wsj" load-session
+        else
+            default.wsj >json @ load-root to session 
+        then
+    then ;
+
+: main
+    0 to hovered
+    0 to hud
+    0 to the-dhud
+    init-icon-font
+    new workspace 
+    fullscreen winmode ;
+
+main
+
+s" %idir%/../games/darkblue/workspace.wsj" load-session

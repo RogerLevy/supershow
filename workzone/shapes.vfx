@@ -1,0 +1,140 @@
+require %vfxland5%/supershow/actor.vfx
+require %vfxland5%/supershow/stage.vfx
+require %vfxland5%/supershow/mode.vfx
+
+\ Color and thickness are stored in each shape's execution context.
+\ So to set a shape's color or thickness:
+\ myshape { $ff00ffff rgba   5. thick }
+
+ec-cell thickness
+0.5 thickness!
+
+: thick ( n. - )
+    thickness! ;
+
+: circ ( radius. - )
+    thickness@ p>f f>ds >r   at@f p>f rgba@fds r> al_draw_circle ;
+
+: circf ( radius. - )
+    at@f p>f rgba@fds al_draw_filled_circle ;
+
+: oval ( radiusx. radiusy. - )
+    thickness@ p>f f>ds >r   at@f 2p>f rgba@fds r> al_draw_ellipse ;
+
+: ovalf ( radiusx. radiusy. - )
+    at@f 2p>f rgba@fds al_draw_filled_ellipse ;
+
+: line ( x. y. - )
+    thickness@ p>f f>ds >r   at@f   2p>f  rgba@fds r> al_draw_line ;
+
+: rect ( w. h. - )
+    thickness@ p>f f>ds >r   at@f   at@p 2+ 2p>f   rgba@fds r> al_draw_rectangle ;
+
+: rectf ( w. h. - )
+    at@f   at@p 2+ 2p>f   rgba@fds al_draw_filled_rectangle ;
+
+: pixel ( - )
+    at@f rgba@fds al_draw_pixel ;
+
+: f>c  255e f* 0.5e f+ f>s ;
+
+: f>rgba8 ( f:r f:g f:b f:a - n )
+    f>c
+    f>c 8 << or
+    f>c 16 << or
+    f>c 24 << or ;
+
+: pixel@ ( bmp x y - rgba8 )
+    {: b x y | buf[ 16 ] :}
+    buf[ b x y al_get_pixel
+    buf[ 4f@ f>rgba8 ;
+
+: 2sf!+ ( a f:x f:y - a' )
+    fswap sf!+ sf!+ ;
+
+ec-cell ppenu
+ec-cell ppenv
+
+: uv ( u. v. - )
+    ppenv! ppenu! ;
+
+: vertex ( a - a' )
+    at@f 2sf!+ 
+    0e sf!+
+    ppenu@ p>f sf!+  ppenv@ p>f sf!+
+    ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
+
+: fvertex ( f:x f:y f:u f:v a - a' )
+    {: f: x f: y f: u f: v :}
+    x sf!+  y sf!+
+    0e sf!+
+    u sf!+  v sf!+
+    ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
+
+: vdump ( a n - )
+    for 
+        9 for sf@+ f. loop cr
+    loop ;
+
+: texrectf ( bmp w h - )
+    {: bmp iw ih | f: x f: y f: w f: h f: u f: v vtxs[ 256 ] :}
+    iw ih 2s>f to h to w
+    ppenu@ ppenv@ p>f to v p>f to u 
+    at@f to y to x 
+    vtxs[
+        x y           u v fvertex
+        x y h f+      u v h f+ fvertex
+        x w f+ y h f+ u w f+ v h f+ fvertex
+        x w f+ y      u w f+ v fvertex
+    drop 
+    vtxs[ 0 bmp id>albmp 0 4 ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim 
+    0= abort" al_draw_prim failure" ;
+
+\ \ c: %shape %drawable tr tg tb ta fil ;
+\ c: %shape %actor fil ;
+\ c: %circle %shape r ;
+\ c: %oval %shape rx ry ;
+\ c: %line %shape dx dy ;
+\ c: %rect %shape w h ;
+\ c: %pixel %shape ;
+
+\ \ : tinted  tr @ ppenr! tg @ ppeng! tb @ ppenb! ta @ ppena! ;
+
+\ %circle :: draw  at-me r @ fil @ if circf else circ then ;
+\ %oval :: draw  at-me rx 2@ fil @ if ovalf else oval then ;
+\ %line :: draw  at-me dx 2@ line ;
+\ %rect :: draw  at-me w 2@ fil @ if rectf else rect then ;
+\ %pixel :: draw  at-me pixel ;
+
+\ : *circle  %circle  *add { r ! me } ;
+\ : *circlef *circle { fil on me } ;    
+\ : *oval    %oval  *add { rx 2! me } ;
+\ : *ovalf   *oval { fil on me } ;
+\ : *line    %line  *add { dx 2! me } ;
+\ : *rect    %rect  *add { w 2! me } ;
+\ : *rectf   *rect { fil on me } ;
+\ : *pixel   %pixel  *add ;
+
+\ 0 0 at
+\ create test-shapes
+\ %actor make {
+\     create c1
+\     100 100 at 50. *circlef { 
+\         $00ff00ff rgba8 
+\         create r1
+\         -20 -30 at  64. 32. *rect {
+\             $0000ffff rgba8
+\             3. thick
+\         }
+\     }
+\     create c2
+\     50 50 at 20. *circle { $ff0000ff rgba8 }
+\ }
+
+\ : shapes
+\     work>
+\         step
+\     show> 
+\         test-shapes ndraw ;
+
+\ shapes
