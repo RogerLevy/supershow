@@ -1,114 +1,216 @@
 \ =============================================================================
-\ Filesystem
+\ Filesystem Tools
 \ =============================================================================
 
-: -file ( a len - a len' ) slashes '\' <scan ;
-: ext ( a len - a' len' ) '.' ending ;
+private
+
+create buf 256 allot
+
+: bytes-left ( fid - n )
+    >r r@ file-size throw drop
+    r> file-position throw drop - ;
+
+2 constant ERROR_FILE_NOT_FOUND
+3 constant ERROR_PATH_NOT_FOUND
+
+public
+
+: expanded ( a len - a' len' )
+    over buf 1 - = abort" EXPANDED: Source is buffer!"
+    >pad buf $expand buf count ;
 
 || create buf 256 allot
 : wd@ ( - a len )
     buf 256 buf GetCurrentDirectory ;
 
-: bytes-left  ( id - n )
-    >r r@ file-size abort" BYTES-LEFT : Get file size error" drop
-    r> file-position abort" BYTES-LEFT : Get file position error" drop
-    - ;
+\ =============================================================================
+\ Path manipulation
+\ =============================================================================
 
-|| : expanded ( a len - a' len' ) 
-    over buf 1 + = abort" EXPANDED : Source string is the buffer!"
-    >pad buf $expand  buf count ;
+: fname ( a len - a' len' )   \ extract filename from path
+    slashes '\' ending 0 max ;
 
-: file-exists? ( fp len - flag ) 
+: fpath ( a len - a len' )    \ extract directory path (remove filename)
+    slashes '\' <scan ;
+
+: fext ( a len - a' len' )    \ extract extension (including dot)
+    '.' ending ;
+
+: -fext ( a len - a len' )    \ remove extension
+    '.' <scan ;
+
+\ =============================================================================
+\ File queries
+\ =============================================================================
+
+: fexists? ( fp len - flag )
     expanded fileexists? ;
 
-: ?notfound ( fp len - )
-    {: fp len :} 
-    fp len file-exists? not if
-        fp len f" File not found: %s" -1 -rot .abort
-    then ;
-
-: file, ( fn len - )
-    expanded
-    r/o open-file abort" FILE, : File open error"
-    | #1 |
-    here 
-    #1 bytes-left allot
-    #1 bytes-left #1 read-file abort" FILE, : File read error" drop
-    #1 close-file drop 0 , ;
-
-: fsize ( fn len - n )
-    expanded r/o open-file abort" FSIZE : File open error" 
-    dup file-size throw drop swap close-file throw ;
-
-: dir-exists? ( a n - f )
+: dir-exists? ( fp len - flag )
     >zpad GetFileAttributes -1 <> ;
 
-: find-dat-path ( a n - a n )
-    s" dat" dir-exists? if s" " else s" ..\" then f" %sdat\%s" ;
+: fsize ( fp len - n )
+    {: fp len :}
+    fp len expanded r/o open-file ?dup failed? if
+        dup fp len .error throw
+    then
+    dup file-size throw drop
+    swap close-file throw ;
 
-extern int SHCreateDirectoryExA( void * hwnd, void * zpath, void * psa );
+\ =============================================================================
+\ Directory creation
+\ =============================================================================
+
+extern int SHCreateDirectoryExA( void* hwnd, void* zpath, void* psa );
+80 constant ERROR_FILE_EXISTS
+183 constant ERROR_ALREADY_EXISTS
+
 : ensure-dir ( fp len - )
     {: | err zstr[ 256 ] :}
     normalize zstr[ zplace
     0 zstr[ 0 SHCreateDirectoryExA to err
+    err 0= if
+        zstr[ zcount f" Created directory: %s" .info exit
+    then
     err ERROR_FILE_EXISTS =
-    err ERROR_ALREADY_EXISTS = or not 
-    err 0<> and if
-        zstr[ zcount f" Error creating directory: %s" -1 -rot .abort 
+    err ERROR_ALREADY_EXISTS = or if exit then
+    \ Real error
+    err zstr[ zcount .error
+    err throw ;
+
+\ =============================================================================
+\ File deletion
+\ =============================================================================
+
+: ?fdelete ( fp len - ior )
+    {: fp len :}
+    fp len expanded delete-file
+    dup ERROR_FILE_NOT_FOUND = if drop 0 exit then  \ not-found is ok
+    dup failed? if dup fp len .error else fp len f" Deleted: %s" .info then ;
+
+: fdelete ( fp len - )
+    ?fdelete ?dup failed? if throw then ;
+
+\ =============================================================================
+\ File renaming
+\ =============================================================================
+
+: frename ( fp len newname len - )
+    {: fp fplen newname newlen :}
+    newname newlen expanded 2swap fp fplen expanded 2swap
+    rename-file ?dup failed? if
+        dup fp fplen .error throw
+    then
+    newname newlen fp fplen f" Renamed: %s -> %s" .info ;
+
+\ =============================================================================
+\ File writing
+\ =============================================================================
+
+: (fwrite) ( src len fp len - )
+    {: src slen fp fplen | fid :}
+    fp fplen expanded w/o create-file ?dup failed? if
+        dup fp fplen .error throw
+    then to fid
+    src slen fid write-file ?dup failed? if
+        fid close-file drop
+        dup fp fplen .error throw
+    then
+    fid close-file drop
+    fp fplen f" Wrote: %s" .info ;
+
+: fwrite ( src len fp len - )
+    (fwrite) ;
+
+: fwrite! ( src len fp len - )  \ create dir if path not exist
+    2dup fpath ensure-dir
+    (fwrite) ;
+
+: (fappend) ( src len fp len - )
+    {: src slen fp fplen | fid :}
+    fp fplen fexists? if
+        fp fplen expanded w/o open-file
     else
-        err 0= if
-            zstr[ zcount f" Created directory: %s" type cr
-        then
-    then ;
+        fp fplen expanded w/o create-file
+    then 
+    ?dup failed? if
+        dup fp fplen .error throw
+    then
+    to fid
+    fid file-size throw fid reposition-file throw  \ seek to end
+    src slen fid write-file ?dup failed? if
+        fid close-file drop
+        dup fp fplen .error throw
+    then
+    fid close-file drop
+    fp fplen f" Appended: %s" .info ;
 
-|| 0 value #1
-: write{ w/o create-file abort" File create error" to #1 ;
-: data, #1 write-file abort" File write error" ;
-: line, #1 write-line abort" File write error" ;
-: nl,  s" " line, ;
-: write} #1 close-file drop ;
+: fappend ( src len fp len - )  \ create file if not exist
+    (fappend) ;
 
-: write ( src len path len - )
-\    2dup file-exists? if 2dup delete-file throw then
-    expanded
-    2dup w/o create-file if drop f" File create error: %s" -1 -rot .abort then 
-    >r
-    f" File write: %s" type cr
-    r@ write-file abort" WRITE : File write error"
-    r> close-file drop ;
+: fappend! ( src len fp len - )  \ create dir if path not exist
+    2dup fpath ensure-dir
+    (fappend) ;
 
-: read ( dest len path len - )
-    expanded
-    2dup r/o open-file if drop f" File open error: %s" -1 -rot .abort then
-    >r
-    f" File read: %s" type cr
-    ( dest len ) r@ file-size drop drop min
-    r@ read-file nip abort" READ : File read error"
-    r> close-file drop ;
+\ =============================================================================
+\ File reading
+\ =============================================================================
 
-: _?read ( dest len path len - )
-    expanded
-    2dup r/o open-file throw >r
-    f" File read: %s" type cr
-    ( dest len ) r@ file-size drop drop min
-    r@ read-file nip throw
-    r> close-file drop ;
+: (fread) ( fp len - a len ior )
+    {: fp len | mem size fid :}
+    fp len expanded r/o open-file ?dup failed? if
+        0 0 rot exit
+    then to fid
+    fid file-size ?dup failed? if
+        fid close-file drop
+        0 0 rot exit
+    then drop to size
+    size allocate ?dup failed? if
+        fid close-file drop
+        0 0 rot exit
+    then to mem
+    mem size fid read-file ?dup failed? if
+        mem free drop fid close-file drop
+        0 0 rot exit
+    then drop
+    fid close-file drop
+    mem size 0 ;
 
-: ?read ( dest len path len - )
-    ['] _?read catch if 2drop 2drop then ;
+: fread ( ... fp len xt - ... ) ( a len - )
+    {: fp len xt | mem :}
+    fp len (fread) ?dup failed? if
+        dup fp len .error throw
+    then
+    fp len f" Read: %s" .info
+    over to mem
+    xt execute
+    mem free drop ;
 
-: load-file ( fn len - a len ) 
-    \ returns allocated memory that has to be freed
-    {: fn len | mem size :}
-    fn len f" LOAD-FILE %s" type cr
-    fn len fsize to size 
-    size allocate throw to mem
-    mem size fn len read 
-    mem size ;
+: ?fread ( ... fp len xt - ... ior ) ( a len - )
+    {: fp len xt | mem :}
+    fp len (fread) ?dup failed? if
+        nip nip exit
+    then
+    over to mem
+    xt execute
+    mem free drop 0 ;
 
-variable dump#
-: dumpsys
-    s" dumps" ensure-dir
-    debug here over - 
-    dump# @ f" dumps/dump%03n.bin" write 
-    1 dump# +! ;
+\ =============================================================================
+\ Dictionary compilation (compile-time)
+\ =============================================================================
+
+redef : slurp ( fp len - )
+    {: fp len | fid :}
+    fp len expanded
+    r/o open-file ?dup failed? if
+        dup fp len .error throw
+    then
+    to fid
+    here
+    fid bytes-left dup allot
+    fid read-file throw drop
+    fid close-file drop
+    fp len f" Slurped: %s" .info ;
+
+: lslurp ( fp len - lstr )
+    here -rot 2dup fsize dup , , slurp ;
