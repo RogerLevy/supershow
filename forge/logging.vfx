@@ -10,6 +10,11 @@ create logfile$ 256 allot&erase
 variable hlog  0 hlog !
 variable #errors
 
+\ Log buffer for batching writes
+65536 constant /logbuf
+create logbuf /logbuf allot&erase
+variable logbuf#  0 logbuf# !
+
 \ Timestamp generation with separate buffers
 cstring timestamp-buf$
 cstring datestamp-buf$
@@ -27,12 +32,14 @@ create systime /SYSTEMTIME allot&erase
 \ 12: wSecond (WORD)
 \ 14: wMilliseconds (WORD)
 
-: timestamp ( - a c )
+: update-timestamp ( - )
     systime GetLocalTime
     systime 12 + w@                 \ seconds
     systime 10 + w@                 \ minutes
     systime 8 + w@                  \ hours
-    f" %02n:%02n:%02n " timestamp-buf$ place
+    f" %02n:%02n:%02n " timestamp-buf$ place ;
+
+: timestamp ( - a c )
     timestamp-buf$ count ;
 
 : filetimestamp ( - a c )
@@ -42,7 +49,6 @@ create systime /SYSTEMTIME allot&erase
     systime 8 + w@                  \ hours
     f" %02n-%02n-%02n" timestamp-buf$ place
     timestamp-buf$ count ;
-
 
 : datestamp ( - a c )
     systime GetLocalTime
@@ -87,16 +93,28 @@ create systime /SYSTEMTIME allot&erase
 
 \ Log writing
 create crlf 13 c, 10 c,
-variable last-cycle-time
-1000 constant cycle-interval  \ 1 second in milliseconds
+variable last-flush-time
+1000 constant flush-interval  \ 1 second in milliseconds
+
+: +logbuf ( a c - )
+    \ Append to log buffer, silently truncate if full
+    dup logbuf# @ + /logbuf > if 2drop exit then
+    logbuf logbuf# @ + swap dup logbuf# +! move ;
+
+: flush-logbuf ( - )
+    logbuf# @ 0= if exit then
+    open-log not if exit then
+    logbuf logbuf# @ hlog @ write-file drop
+    0 logbuf# ! ;
 
 : ?flush-log ( - )
     debug @ -exit
-    GetTickCount dup 
-    last-cycle-time @ -
-    cycle-interval >= if
-        last-cycle-time !
-        hlog @ flush-file drop
+    GetTickCount dup
+    last-flush-time @ -
+    flush-interval >= if
+        last-flush-time !
+        flush-logbuf
+        update-timestamp
     else drop then ;
 
 \ Error formatting
@@ -182,18 +200,18 @@ $1200 constant FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS  \ FROM_SYSTEM | IGNORE
 public
 
 \ Write to both console and file
- : log ( a c - )
+: log ( a c - )
     ?flush-log
     2dup type cr                    \ console
-    open-log not if 2drop exit then
-    timestamp hlog @ write-file drop
-    hlog @ write-file drop
-    crlf 2 hlog @ write-file drop ;
-
+    timestamp +logbuf               \ buffer timestamp
+    +logbuf                         \ buffer message
+    crlf 2 +logbuf ;                \ buffer newline
 
 \ Initialization
 : init-logging ( - )
     0 #errors !
+    GetTickCount last-flush-time !
+    update-timestamp
     s" === Logging Session Started ===" log ;
 
 \ Main logging interface
@@ -211,10 +229,14 @@ public
     debug @ not if 2drop exit then
     f" [DEBUG] %s" log ;
 
+: flush-log ( - )
+    flush-logbuf ;
+
 \ Cleanup
 : shutdown-logging ( - )
     #errors @
     f" === Session ended with %n errors ===" log
+    flush-logbuf
     close-log ;
 
 \ Hooks
