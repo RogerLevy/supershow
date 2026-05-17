@@ -1,26 +1,31 @@
 \ ------------------------------------------------------------------------------
 \ Cell-counted strings
+\ max , size , data ...
 \ ------------------------------------------------------------------------------
 
 : lcount ( lstr - addr len )
-    dup cell+ swap @ ;
+    cell+ dup cell+ swap @ ;
 
 : lplace ( addr len lstr - )
-    2dup ! cell+ swap move ;
+    cell+ 2dup ! cell+ swap move ;
 
 : lappend ( addr len lstr - )
-    >r
+    cell+ >r
     r@ cell+ r@ @ +  ( addr len dest )
     over >r swap move r>
     r@ @ + r> ! ;
 
-: lslurp ( fn-a fn-len - l$ )
-    here -rot  2dup fsize , file, ;
-
 : l$,  ( a len - )
-    \ here -rot  
-    dup cell+ allot here lplace 
-    ; \ drop ;
+    dup cell+ dup , allot here lplace ;
 
-: l$@+ ( a - a' l$ len - )
-    lcount 2dup + -rot ;
+: l$@+ ( a - a' a'' len )
+    lcount 2dup cell+ + -rot ;
+
+: lmaxsize ( lstr - n )
+    @ ;
+
+: lmaxsize! ( n lstr - )
+    ! ;
+
+: lsize ( lstr - n )
+    cell+ @ ;

@@ -1,0 +1,224 @@
+\ ------------------------------------------------------------------------------
+\ Error Logging System
+\  Writes timestamped messages to console and logs\ subdirectory
+\ ------------------------------------------------------------------------------
+
+private
+
+\ Log file management
+create logfile$ 256 allot&erase
+variable hlog  0 hlog !
+variable #errors
+
+\ Timestamp generation with separate buffers
+cstring timestamp-buf$
+cstring datestamp-buf$
+
+\ GetSystemTime stuff
+16 constant /SYSTEMTIME
+create systime /SYSTEMTIME allot&erase
+\ SYSTEMTIME structure offsets:
+\ 0: wYear (WORD)
+\ 2: wMonth (WORD)
+\ 4: wDayOfWeek (WORD)
+\ 6: wDay (WORD)
+\ 8: wHour (WORD)
+\ 10: wMinute (WORD)
+\ 12: wSecond (WORD)
+\ 14: wMilliseconds (WORD)
+
+: timestamp ( - a c )
+    systime GetLocalTime
+    systime 12 + w@                 \ seconds
+    systime 10 + w@                 \ minutes
+    systime 8 + w@                  \ hours
+    f" %02n:%02n:%02n " timestamp-buf$ place
+    timestamp-buf$ count ;
+
+: filetimestamp ( - a c )
+    systime GetLocalTime
+    systime 12 + w@                 \ seconds
+    systime 10 + w@                 \ minutes
+    systime 8 + w@                  \ hours
+    f" %02n-%02n-%02n" timestamp-buf$ place
+    timestamp-buf$ count ;
+
+
+: datestamp ( - a c )
+    systime GetLocalTime
+    systime 6 + w@                  \ day
+    systime 2 + w@                  \ month
+    systime w@                      \ year
+    f" %04n-%02n-%02n" datestamp-buf$ place
+    datestamp-buf$ count ;
+
+|| : dir-exists? ( fp len - flag )
+    >zpad GetFileAttributes -1 <> ;
+
+\ Directory and file operations
+: ensure-logs\ ( - )
+    s" logs" dir-exists? ?exit
+    s" logs" >zpad 0 CreateDirectory drop ;
+
+: generate-logfilename ( - a c )
+    filetimestamp datestamp f" logs\%s_%s_session.log" ;
+
+: open-log ( - f )
+    hlog @ if
+        \ File already open
+        true exit
+    then
+    ensure-logs\
+    generate-logfilename logfile$ place
+    logfile$ count w/o open-file if
+        drop
+        \ File doesn't exist, create it
+        logfile$ count w/o create-file if
+            ( 0 ) exit  \ Failed to create
+        then
+    then
+    hlog !
+    true ;
+
+: close-log ( - )
+    hlog @ -exit
+    hlog @ close-file drop
+    0 hlog ! ;
+
+\ Log writing
+create crlf 13 c, 10 c,
+variable last-cycle-time
+1000 constant cycle-interval  \ 1 second in milliseconds
+
+: ?flush-log ( - )
+    debug @ -exit
+    GetTickCount dup 
+    last-cycle-time @ -
+    cycle-interval >= if
+        last-cycle-time !
+        hlog @ flush-file drop
+    else drop then ;
+
+\ Error formatting
+create error-buf 512 allot&erase
+
+\ Windows error messages via FormatMessageA
+extern DWORD FormatMessageA( DWORD flags, void* source, DWORD msgid, DWORD langid, void* buf, DWORD size, void* args );
+$1200 constant FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS  \ FROM_SYSTEM | IGNORE_INSERTS
+
+: os-error>string ( n - a c )
+    FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS 0 rot 0 error-buf 511 0 FormatMessageA
+    ?dup if
+        error-buf swap
+        \ trim trailing CRLF
+        begin dup 0> while
+            2dup + 1- c@ dup 13 = swap 10 = or if 1- else exit then
+        repeat
+    else
+        drop s" Unknown OS error"
+    then ;
+
+: ans-error>string ( n - a c )
+    case
+        -1 of s" ABORT" endof
+        -2 of s\" ABORT\"" endof
+        -3 of s" STACK_OVERFLOW" endof
+        -4 of s" STACK_UNDERFLOW" endof
+        -5 of s" RETURN_STACK_OVERFLOW" endof
+        -13 of s" UNDEFINED_WORD" endof
+        -14 of s" COMPILE_ONLY_WORD" endof
+        -15 of s" INVALID_FORGET" endof
+        -16 of s" ATTEMPT_TO_USE_ZERO_LENGTH_STRING" endof
+        -17 of s" PICTURED_NUMERIC_OUTPUT_STRING_OVERFLOW" endof
+        -18 of s" PARSED_STRING_OVERFLOW" endof
+        -19 of s" DEFINITION_NAME_TOO_LONG" endof
+        -20 of s" WRITE_TO_READ_ONLY_LOCATION" endof
+        -21 of s" UNSUPPORTED_OPERATION" endof
+        -22 of s" CONTROL_STRUCTURE_MISMATCH" endof
+        -23 of s" ADDRESS_ALIGNMENT_EXCEPTION" endof
+        -24 of s" INVALID_NUMERIC_ARGUMENT" endof
+        -25 of s" RETURN_STACK_IMBALANCE" endof
+        -26 of s" LOOP_PARAMETERS_UNAVAILABLE" endof
+        -27 of s" INVALID_RECURSION" endof
+        -28 of s" USER_INTERRUPT" endof
+        -29 of s" COMPILER_NESTING" endof
+        -30 of s" OBSOLESCENT_FEATURE" endof
+        -31 of s" BODY_NOT_AVAILABLE" endof
+        -32 of s" INVALID_NAME_ARGUMENT" endof
+        -33 of s" BLOCK_READ_EXCEPTION" endof
+        -34 of s" BLOCK_WRITE_EXCEPTION" endof
+        -35 of s" INVALID_BLOCK_NUMBER" endof
+        -36 of s" INVALID_FILE_POSITION" endof
+        -37 of s" FILE_IO_EXCEPTION" endof
+        -38 of s" NON_EXISTENT_FILE" endof
+        -39 of s" UNEXPECTED_END_OF_FILE" endof
+        -40 of s" INVALID_BASE_FOR_FLOATING_POINT_CONVERSION" endof
+        -41 of s" LOSS_OF_PRECISION" endof
+        -42 of s" FLOATING_POINT_DIVIDE_BY_ZERO" endof
+        -43 of s" FLOATING_POINT_RESULT_OUT_OF_RANGE" endof
+        -44 of s" FLOATING_POINT_STACK_OVERFLOW" endof
+        -45 of s" FLOATING_POINT_STACK_UNDERFLOW" endof
+        -46 of s" FLOATING_POINT_INVALID_ARGUMENT" endof
+        -47 of s" COMPILATION_WORD_LIST_DELETED" endof
+        -48 of s" INVALID_POSTPONE" endof
+        -49 of s" SEARCH_ORDER_OVERFLOW" endof
+        -50 of s" SEARCH_ORDER_UNDERFLOW" endof
+        -51 of s" COMPILATION_WORD_LIST_CHANGED" endof
+        -52 of s" CONTROL_FLOW_STACK_OVERFLOW" endof
+        -53 of s" EXCEPTION_STACK_OVERFLOW" endof
+        -54 of s" FLOATING_POINT_UNDERFLOW" endof
+        -55 of s" FLOATING_POINT_UNIDENTIFIED_FAULT" endof
+        -56 of s" QUIT" endof
+        -57 of s" EXCEPTION_IN_SENDING_OR_RECEIVING_CHARACTER" endof
+        -58 of s" [IF], [ELSE], OR [THEN] EXCEPTION" endof
+        \ Default case for unknown ANS errors
+        dup f" UNKNOWN_ANS_ERROR_%n" error-buf place
+        error-buf count
+    endcase ;
+
+: error>string ( n - a c )
+    dup 0< if ans-error>string else os-error>string then ;
+
+public
+
+\ Write to both console and file
+ : log ( a c - )
+    ?flush-log
+    2dup type cr                    \ console
+    open-log not if 2drop exit then
+    timestamp hlog @ write-file drop
+    hlog @ write-file drop
+    crlf 2 hlog @ write-file drop ;
+
+
+\ Initialization
+: init-logging ( - )
+    0 #errors !
+    s" === Logging Session Started ===" log ;
+
+\ Main logging interface
+: .error ( n a c - )
+    1 #errors +!
+    rot dup error>string rot f" [ERROR %n %s] %s" log ;
+
+: .warn ( a c - )
+    f" [WARN] %s" log ;
+
+: .info ( a c - )
+    f" [INFO] %s" log ;
+
+: .debug ( a c - )
+    debug @ not if 2drop exit then
+    f" [DEBUG] %s" log ;
+
+\ Cleanup
+: shutdown-logging ( - )
+    #errors @
+    f" === Session ended with %n errors ===" log
+    close-log ;
+
+\ Hooks
+' shutdown-logging atexit
+
+
+init-logging
