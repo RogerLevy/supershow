@@ -3,6 +3,49 @@
 \ ------------------------------------------------------------------------------
 
 : e -1 abort" e is not defined" ;
+: failed? ; immediate
+: redef ( - )
+    warnings? >r postpone -warnings 0 parse evaluate r> to warnings? ;
+
+\ =============================================================================
+\ File error fixes (VFX returns -1 instead of actual OS error)
+\ =============================================================================
+
+extern DWORD GetLastError();
+: ?os-error ( n - n' ) if GetLastError else 0 then ;
+
+redef : create-file ( c-addr u fam -- fileid ior )
+    create-file ?os-error ;
+
+redef : open-file ( c-addr u fam -- fileid ior )
+    open-file ?os-error ;
+
+redef : close-file ( fileid -- ior )
+    close-file ?os-error ;
+
+redef : read-file ( c-addr u1 fileid -- u2 ior )
+    read-file ?os-error ;
+
+redef : write-file ( c-addr u fileid -- ior )
+    write-file ?os-error ;
+
+redef : delete-file ( c-addr u -- ior )
+    delete-file ?os-error ;
+
+redef : rename-file ( c-addr1 u1 c-addr2 u2 -- ior )
+    rename-file ?os-error ;
+
+redef : resize-file ( ud fileid -- ior )
+    resize-file ?os-error ;
+
+redef : reposition-file ( ud fileid -- ior )
+    reposition-file ?os-error ;
+
+redef : file-size ( fileid -- ud ior )
+    file-size ?os-error ;
+
+redef : file-position ( fileid -- ud ior )
+    file-position ?os-error ;
 
 synonym aka synonym
 aka not 0=
@@ -382,9 +425,6 @@ variable sosp   search-order-stack sosp ! \ object stack pointer
     does> 
         lvcount @ abort" Can't use locals inside continuations."
         @ compile, ;
-
-: redef ( - )
-    warnings? >r postpone -warnings 0 parse evaluate r> to warnings? ;
 
 errdef err_redefined "Word redefined"
 

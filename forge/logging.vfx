@@ -18,6 +18,7 @@ variable logbuf#  0 logbuf# !
 \ Timestamp generation with separate buffers
 cstring timestamp-buf$
 cstring datestamp-buf$
+cstring filetimestamp-buf$
 
 \ GetSystemTime stuff
 16 constant /SYSTEMTIME
@@ -47,8 +48,8 @@ create systime /SYSTEMTIME allot&erase
     systime 12 + w@                 \ seconds
     systime 10 + w@                 \ minutes
     systime 8 + w@                  \ hours
-    f" %02n-%02n-%02n" timestamp-buf$ place
-    timestamp-buf$ count ;
+    f" %02n-%02n-%02n" filetimestamp-buf$ place
+    filetimestamp-buf$ count ;
 
 : datestamp ( - a c )
     systime GetLocalTime
@@ -75,12 +76,11 @@ create systime /SYSTEMTIME allot&erase
         true exit
     then
     ensure-logs\
-    generate-logfilename logfile$ place
-    logfile$ count w/o open-file if
+    logfile$ count w/o open-file failed? if
         drop
         \ File doesn't exist, create it
-        logfile$ count w/o create-file if
-            ( 0 ) exit  \ Failed to create
+        logfile$ count w/o create-file failed? if
+            drop 0 exit  \ Failed to create
         then
     then
     hlog !
@@ -190,8 +190,7 @@ $1200 constant FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS  \ FROM_SYSTEM | IGNORE
         -57 of s" EXCEPTION_IN_SENDING_OR_RECEIVING_CHARACTER" endof
         -58 of s" [IF], [ELSE], OR [THEN] EXCEPTION" endof
         \ Default case for unknown ANS errors
-        dup f" UNKNOWN_ANS_ERROR_%n" error-buf place
-        error-buf count
+        dup f" UNKNOWN_ANS_ERROR_%n"
     endcase ;
 
 : error>string ( n - a c )
@@ -201,23 +200,25 @@ public
 
 \ Write to both console and file
 : log ( a c - )
-    ?flush-log
-    2dup type cr                    \ console
+    2dup type cr                    \ console first, before any f" reuse
     timestamp +logbuf               \ buffer timestamp
-    +logbuf                         \ buffer message
-    crlf 2 +logbuf ;                \ buffer newline
+    +logbuf                         \ buffer message (now safe in logbuf)
+    crlf 2 +logbuf
+    ?flush-log ;
 
 \ Initialization
 : init-logging ( - )
     0 #errors !
     GetTickCount last-flush-time !
     update-timestamp
+    generate-logfilename logfile$ place
     s" === Logging Session Started ===" log ;
 
 \ Main logging interface
 : .error ( n a c - )
     1 #errors +!
-    rot dup error>string rot f" [ERROR %n %s] %s" log ;
+    rot >r
+    r@ error>string r> f" [ERROR %n %s] %s" log ;
 
 : .warn ( a c - )
     f" [WARN] %s" log ;
