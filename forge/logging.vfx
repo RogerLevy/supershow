@@ -196,6 +196,16 @@ $1200 constant FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS  \ FROM_SYSTEM | IGNORE
 : error>string ( n - a c )
     dup 0< if ans-error>string else os-error>string then ;
 
+: ip>str ( a - a' c' )
+    {: a | name[ 256 ] :}
+    a body> inForth? if
+        a ip>nfa dup count name[ place
+        a swap name> -
+        ?dup if name[ count f" %s+%n" else name[ count f" %s" then
+    else
+        a f" %n"
+    then ;
+
 public
 
 \ Write to both console and file
@@ -216,9 +226,12 @@ public
 
 \ Main logging interface
 : .error ( n a c - )
+    r@ {: n a c caller :}
     1 #errors +!
-    rot >r
-    r@ error>string r> f" [ERROR %n %s] %s" log ;
+    a c
+    n error>string 
+    caller ip>str 
+    n f" [ERROR %n in %s %s] %s" log ;
 
 : .warn ( a c - )
     f" [WARN] %s" log ;
@@ -228,7 +241,8 @@ public
 
 : .debug ( a c - )
     debug @ not if 2drop exit then
-    f" [DEBUG] %s" log ;
+    r@ ip>str
+    f" [DEBUG in %s] %s" log ;
 
 : flush-log ( - )
     flush-logbuf ;
