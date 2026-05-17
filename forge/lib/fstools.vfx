@@ -19,7 +19,6 @@ public
     over buf 1 - = abort" EXPANDED: Source is buffer!"
     >pad buf $expand buf count ;
 
-|| create buf 256 allot
 : wd@ ( - a len )
     buf 256 buf GetCurrentDirectory ;
 

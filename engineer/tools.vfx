@@ -17,6 +17,12 @@
 : ld-again ( - )
     ld-action$ count >ld ;
 
+|| : ?notfound ( fp len - )
+    {: fp len :} 
+    fp len file-exists? not if
+        fp len f" File not found: %s" -1 -rot .abort
+    then ;
+
 : ld ( - <namespec> )
     \ Usage: 
     \ - ld projectname
