@@ -1,0 +1,85 @@
+\ strout2.vfx - String output capture with dynamic allocation
+\ API:
+\   strout ( xt - )       Redirect output, execute xt, free buffer
+\   str@  ( - a len )     Inside xt: get captured output as string
+
+|| aligned-page strout-stack
+|| variable ssp   strout-stack ssp !
+|| : ss-push ( ? - ) cell ssp c+!  ssp @ ! ;
+|| : ss-pop ( - ? )  ssp @ @  cell negate ssp c+! ;
+
+|| : lbuf ( - lstring ) ssp @ @ ;
+|| : lbuf! ( lstring - ) ssp @ ! ;
+
+|| : ?grow ( needed - )
+    lbuf lmaxsize > if
+        lbuf lmaxsize 2 * dup 2 cells + lbuf swap resize throw lbuf!
+        lbuf lmaxsize!
+    then ;
+
+\ --- I/O device vectors ---
+
+|| variable cbuf
+|| : Emit-string ( c ? - )
+    drop 
+    cbuf c!
+    lbuf lsize 1 + ?grow
+    cbuf 1 lbuf lappend ;
+
+|| : Type-string ( a len ? - )
+    drop
+    lbuf lsize over + ?grow
+    lbuf lappend ;
+
+|| : CR-string ( ? - )
+    drop
+    lbuf lsize 1 + ?grow
+    10 cbuf c!  cbuf 1 lbuf lappend ;
+
+|| create string-vectors
+    ' drop ,          \ 0
+    ' drop ,          \ 1
+    ' drop ,          \ 2
+    ' drop ,          \ 3
+    ' drop ,          \ 4
+    ' drop ,          \ 5
+    ' drop ,          \ 6
+    ' drop ,          \ 7
+    ' drop ,          \ 8
+    ' Emit-string ,   \ 9  - emit
+    ' drop ,          \ 10
+    ' Type-string ,   \ 11 - type
+    ' CR-string ,     \ 12 - cr
+    ' drop ,          \ 13
+    ' drop ,          \ 14
+    ' drop ,          \ 15
+    ' drop ,          \ 16
+    ' drop ,          \ 17
+    ' drop ,          \ 18
+    ' drop ,          \ 19
+    ' drop ,          \ 20
+    ' drop ,          \ 21
+    ' drop ,          \ 22
+    ' drop ,          \ 23
+    ' drop ,          \ 24
+
+|| create strdev   0 , string-vectors ,
+
+\ --- Main API ---
+
+: strout ( xt - )
+    256 allocate throw            ( xt lstr )
+    >r                            ( xt R: lstr )
+    256 2 cells - r@ lmaxsize!    \ set initial maxsize
+    0 r@ lsize!                   \ set size = 0
+
+    op-handle @ ss-push           \ save current output device
+    r> ss-push                    \ push lstring onto stack
+    strdev op-handle !            \ redirect to string capture
+    catch                         ( error? )
+    ss-pop free throw             \ discard and free buffer
+    ss-pop op-handle !            \ restore output device     
+    throw ;
+
+: str@ ( - a len )
+    lbuf lcount ;

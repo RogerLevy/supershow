@@ -29,3 +29,6 @@
 
 : lsize ( lstr - n )
     cell+ @ ;
+
+: lsize! ( lstr - n )
+    cell+ ! ;

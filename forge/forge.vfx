@@ -32,7 +32,7 @@ include %idir%/lib/lstring.vfx    \ Cell-counted strings
 
     \ include %idir%/lib/gamemath.vfx   \ 2D vectors and game math
 
-\ include %idir%/lib/strout.vfx     \ Capture console output
+include %idir%/lib/strout2.vfx     \ Capture console output
 
 \ include %idir%/lib/counter.vfx    \ Required by mersenne for seeding
 \ include %idir%/lib/mersenne.vfx   \ RNG
