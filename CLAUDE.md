@@ -83,13 +83,13 @@ This is a custom system developed by the user specifically for their game develo
 ### Testing VFX Code
 ```bash
 # Run VFX commands with 5-second timeout
-(echo "command1"; echo "command2"; echo "bye"; sleep 1) | timeout 5 vfxlin include engineer/vfxcore2.vfx
+(echo "command1"; echo "command2"; echo "bye"; sleep 1) | timeout 5 vfxlin include forge/forge.vfx
 
 # Example: Basic arithmetic test  
-(echo "1 2 + . bye"; sleep 1) | timeout 5 vfxlin include engineer/vfxcore2.vfx
+(echo "1 2 + . bye"; sleep 1) | timeout 5 vfxlin include forge/forge.vfx
 
 # Load and test files
-(echo "include test/test-as.vfx"; echo "bye"; sleep 1) | timeout 5 vfxlin include engineer/vfxcore2.vfx
+(echo "include test/test-as.vfx"; echo "bye"; sleep 1) | timeout 5 vfxlin include forge/forge.vfx
 ```
 
 ### Git Operations

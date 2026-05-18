@@ -1,5 +1,5 @@
 \ debug @ [if]
-\ See vfxcore2.vfx for why it's debug-only
+\ Debug-only build until turnkey system is updated (see forge/forge.vfx)
     library: textmode_renderer_debug.dll
 \ [else]
     \ library: textmode_renderer.dll
