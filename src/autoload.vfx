@@ -43,7 +43,7 @@ class: %bitmap
         does> >bmp @ ;
 
     : _load-albmp ( - )
-        me @data memfile@ dup
+        this @data memfile@ dup
             0 al_load_bitmap_f albmp !
         -memfile ;
 
@@ -54,13 +54,13 @@ class: %bitmap
         2dup -path %bitmap asset does-bitmap { 
             ( fp len ) embed
             _load-albmp 
-            me add-bitmap bmp !
+            this add-bitmap bmp !
         } ;
     
     aka bitmap: bitmap
 
     :: on-startup ( - )
-        ." Loading bitmap " me .name cr
+        ." Loading bitmap " this .name cr
         _load-albmp ;
 class;
 [then]
@@ -80,8 +80,8 @@ class: %tileset
     aka tileset: tileset-from
 
     :: on-startup ( - )
-        ." Slicing tileset " me .name cr 
-        me update-tileset ;
+        ." Slicing tileset " this .name cr 
+        this update-tileset ;
 class;
 [then]
 
@@ -97,7 +97,7 @@ class: %sample
         does> -> id @ sound ;
 
     : _load-alsmp ( - alsmp )
-        me @data memfile@ dup
+        this @data memfile@ dup
             ident count >zpad al_load_sample_f alsmp !
         -memfile ;
 
@@ -114,7 +114,7 @@ class: %sample
         } ;
 
     :: on-startup ( - )
-        ." Loading sample " me .name cr
+        ." Loading sample " this .name cr
         _load-alsmp 
         alsmp @ id @ set-sample ;
 

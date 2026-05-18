@@ -68,7 +68,7 @@ borrow nib2>> prop+
             property0 cla @ >serialize-flag @  if
 
                 \ get the property address in the instance and in the template
-                me property0 prop+ to val-addr
+                this property0 prop+ to val-addr
                 cla @ >template property0 prop+ to tmpl-addr
 
                 cjson property0 ser-property-json 
@@ -89,7 +89,7 @@ borrow nib2>> prop+
             list-next to property0
             property0 cla @ >serialize-flag @  if
                 property0 >zname cjson get-item if
-                    me property0 prop+ to val-addr
+                    this property0 prop+ to val-addr
                     cjson property0 des-property-json
                 then
             then

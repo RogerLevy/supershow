@@ -74,10 +74,10 @@
 : .class ( class - )
     \ Print detailed information about a class
     {
-    me valid-class? not if ." Not a valid class." exit then
+    this valid-class? not if ." Not a valid class." exit then
     
     cr
-    ."     Class: " me body>name type cr
+    ."     Class: " this body>name type cr
     ."     Instance size: " instance-size @ . ." bytes" cr
     ."     Field-space: " field-space-size @ ?dup if . ." bytes" else ." none" then cr
     ."     Mapped space: " next-ofs @ ?dup if . ." bytes" else ." none" then
@@ -87,23 +87,23 @@
     ."     Protocols: (TODO:)" cr \ protocol-list .list
     ."     Dependents: " dependents .list 
     
-    me .traits
-    me .parents
+    this .traits
+    this .parents
     } ;
 
 : .trait ( trait  - )
     \ Print detailed information about a class
     {
-    me valid-trait? not if ." Not a valid trait." exit then
+    this valid-trait? not if ." Not a valid trait." exit then
     
     cr
-    ."     Trait: " me body>name type cr
+    ."     Trait: " this body>name type cr
     ."     Classifier #: " classifier# @ . cr
     ."     Properties: " property-list .list
     ."     Protocols: " protocol-list .list
     ."     Dependents: " dependents .list
     
-    me .parents
+    this .parents
     } ;
 
 

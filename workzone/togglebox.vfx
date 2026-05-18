@@ -17,8 +17,8 @@ class: %togglebox
         \ designing? bolted? and or -exit
         \ opn toggle ;
 
-    || : _toggle  opened? if me close else me open then ;
-    || : ?front   opened? if me dup >parent @ push then ;
+    || : _toggle  opened? if this close else this open then ;
+    || : ?front   opened? if this dup >parent @ push then ;
 
     :: click ( btn - )
         lmb = -exit   _toggle  ?front ;
@@ -42,4 +42,4 @@ class: %togglebox
 class;
 
 : *togglebox ( a len - togglebox )
-    %togglebox make { me text! ( you { rgba8@ } clr ! ) me } ;
+    %togglebox make { this text! ( you { rgba8@ } clr ! ) this } ;

@@ -24,10 +24,10 @@ REQUIRE %idir%/sprites.vfx
 \             ." FILE_ACTION_ADDED" cr
 \             %totem -> dependents list-count for
 \                 list-next {
-\                     changed-file me -> default-dir$ count strin? if
-\                         changed-file '.' ending me -> extension$ count s= if
+\                     changed-file this -> default-dir$ count strin? if
+\                         changed-file '.' ending this -> extension$ count s= if
 \                             ." New file discovered!" cr
-\                             changed-file me manifest o.
+\                             changed-file this manifest o.
 \                         then
 \                     then
 \                 }

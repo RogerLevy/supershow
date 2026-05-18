@@ -102,17 +102,17 @@ class;
 
 %micro :: gather
     en @ -exit
-    ['] gather me each 
+    ['] gather this each 
     val @ abs 0.01 >= if 
-        me _gather 
+        this _gather 
     then ;
 
 %micro :: act 
     en @ -exit
     val @ abs 0.01 >= if
-        me _act
+        this _act
     then
-    ['] act me each ;
+    ['] act this each ;
 
 || 0.05 constant ps
 
@@ -122,7 +122,7 @@ class;
 : decay-gui ( _micro - )    
     [ here ]
     as> 
-        me %micro is? if
+        this %micro is? if
             en @ -exit
             dcy @ 0 1.0 clamp dcy !
             val @ abs 0.001 >= if val @ dcy @ p* val ! else 0 val ! then
@@ -131,7 +131,7 @@ class;
             \ lpul @ pulse- lpul !
             rpul @ pulse- rpul !
         then
-        literal me each ;
+        literal this each ;
 
 : non-decaying  template { 1.0 dcy ! } ;
 
@@ -178,10 +178,10 @@ class;
 : pulse@  upul @ ( dpul @ + ) ( lpul @ + ) rpul @ + 1.0 min ;
 
 || : hint ( element - )
-    {: me | a len :} 
-    me _hint to len to a
+    {: this | a len :} 
+    this _hint to len to a
     len -exit
-    me { at-me }
+    this { at-me }
     5 5 +at 
     black 0.5 ppena! a len print 
     -1 -1 +at
@@ -202,7 +202,7 @@ redef : icon
     icon-color @ val-alpha rgba8 ICON_RADIUS circf  \ inner circle fill
     icon-color @ rgba8 ICON_RADIUS circ             \ inner circle rim
     icon-bmp @ cput 
-    context-menu not if me hint then ;
+    context-menu not if this hint then ;
 
 %micro :: _draw
     icon connectors ;
@@ -218,7 +218,7 @@ class: %origin  %micro derive  non-decaying
 class;
 
 : origin@ ( - origin|0 )
-    me begin dup %origin is? not while >parent @ dup -exit repeat ;
+    this begin dup %origin is? not while >parent @ dup -exit repeat ;
 
 class: %move  %micro derive
     prop ang :fixed <save
@@ -305,7 +305,7 @@ class;
     abspos 50. 50. 2-`` 100. 100.`` box ;
 
 %origin :: _draw  
-    me clickbox 2over 2- 2swap atp black see-thru rectf
+    this clickbox 2over 2- 2swap atp black see-thru rectf
     at-me icon-bmp @ cput
     connectors ;
 
@@ -314,7 +314,7 @@ class;
 %sprite :: _draw
     bmp @ if 
         bmp @ ?flip cput 
-        bmp @ id>bmp >touched @ if e{ me clickbox 2over 2- 2swap atp white 0.25 ppena! rect e} then 
+        bmp @ id>bmp >touched @ if e{ this clickbox 2over 2- 2swap atp white 0.25 ppena! rect e} then 
     else icon then ;
     \ connectors ;
 
@@ -339,17 +339,17 @@ class;
 \ -- Micro rendering -----------------------------------------------------------
 
 %element :: render
-    ['] render me each ;
+    ['] render this each ;
 
 %origin :: render 
-    <at rx 2@ 2>i 2dup +at ['] render me each 2negate +at ;
+    <at rx 2@ 2>i 2dup +at ['] render this each 2negate +at ;
 
 %sprite :: render 
     en @ -exit  
     <at 
     origin@ relpos 2>i 2dup +at 
     bmp @ cput 
-    ['] render me each 
+    ['] render this each 
     2negate +at ;
 
 \ -- Class Logic ------------------------------------------------------
@@ -392,12 +392,12 @@ class;
 %rep :: _gather 
     pdelta val @ abs p* t +! 
     t @ dur @ < ?exit
-    me trigger ;
+    this trigger ;
 
 %timeout :: _gather 
     pdelta val @ abs p* t +! 
     t @ dur @ < ?exit
-    me trigger ;
+    this trigger ;
 
 %sprite :: clickbox ( - x1. y1. x2. y2. )
     bmp @ 0= if abspos -8. -8. 2+ 16. 16. box exit then
@@ -406,7 +406,7 @@ class;
 
 %sprite :: _mousedown ( btn - )
     rmb = -exit
-    using? if me open-context-menu then ;
+    using? if this open-context-menu then ;
 
 %sprite :: _act 
     anm @ -exit
@@ -435,7 +435,7 @@ class;
 %neuron :: _gather
     tst @ ?execute
     val @ abs thr @ < ?exit
-    me trigger ;
+    this trigger ;
 
 %neuron :: _hint ( - a len )
     trg @ if s" T" else s" " then ;
@@ -449,7 +449,7 @@ class;
 
 %rng :: _gather
     noi @ -exit
-    me trigger ;
+    this trigger ;
 
 %rng :: _hint ( - a len )
     noi @ if s" N" else s" " then ;
@@ -466,11 +466,11 @@ defer _delete-micro
     r@ dlremove r> free throw ;
 ' delete-micro is _delete-micro
 
-%micro :: delete  me delete-micro ;
+%micro :: delete  this delete-micro ;
 
 \ -- DSL Syntax ---------------------------------------------------------------
 
-\ || : level  parent @ dup if me swap indexof 1 + then ;
+\ || : level  parent @ dup if this swap indexof 1 + then ;
 \ || : level ( - n )
 \     {: | n :}
 \     0 to n
@@ -482,8 +482,8 @@ defer _delete-micro
 
 : {{ ( micro - )
     { e{
-    \ me .summary ." absolute: " abspos 2p. cr
-    me %origin is? if
+    \ this .summary ." absolute: " abspos 2p. cr
+    this %origin is? if
         0 ICON_SPACING at
         absy ICON_SPACING + to next-y
     else
@@ -492,12 +492,12 @@ defer _delete-micro
     then ;
 
 : }}
-    me %origin is? not >r
+    this %origin is? not >r
     e} }
     r> if ICON_SPACING 0 +at then ;
 
 : *sprite ( bmp - sprite )
-    %sprite  *add { bmp ! me } ;
+    %sprite  *add { bmp ! this } ;
 
 \ -- Micro Context Menus -------------------------------------------------------
 

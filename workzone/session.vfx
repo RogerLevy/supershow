@@ -12,19 +12,19 @@ also cjson2>>
 : asset>json ( asset - json|0 )
     as>
     [defined] %bitmap [if]
-        me %bitmap is? if 
+        this %bitmap is? if 
             srcpath$ count session-relpath f" bitmap %s" 
             >zpad new-string exit 
         then
     [then]
     [defined] %tileset [if]
-        me %tileset is? if 
-            me body>name` tw 2@ swap`` bmp @ id>bmp body>name` f" %s %n %n tileset-from %s" 
+        this %tileset is? if 
+            this body>name` tw 2@ swap`` bmp @ id>bmp body>name` f" %s %n %n tileset-from %s" 
             >zpad new-string exit 
         then 
     [then]
     [defined] %sample [if]
-        me %sample is? if 
+        this %sample is? if 
             srcpath$ count session-relpath f" sample %s" 
             >zpad new-string exit 
         then 

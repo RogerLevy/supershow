@@ -87,9 +87,9 @@ command : as ( obj - )
     0
     actives> 
         bmp @ -exit
-        me editable? -exit
+        this editable? -exit
         mouse 2dup bmpbox overlap? if
-            drop me 
+            drop this 
         then ;
 
 : copy-actor ( obj - obj` )
@@ -122,10 +122,10 @@ command : as ( obj - )
 variable flicker-ctr
 
 : flicker ( - )
-    1 flicker-ctr +!  flicker-ctr @ 1 and ?exit me draw ;
+    1 flicker-ctr +!  flicker-ctr @ 1 and ?exit this draw ;
 
 : sprites ( - )
-    batch> actives> me editable? if me draw else flicker then ;
+    batch> actives> this editable? if this draw else flicker then ;
 
 aka _hold hold     \ shadow system variable
 variable hold      \ new private variable will work with f8 and persist

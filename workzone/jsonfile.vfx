@@ -11,10 +11,10 @@ class: %jsonfile
     prop json :addr
 
     : _load-json ( - )
-        me @data parse-json json ! ;
+        this @data parse-json json ! ;
 
     :: on-startup ( - )
-        ." Loading JSON data " me .name cr
+        ." Loading JSON data " this .name cr
         _load-json ;
 
 class;

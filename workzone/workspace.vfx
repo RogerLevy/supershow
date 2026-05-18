@@ -64,7 +64,7 @@ class;
 : handle-dhud-toggle
     <tilde> pressed? shift? and -exit
     dhud -exit
-    dhud { opened? if me close else me open then } ;
+    dhud { opened? if this close else this open then } ;
 
 : saveas...
     0 z" Save workspace as..." z" *.wsj" save-dialog
@@ -126,14 +126,14 @@ workspace
     default-sticky,
     you { bolted? } ?exit
     you dhud descendant? ?exit
-    you [: abspos me dhud push x 2! ;] s" Desktop Sticky" option
+    you [: abspos this dhud push x 2! ;] s" Desktop Sticky" option
 ;] is sticky,
 
 [:
     dup hud descendant? if
         {
             desktop relpos
-            me desktop push
+            this desktop push
             x 2!
         }
     else 
@@ -157,7 +157,7 @@ redef : switch ( n - )
     pmouse desktop >x 2@ 2- 2>i ;
 
 : tidy 
-    [: [ here ]  { temporary? if me unload then  literal me each } ;] session each ;
+    [: [ here ]  { temporary? if this unload then  literal this each } ;] session each ;
 
 \ -- Instructions---------------------------------------------------------------
 

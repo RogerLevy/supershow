@@ -14,7 +14,7 @@ optimising on
 #max-classifiers 8 / constant /bit-table
 create classifiers #max-classifiers cells allot&erase
 
-0 value me              \ current object
+0 value this              \ current object
 0 value classifier      \ current classifier
 0 value /static         \ next static field offset
 0 value current-property \ property being configured by metadata words
@@ -37,11 +37,11 @@ variable osp   os osp ! \ object stack pointer
 \ ==============================================================================
 
 : my-name ( - a len )
-    me body>name ;
+    this body>name ;
 
 redef : field ( ofs size <name> - n ) ( a - a )
     create 0 , 0 , MAGIC_FIELD , over , +
-    does> 3 cells + @ me + ;
+    does> 3 cells + @ this + ;
 
 0
     cell field cla
@@ -123,19 +123,21 @@ redef : -> ( object <name> - a )
 \ Object scoping
 \ ==============================================================================
 
-redef : { ( object - ) me osp @ !  4 osp c+!  to me ;
-redef : } ( - ) -4 osp c+!  osp @ @ to me ;
+redef : { ( object - ) this osp @ !  4 osp c+!  to this ;
+redef : } ( - ) -4 osp c+!  osp @ @ to this ;
 : you ( - object ) osp @ cell- @ ;
 : that ( - object ) osp @ @ ;
 continuation: as> ( %actor - ) ( - ) swap { ( xt ) execute } ;
 
 : as ( object - )
     \ Bind the given object and switch to its vocabulary if it has one
-    to me
+    to this
     cla @ body>name f" %s/"
     sfind if execute else drop then ;
 
-: me! ( object - ) to me ;
+: this! ( object - ) to this ;
+aka me this
+aka me! this!
 
 \ ==============================================================================
 \ Execution context
@@ -150,8 +152,8 @@ continuation: as> ( %actor - ) ( - ) swap { ( xt ) execute } ;
 0 value s/ec
 256 constant EC_MAX_SIZE
 
-: ecp@ ( - ec ) me >ecp @ ;
-: ecp! ( ec - ) me >ecp ! ;
+: ecp@ ( - ec ) this >ecp @ ;
+: ecp! ( ec - ) this >ecp ! ;
 
 : sentinels,  256 cell/ 0 do $DEADBEEF , loop ;
 
@@ -285,7 +287,7 @@ drop
     {
         /classifier instance-size !
         allocate-classifier-id
-    me }  ;
+    this }  ;
     
 : (init-class) ( - )
     MAGIC_CLASSIFIER magic ! ;
@@ -346,8 +348,8 @@ redef : construct ( ... class addr - )
     swap over >cla !   \ Store class pointer
     ecp@ >r
     {
-        me copy-template
-        r> me -> ecp !
+        this copy-template
+        r> this -> ecp !
         cla @ -> constructor-xt @ ?dup if execute then
     } ;
 
@@ -379,7 +381,7 @@ redef : make ( ... class - object )
 \ Members
 \ ==============================================================================
 
-here to me 0 , rootec , 
+here to this 0 , rootec , 
 
 create %property  %class dmake {
     (add-object-system-trait-bit)
@@ -466,14 +468,14 @@ create %protocol  %class dmake {
     f" Property %s not found in class %s" -1 -rot .abort ;
 
 : does-property 
-    does> me swap ->property ;
+    does> this swap ->property ;
  
 : create-property ( <name> - property ) 
     push-order only forth definitions 
     create %property dmake {
         2 cells allocate-static-offset
         MAGIC_PROPERTY magic !
-    me }     
+    this }     
     s" does-property" evaluate   \ late-bound for easy Oversight integration
     pop-order ;  
     
@@ -502,9 +504,9 @@ create %protocol  %class dmake {
         classifier -> next-ofs @ offset @ classifier + !
         \ Allocate metadata struct and store pointer
         here /property-metadata allot&erase   
-        classifier me -> offset @ + cell+ !
+        classifier this -> offset @ + cell+ !
         ( size ) 
-        dup me classifier >property-size !
+        dup this classifier >property-size !
         classifier -> next-ofs +!
     }
     classifier has-field-space? not if            
@@ -996,7 +998,7 @@ redef : ; ( - )
         does-protocol
         {
             2 cells allocate-static-offset
-        me }
+        this }
     then
     to protocol0
 
@@ -1093,7 +1095,7 @@ redef : ; ( - )
         i dest-class -> can-table test-bit or if
             i cells classifiers + @ { 
                 cla @ %trait = if
-                    dest-class me track-dependent
+                    dest-class this track-dependent
                 then
             }
         then
@@ -1240,7 +1242,7 @@ aka prop property
 
 : .object ( object - )
     dup valid-object? not if .data exit then
-    { cla @ .data  me .data  me . } ;
+    { cla @ .data  this .data  this . } ;
 
 : inspect-property ( property val-addr classifier - )
     {: property val-addr classifier :} 
@@ -1265,7 +1267,7 @@ aka prop property
     {
         cla @ -> property-list list-count for
             list-next           \ get property
-            me over prop+   \ get field address
+            this over prop+   \ get field address
             cla @ 
             ."     " inspect-property
         loop drop 
@@ -1282,7 +1284,7 @@ aka prop property
 
 %object :: .summary ( - )
     \ Default : show class, name, and address
-    ." ( " me .object ." ) " ;
+    ." ( " this .object ." ) " ;
 
 aligned-page estack
 variable errsp   estack errsp ! 
@@ -1296,8 +1298,8 @@ variable errsp   estack errsp !
 : restore-ds ( throwcode - )
     >r s0 @ sp! e> 0 ?do e> loop r> ;
 
-: save-osp      me >ep  osp @ >ep  ;
-: restore-osp   ep> osp !  ep> to me ;
+: save-osp      this >ep  osp @ >ep  ;
+: restore-osp   ep> osp !  ep> to this ;
 
 : save-nibs           ( save-ds    )  save-osp  2 ;
 : restore-nibs  drop  ( restore-ds )  restore-osp ;
@@ -1346,7 +1348,7 @@ global as in-dict
     fresh-next-classifier# @ next-classifier# ! 
     fresh-/static @ to /static
     reset-object-stack
-    global me!  rootec ecp!  in-dict
+    global this!  rootec ecp!  in-dict
     reset-ec-stack
     fresh/ec @ to s/ec
     0 to classifier 

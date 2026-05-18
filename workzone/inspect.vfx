@@ -22,7 +22,7 @@ class: %inspector
 
         {: | obj0 n property0 type0 readonly? :}
 
-        ['] delete me each
+        ['] delete this each
 
         obj@ to obj0
 
@@ -98,10 +98,10 @@ class;
             mouse 2>p x 2!
         then
         corral
-    me } ;
+    this } ;
 
 : find-inspector ( object - inspector|0 )
-    0 [: { me %inspector is? if over obj @ = if drop me enough then then } ;] session each 
+    0 [: { this %inspector is? if over obj @ = if drop this enough then then } ;] session each 
     nip ;
 
 : inspect ( object - )

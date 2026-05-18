@@ -61,7 +61,7 @@ variable next-bmp#  1 next-bmp# !
 \ : ?subbmp  dup al_is_sub_bitmlap if al_get_parent_bitmap then ;
 
 : wrap-bitmap ( albmp - bitmap )
-    %bitmap make { albmp ! me } ;
+    %bitmap make { albmp ! this } ;
 
 : bmpwh ( bmpid - w h )
     id>albmp ?dup if dup albmpw swap albmph else 0 0 then ;

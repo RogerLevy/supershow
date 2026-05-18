@@ -13,7 +13,7 @@ REQUIRE %idir%/colors.vfx
 REQUIRE %idir%/element.vfx
 REQUIRE %idir%/save.vfx
 
-: in-me?  2>p 2dup me clickbox overlap? ;
+: in-me?  2>p 2dup this clickbox overlap? ;
 
 : white-connector ( element - )
     e{ abspos atp 1.0 thick $ffffff44 rgba8
@@ -127,7 +127,7 @@ cursors.png 32 32 TILESET-FROM cursors.ts
         cursors.ts hand tile cput
     else
         hovered 0<> using? and
-        if hovered { <at me cursor } else default-cursor then
+        if hovered { <at this cursor } else default-cursor then
     then
     snap-mode @ if
         16 16 +at
@@ -188,10 +188,10 @@ class;
 0 0 at %desktop dmake value desktop
 
 %desktop :: active? ( - flag )
-    desktop me = ;
+    desktop this = ;
 
 %desktop :: forth@ ( - a len )
-    desktop me = if s" me to desktop" else s" " then 
+    desktop this = if s" this to desktop" else s" " then 
     bmp @ bmp>set$ 2swap f" %s   %s bmp !" ;
 
 \ -- Desktop-specific HUDs -----------------------------------------------------
@@ -207,7 +207,7 @@ class;
 : dhud ( - desktop-hud )
     the-dhud ?dup ?exit
     desktop ?dup 0= abort" DHUD : DESKTOP is null."
-    0 [: { me %desktop-hud is? if drop me then } ;] desktop each
+    0 [: { this %desktop-hud is? if drop this then } ;] desktop each
     ?dup 0= if desktop { %desktop-hud *add } then
     dup to the-dhud ;
 
@@ -216,7 +216,7 @@ class;
     parent @ ?dup if
         >x 2@ 2negate x 2!          \ stay fixed on screen
     then 
-    me desktop push ;
+    this desktop push ;
 
 \ -- UI Box --------------------------------------------------------------------
 
@@ -263,22 +263,22 @@ class: %window
     %panel derive
     template { +clipped }
 
-    : move-contents ( x. y. ) [: { 2dup x 2+! } ;] me each 2drop ;
+    : move-contents ( x. y. ) [: { 2dup x 2+! } ;] this each 2drop ;
 
     :: _process
         +clipped
         <space> held? lmb? and if
-            window-panning me = if
+            window-panning this = if
                 pan-delta move-contents
             else
                 lmb pressed? mouse in-me? and if
-                    me to window-panning
+                    this to window-panning
                     record-click-position
                     0 to aligned-axis
                 then
             then
         else
-            window-panning me = if 0 to window-panning then
+            window-panning this = if 0 to window-panning then
         then ;
 
     :: _mousewheel ( n - )
@@ -292,13 +292,13 @@ class;
 : _load-figure ( fp len - )
     ?dup 0= if drop exit then
     load-json load-root
-    begin dup >lowest @ ?dup while me push repeat
+    begin dup >lowest @ ?dup while this push repeat
     delete ;
 
 class: %figure
     %window derive
     256 nprop srcpath$ :cstring <save
-    :: save  srcpath$ c@ -exit  me srcpath$ count save-gui ;
+    :: save  srcpath$ c@ -exit  this srcpath$ count save-gui ;
     :: forth@  serializing-root? if s" " else f" srcpath$ count _load-figure" then ;
     :: external?  true ;
 class;
@@ -336,7 +336,7 @@ trait: %textual
         _update-box ;
 
     :: text@ ( - a len|0 )
-        txt @ 0= if s" " me text! then
+        txt @ 0= if s" " this text! then
         txt @ lcount ;
 trait;
 
@@ -354,14 +354,14 @@ class: %label
     template { fnt@ fnt ! $FFFFFFFF clr ! editable on }
 
     :: on-clone
-        me text@ *lstring txt ! _update-box ;
+        this text@ *lstring txt ! _update-box ;
 
-    : editing-me?  editing @ focused me = and ;
+    : editing-me?  editing @ focused this = and ;
 
     : _draw-text
         txt @ ?dup if fnt @ fnt! lcount print then
         editing-me? if
-            me text@ nip 8 * 0 +at '_' glyph
+            this text@ nip 8 * 0 +at '_' glyph
         then ;
 
     :: _draw
@@ -371,17 +371,17 @@ class: %label
     :: _mousedown ( btn - )
         lmb = -exit
         editable @ -exit
-        me focus
+        this focus
         editing on
         original free drop
-        me text@ *lstring to original
+        this text@ *lstring to original
         clear-on-edit @ if
-            s" " me text!
+            s" " this text!
         then
     ;
 
     : _revert
-        original lcount me text!
+        original lcount this text!
         original free drop
         0 to original ;
 
@@ -402,15 +402,15 @@ class: %label
             exit
         then
         dup <bksp> = if
-            drop txt @ lcount 1 - 0 max me text!
+            drop txt @ lcount 1 - 0 max this text!
             exit
         then
-        drop the-char me add-char ;
+        drop the-char this add-char ;
 
 class;
 
 : *label ( a len - label )
-    %label  *add { me text! you { rgba8@ } clr ! me } ;
+    %label  *add { this text! you { rgba8@ } clr ! this } ;
 
 %label :: clickbox ( - x1 y1 x2 y2 )
     abspos w @ 16. max h @ box ;
@@ -446,32 +446,32 @@ class: %numberfield
         -1 abort" invalid val-type" ;
 
     :: _draw 
-        editing-me? not if val>str me text! then
+        editing-me? not if val>str this text! then
         label:_draw ;
 
     :: _process
         editing-me?
         label:_process 
         txt @ 0<> and if 
-            me text@ s" -" s= not if
+            this text@ s" -" s= not if
                 sp@ >r val @
-                me text@ ['] evaluate catch if 
+                this text@ ['] evaluate catch if 
                     2drop 
                 else 
                     val-type @ TYPE_FIXED = if
-                        me text@ s" ." strin? not if >p then
+                        this text@ s" ." strin? not if >p then
                     then
                 then
                 val !
                 r> sp! 
             then
         then
-        me sync ;
+        this sync ;
 
 class;
 
-: *int  %numberfield  *add { val ! TYPE_INT val-type ! me } ;
-: *fixed  %numberfield  *add { val ! TYPE_FIXED val-type ! me } ;
+: *int  %numberfield  *add { val ! TYPE_INT val-type ! this } ;
+: *fixed  %numberfield  *add { val ! TYPE_FIXED val-type ! this } ;
 
 \ -- String Field --------------------------------------------------------------
 
@@ -484,17 +484,17 @@ trait: %syncable-string
         ra @ -exit
         editing-me? not was-editing @ and if
             str-type @ TYPE_CSTRING = if
-                me text@ ra @ place
+                this text@ ra @ place
             else
                 ra @ @ free drop
-                me text@ *lstring ra @ !
+                this text@ *lstring ra @ !
             then
         then
         editing-me? not if
             str-type @ TYPE_CSTRING = if
-                ra @ count me text!
+                ra @ count this text!
             else
-                ra @ @ ?dup if lcount else s" " then me text!
+                ra @ @ ?dup if lcount else s" " then this text!
             then
         then
         editing-me? was-editing ! ;
@@ -506,16 +506,16 @@ class: %stringfield
     template { clear-on-edit off }
 
     :: _draw
-        editing-me? not if me sync then
+        editing-me? not if this sync then
         label:_draw ;
 
     :: _process
         label:_process
-        me sync ;
+        this sync ;
 class;
 
 : *stringfield ( str-type - stringfield )
-    %stringfield  *add { str-type ! s" " me text! me } ;
+    %stringfield  *add { str-type ! s" " this text! this } ;
 
 \ -- Forth elements -----------------------------------------------------------
 
@@ -539,13 +539,13 @@ class: %command
         lmb = -exit
         bolted? not shift? not and ?exit
         obj @ ?dup if as> then
-        me text@ evaluate ;
+        this text@ evaluate ;
 
     :: _mousedown ( btn - ) drop ;
 class;
 
 : *command ( a len - command )
-    %command  *add { me text! me } ;
+    %command  *add { this text! this } ;
 
 class: %repl
     %label derive
@@ -566,7 +566,7 @@ class: %repl
         yellow _draw-text ;
 
     : _evaluate
-        me text@ 
+        this text@ 
         obj @ ?dup if
             { evaluate }
         else
@@ -577,14 +577,14 @@ class: %repl
         editing-me? not if drop exit then
         dup <enter> = if
             drop _stop-editing ['] _evaluate catch .throw
-            s" " me text! 
+            s" " this text! 
             exit
         then
         dup <bksp> = if
-            drop txt @ lcount 1 - 0 max me text!
+            drop txt @ lcount 1 - 0 max this text!
             exit
         then
-        drop the-char me add-char ;
+        drop the-char this add-char ;
 
     :: _keychar ( key - )
         w @ >r __keychar r> w ! ;
@@ -601,7 +601,7 @@ class: %repl
 class;
 
 : *repl ( w - repl )
-    %repl  *add { >p w ! s" " me text! me } ;
+    %repl  *add { >p w ! s" " this text! this } ;
 
 class: %doer
     %element derive
@@ -654,16 +654,16 @@ c: %menu %panel ;
 || 12. constant item-h  \ menu item height (text + padding)
 
 : *menu ( - menu )
-    %menu  *add { 0 0 at me 0. 0. w 2! } ;
+    %menu  *add { 0 0 at this 0. 0. w 2! } ;
 
 : *menu-item ( object|0 xt text len - menu-item )
     item-h h +!        \ grow menu height
     %menu-item  *add {
-        me text! xt ! obj ! +bolted
+        this text! xt ! obj ! +bolted
         you >w @ w @ 4. + max you >w ! \ expand menu width to fit
         you >w @ w !  \ set item width to menu width
         item-h h !    \ set item height
-    me }
+    this }
     0 item-h +atp ;
 
 : fill-menu-width ( menu - )
@@ -678,7 +678,7 @@ c: %menu %panel ;
 
 class: %hud
     %element derive
-    :: forth@  s" me to hud" ;
+    :: forth@  s" this to hud" ;
     :: draw  overview @ ?exit  element:draw ;
 class;
 
@@ -741,22 +741,22 @@ defer _topmost-element
 [:
     dup active? not if drop exit then
     [: {
-        me active? mouse in-me? and if
+        this active? mouse in-me? and if
             \ Skip elements being dragged so we can see what's underneath
-            me being-dragged? not if
+            this being-dragged? not if
                 \ Check if mouse is within all clipped ancestors
-                me clipped-ancestor? not if drop me then
+                this clipped-ancestor? not if drop this then
             then
         then
         opened? if
-            me _topmost-element
+            this _topmost-element
         then
     } ;] swap each
 ;] is _topmost-element
 
 : topmost-element ( - element|0 )
-    me { mouse in-me? } if me else 0 then
-    me _topmost-element ;
+    this { mouse in-me? } if this else 0 then
+    this _topmost-element ;
 
 \ Same as topmost-element but skips root and desktops (for cycling)
 || 0 value top-selectable
@@ -765,18 +765,18 @@ defer _topmost-selectable
 [:
     dup active? not if drop exit then
     [: {
-        me active? mouse in-me? and parent @ and me %desktop is? not and if
-            me clipped-ancestor? not if
-                me to top-selectable
+        this active? mouse in-me? and parent @ and this %desktop is? not and if
+            this clipped-ancestor? not if
+                this to top-selectable
             then
         then
-        opened? if me _topmost-selectable then
+        opened? if this _topmost-selectable then
     } ;] swap each
 ;] is _topmost-selectable
 
 : topmost-selectable ( - element|0 )
     0 to top-selectable
-    me _topmost-selectable
+    this _topmost-selectable
     top-selectable ;
 
 \ Find element below 'skip' under mouse (for cycling selection)
@@ -790,16 +790,16 @@ defer _element-below
 [:  ( element - )
     dup active? not if drop exit then
     [: {
-        me active? mouse in-me? and parent @ and me %desktop is? not and if
-            me clipped-ancestor? not if
-                me skip-element = if
+        this active? mouse in-me? and parent @ and this %desktop is? not and if
+            this clipped-ancestor? not if
+                this skip-element = if
                     true to found-skip
                 else
-                    found-skip not if me to below-element then
+                    found-skip not if this to below-element then
                 then
             then
         then
-        opened? if me _element-below then
+        opened? if this _element-below then
     } ;] swap each
 ;] is _element-below
 
@@ -831,7 +831,7 @@ defer _element-below
     selection #items 0= if hovered exit then
     \ If selected element is under mouse and mouse hasn't moved, show cycle target
     mouse selected { in-me? } if
-        selected me element-below ?dup ?exit
+        selected this element-below ?dup ?exit
         topmost-selectable exit
     then
     hovered ;
@@ -864,7 +864,7 @@ defer _element-below
 : cycle-select ( - )
     \ Cycle to element below the current selection
     selection #items 0= if exit then
-    selected me element-below ?dup if
+    selected this element-below ?dup if
         select
     else
         topmost-selectable ?dup if select then
@@ -1055,7 +1055,7 @@ variable temp-mode-active
 : handle-hud-toggle
     <tilde> pressed? shift? not and -exit
     hud -exit
-    hud { opened? if me close else me open then } ;
+    hud { opened? if this close else this open then } ;
 
 : handle-focused-keys
     focused -exit
@@ -1099,13 +1099,13 @@ variable temp-mode-active
 : process-gui ( element - )
     dup gui-input dup process sweep ;
 
-: click-box  -1. thick me clickbox 2over atp 2swap 2- rect ;
+: click-box  -1. thick this clickbox 2over atp 2swap 2- rect ;
 
 : click-fbox
-    me %desktop is? ?exit
-    designing?   me handy? or if
+    this %desktop is? ?exit
+    designing?   this handy? or if
         get-blender additive-mode
-        0.2 ppena! me clickbox 2over atp 2swap 2- rectf
+        0.2 ppena! this clickbox 2over atp 2swap 2- rectf
         set-blender
     then
     1.0 ppena! click-box ;
@@ -1136,17 +1136,17 @@ variable temp-mode-active
     2r> 2r> al_set_clipping_rectangle ;
 
 : clipped-click-fbox
-    me %desktop is? ?exit
-    [: designing? me handy? or if
+    this %desktop is? ?exit
+    [: designing? this handy? or if
             get-blender additive-mode
-            0.2 ppena! me clickbox 2over atp 2swap 2- rectf
+            0.2 ppena! this clickbox 2over atp 2swap 2- rectf
             set-blender
         then
         1.0 ppena! click-box
-    ;] me with-ancestor-clip ;
+    ;] this with-ancestor-clip ;
 
 : clipped-click-box
-    [: click-box ;] me with-ancestor-clip ;
+    [: click-box ;] this with-ancestor-clip ;
 
 : gui-overlay ( element - )
     as>
@@ -1182,7 +1182,7 @@ require %idir%/inspect.vfx
     you { bolted? } ?exit
     you >parent @ desktop = ?exit
     you [: 
-        me desktop attach-to
+        this desktop attach-to
     ;] s" Detach" option ;
 
 : attach,
@@ -1193,41 +1193,41 @@ require %idir%/inspect.vfx
     then
     you [:
         selection #items -exit
-        selected me = ?exit
-        selected me attach-to
+        selected this = ?exit
+        selected this attach-to
     ;]
     s" Attach" option ;
 
 : delete,
     you { bolted? } ?exit     
-    you [: me unload ;] s" Delete" option ;
+    you [: this unload ;] s" Delete" option ;
 
 : clone,
     \ you { bolted? } ?exit 
     you [: 
-        me deep-clone dup me insert-over 
+        this deep-clone dup this insert-over 
         { 
             5. 5. x 2+! 
-            me select
+            this select
             -bolted
-            me to hovered
+            this to hovered
         } 
     ;] 
     s" Clone" option ;
 
 : front,
     you >parent @ -exit
-    you { bolted? parent @ >highest @ me = or } ?exit 
+    you { bolted? parent @ >highest @ this = or } ?exit 
     you [:
-        me dup >parent @ push
+        this dup >parent @ push
     ;]
     s" Front" option ;
 
 : back,
     you >parent @ -exit
-    you { bolted? parent @ >lowest @ me = or } ?exit 
+    you { bolted? parent @ >lowest @ this = or } ?exit 
     you [:
-        me dup >parent @ unshift
+        this dup >parent @ unshift
     ;]
     s" Back" option ;
 
@@ -1240,23 +1240,23 @@ require %idir%/inspect.vfx
 : bolt-all,
     you { opened? } -exit
     false [: { bolted? not } or ;] you each if
-        you [: [: { +bolted } ;] me each ;] s" Bolt All" option
+        you [: [: { +bolted } ;] this each ;] s" Bolt All" option
     then
     false [: { bolted? } or ;] you each if
-        you [: [: { -bolted } ;] me each ;] s" Unbolt All" option
+        you [: [: { -bolted } ;] this each ;] s" Unbolt All" option
     then ;
 
 : default-sticky,
     you { bolted? } ?exit
     hud -exit
     you hud descendant? ?exit
-    you [: abspos me hud push x 2! ;] s" Global Sticky" option ;
+    you [: abspos this hud push x 2! ;] s" Global Sticky" option ;
 
 defer sticky,  ['] default-sticky, is sticky,
 
 : clear,
     you #children -exit
-    you [: ['] unload me each ;] 
+    you [: ['] unload this each ;] 
     s" Clear" option ;
 
 : center ( - x y )
@@ -1286,7 +1286,7 @@ defer sticky,  ['] default-sticky, is sticky,
     then ;
 
 : save,
-    you [: me save-tree-dialog ;] s" Save" option ;
+    you [: this save-tree-dialog ;] s" Save" option ;
 
 : load,
     you [: load-tree-dialog drop ;] s" Load" option ;
@@ -1298,27 +1298,27 @@ defer sticky,  ['] default-sticky, is sticky,
 : _gather-captured ( element - )
     [ here ]
     as>
-    me active? not ?exit
-    me capture-target = ?exit  \ Skip target itself
-    me capture-target descendant? ?exit  \ Skip target's ancestors
-    me hud descendant? ?exit   \ Skip hud
+    this active? not ?exit
+    this capture-target = ?exit  \ Skip target itself
+    this capture-target descendant? ?exit  \ Skip target's ancestors
+    this hud descendant? ?exit   \ Skip hud
 
     \ Check if within bounds and move to target
     \ bolted? not if
-        me clickbox 1. 1. 2-  capture-target clickbox 1. 1. 2- overlap? if
+        this clickbox 1. 1. 2-  capture-target clickbox 1. 1. 2- overlap? if
             abspos  capture-target { abspos } 2-  ( rx. ry. )
-            me basket push
+            this basket push
             x 2!
         then
     \ then
 
     \ Recurse into children
-    ( [ xt ] ) literal me each ;
+    ( [ xt ] ) literal this each ;
 
 : capture,
     you [:
-        me to capture-target
-        ['] _gather-captured  me >parent @ each
+        this to capture-target
+        ['] _gather-captured  this >parent @ each
         [: capture-target push ;] basket each
         basket vacate
     ;]
@@ -1329,9 +1329,9 @@ defer sticky,  ['] default-sticky, is sticky,
         [: as>
             bolted? ?exit
             abspos parent @ >parent @ { abspos } 2-
-            me parent @ >parent @ push 
+            this parent @ >parent @ push 
             x 2!
-        ;] me each
+        ;] this each
     ;]
     s" Release" option ;
 
@@ -1344,7 +1344,7 @@ defer sticky,  ['] default-sticky, is sticky,
 
 : inspect,
     designing? -exit
-    you [: me inspect ;] s" Inspect" option ;
+    you [: this inspect ;] s" Inspect" option ;
 
 : common-options,
     \ designing? if clone, then

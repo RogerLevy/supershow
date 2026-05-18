@@ -76,7 +76,7 @@ borrow nib2>> prop+
             property0 cla @ >serialize-flag @  if
 
                 \ get the property address in the instance and in the template
-                me property0 prop+ to val-addr
+                this property0 prop+ to val-addr
                 cla @ >template property0 prop+ to tmpl-addr
 
                 cjson property0 ser-property-json
@@ -91,13 +91,13 @@ borrow nib2>> prop+
     {: | cjson :}
     {   
         new-object to cjson
-        me cjson add-properties-to 
+        this cjson add-properties-to 
 
-        me script@ dup if
+        this script@ dup if
             >zpad "script" cjson add-string
         else 2drop then
 
-        me ['] forth@ catch ?dup 0= if 
+        this ['] forth@ catch ?dup 0= if 
             dup if
                 >zpad "forth" cjson add-string
             else 2drop then
@@ -106,7 +106,7 @@ borrow nib2>> prop+
         then
 
         \ Call on-serialize hook for custom serialization
-        cjson me on-serialize 
+        cjson this on-serialize 
     cjson } 
 ;
 
@@ -120,14 +120,14 @@ borrow nib2>> prop+
             list-next to property0
             property0 cla @ >serialize-flag @  if
                 property0 >zname cjson swap ?get-item if
-                    me property0 prop+ to val-addr
+                    this property0 prop+ to val-addr
                     cjson property0 des-property-json
                 then
             then
         loop drop
         cjson "script" ?j>z ?dup if zcount _load-script then
         cjson "forth" ?j>z ?dup if zcount suppose then 
-        cjson me on-deserialize
+        cjson this on-deserialize
     } ;
 
 : load-json ( path len - cjson )

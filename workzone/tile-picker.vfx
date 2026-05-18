@@ -19,20 +19,20 @@ class: %tile-picker
         bolted? not if
             using? -exit
         then
-        me hovered = -exit
+        this hovered = -exit
         lmb held? <space> held? not and if
             pmouse abspos 2- 2>i ts @ xy>tile tile# !
             ?painter ?dup if the-tile swap select then
         then ;
 
     :: _draw
-        me clickbox 2over 2- 2swap atp
+        this clickbox 2over 2- 2swap atp
         clr @ rgba8 rectf
         the-bmp put
         the-tile bmpxy +at  
         ts @ >tw 2@ 2>p white rect
         \ the-bmp id>bmp ?dup -exit >touched @ if  
-            e{ me clickbox 2over 2- 2swap atp white 0.25 ppena! rect e} 
+            e{ this clickbox 2over 2- 2swap atp white 0.25 ppena! rect e} 
         \ then 
         \ ?painter ?dup if white-connector then ;
         ;
@@ -43,8 +43,8 @@ class: %tile-picker
 class;
 
 : *tile-picker ( tileset - tile-picker )
-    %tile-picker *add { ts ! me } ;
+    %tile-picker *add { ts ! this } ;
 
 \ : ?tile-picker ( bmpid - )
-\     dup is-subbmp? if dup bmp>ts *tile-picker { me click-dims drop  negate 0 x 2! } then
+\     dup is-subbmp? if dup bmp>ts *tile-picker { this click-dims drop  negate 0 x 2! } then
 \     drop ;

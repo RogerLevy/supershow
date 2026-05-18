@@ -25,15 +25,16 @@ include %idir%/fixed.vfx          \ 16.16 fixed-point math
 include %idir%/format.vfx         \ Printf-style string formatting
 include %idir%/logging.vfx         \ Printf-style string formatting
 
-\\
-
-    include %idir%/lib/dictionary.vfx \ Key/value structures
+    \ include %idir%/lib/dictionary.vfx \ Key/value structures
 
 include %idir%/lib/fstools.vfx    \ Filesystem utilities
 include %idir%/lib/lstring.vfx    \ Cell-counted strings
 
-    include %idir%/lib/gamemath.vfx   \ 2D vectors and game math
-    include %idir%/lib/strout.vfx     \ Capture console output
+quit
+
+    \ include %idir%/lib/gamemath.vfx   \ 2D vectors and game math
+
+include %idir%/lib/strout.vfx     \ Capture console output
 
 include %idir%/lib/counter.vfx    \ Required by mersenne for seeding
 include %idir%/lib/mersenne.vfx   \ RNG

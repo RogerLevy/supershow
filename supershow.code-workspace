@@ -7,7 +7,7 @@
 	"settings": {
 		"explorer.autoReveal": false,
 		"explorer.compactFolders": true,
-		"explorer.excludeGitIgnore": true,
+		"explorer.excludeGitIgnore": false,
 		"explorer.fileNesting.enabled": true,
 		"explorer.sortOrder": "type",
 		"search.quickAccess.preserveInput": true,

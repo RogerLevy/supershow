@@ -21,6 +21,6 @@ continuation: tread> ( x y w h a - code ; ) ( pen=xy a - )
     ly2 ygap + ly do
         lx2 xgap + lx do
             i lx2 min j ly2 min at  pen-colrow a spot xt execute
-            me free? if unloop unloop exit then
+            this free? if unloop unloop exit then
         xgap +loop
     ygap +loop ;

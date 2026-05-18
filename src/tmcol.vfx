@@ -74,36 +74,36 @@ defer hit ( f: x y - f: x y )
     py >tmc ny >tmc  = ?exit
     px to tx  ny to ty
     pt1 BIT_CEL and if tx ty pd then ve+
-    me free? ?exit
+    this free? ?exit
     mbw fxgap f/ roundup f>s for
-        me free? if unloop exit then
+        this free? if unloop exit then
         pt2 BIT_CEL and if tx 0.5e f- ty pd then ve+
     loop ;
 : cd
     py mbh f+ >tmc2  ny mbh f+ >tmc2  = ?exit
     px to tx  ny mbh f+ to ty
     pt3 BIT_FLR and if tx ty pu then ve+
-    me free? ?exit
+    this free? ?exit
     mbw fxgap f/ roundup f>s for
-        me free? if unloop exit then
+        this free? if unloop exit then
         pt4 BIT_FLR and if tx 0.5e f- ty pu then ve+
     loop ;
 : cl
     px >tmc nx >tmc  = ?exit
     nx to tx  ny to ty
     pt1 BIT_WRT and if tx ty pr then he+
-    me free? ?exit
+    this free? ?exit
     mbh fygap f/ roundup f>s for
-        me free? if unloop exit then
+        this free? if unloop exit then
         pt3 BIT_WRT and if tx ty 0.5e f- pr then he+
     loop ;
 : crt
     px mbw f+ >tmc2  nx mbw f+ >tmc2  = ?exit
     nx mbw f+ to tx  ny to ty
     pt2 BIT_WLT and if tx ty pl then he+
-    me free? ?exit
+    this free? ?exit
     mbh fygap f/ roundup f>s for
-        me free? if unloop exit then
+        this free? if unloop exit then
         pt4 BIT_WLT and if tx ty 0.5e f- pl then he+
     loop ;
 
@@ -126,7 +126,7 @@ defer hit ( f: x y - f: x y )
 \ Collide with solid tiles
 public
 
-continuation: tmcol>  ( x y w h a me=obj - ) ( f - f )
+continuation: tmcol>  ( x y w h a this=obj - ) ( f - f )
     ( xt ) >r
     xgap s>f to fxgap
     ygap s>f to fygap

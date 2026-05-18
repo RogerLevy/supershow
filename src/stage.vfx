@@ -41,11 +41,11 @@ continuation: actives> ( - ) ( - )
         \ Compare SP to previous SP.
         \ The data stack grows downward.
         dup sp@ cell+ cell+ > if
-            s{ ." Positive stack imbalance in logic for actor " me .summary
+            s{ ." Positive stack imbalance in logic for actor " this .summary
             s} log-warning .rs .s 
         then
         dup sp@ cell+ cell+ < if
-            s{ ." Negative stack imbalance in logic for actor " me .summary
+            s{ ." Negative stack imbalance in logic for actor " this .summary
             s} log-warning .rs .s
         then
     then
@@ -53,7 +53,7 @@ continuation: actives> ( - ) ( - )
 
 : ?actorerr  
     catch ?dup -exit 
-    dup err_bailed = if drop exit else me bench throw then ;
+    dup err_bailed = if drop exit else this bench throw then ;
 
 \ =============================================================================
 \ Find actors
@@ -67,7 +67,7 @@ class;
 
 || : (find) ( 0 %actor - 0|actor )
     dup -> en @ 0= if drop exit then    
-    { xt execute if enough drop me then } ;
+    { xt execute if enough drop this then } ;
 
 continuation: who> ( - actor|0 ) ( - f )
     ( xt ) to xt
@@ -100,7 +100,7 @@ continuation: who> ( - actor|0 ) ( - f )
     unloaded on ; 
 
 : sweep ( - )
-    actives>  unloaded @ -exit  me recycle ;
+    actives>  unloaded @ -exit  this recycle ;
 
 : step ( - )
     hold @ ?exit
@@ -124,7 +124,7 @@ continuation: who> ( - actor|0 ) ( - f )
     clear-stage gamew 2 / gameh 2 / at  ;
 
 : stage-init ( actor - )
-    stg@ swap { stg!   me stg@ push   -1 rnd id !   en on   me init-actor } ;
+    stg@ swap { stg!   this stg@ push   -1 rnd id !   en on   this init-actor } ;
 
 : one ( class - actor )
     >r free-nodes pop r> over construct dup stage-init ;
@@ -173,7 +173,7 @@ continuation: who> ( - actor|0 ) ( - f )
 || 0 value c
 : init-by-class ( class - )
     to c
-    actives> me c is? if me resurrect then ;
+    actives> this c is? if this resurrect then ;
 
 \ =============================================================================
 \ Tools
@@ -198,7 +198,7 @@ continuation: who> ( - actor|0 ) ( - f )
         pad count update-name$ place
     else
         2drop
-        me valid-object? not abort" ME is not a valid object - nothing to update!"
+        this valid-object? not abort" ME is not a valid object - nothing to update!"
         cla @ to class0
         class0 body>name update-name$ place
     then
@@ -208,5 +208,5 @@ continuation: who> ( - actor|0 ) ( - f )
     else
         update-name$ count f" ?hone scripts\%s.vfx" >hone
     then
-    me { class0 init-by-class }
+    this { class0 init-by-class }
     update-name$ count f" %s/" sprivate ;

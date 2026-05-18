@@ -46,7 +46,7 @@ defer _json>element
     \ Get class name and instantiate
     cjson "class" j>s evaluate make {
         \ Read properties into the new element
-        cjson me read-props
+        cjson this read-props
 
         \ Cache the script field if there is one
         cjson "script" ?j>z ?dup if
@@ -56,10 +56,10 @@ defer _json>element
         \ Recursively create children
         cjson "children" ?get-item ?dup if
             jcount for
-                dup i get-item _json>element me push
+                dup i get-item _json>element this push
             loop drop
         then
-    me } ;
+    this } ;
 
 ['] json>element is _json>element
 

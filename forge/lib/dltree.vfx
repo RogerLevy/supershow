@@ -113,8 +113,8 @@ borrow array3>> enough-flag
 : dlclear  ( dltree -- )
     -> lowest @ ?dup if
         {
-            begin  me while
-                next @  (dlorphan)  to me
+            begin  this while
+                next @  (dlorphan)  to this
             repeat
         }
         0 dup lowest ! highest !
@@ -138,40 +138,40 @@ public
     swap as>
     begin parent @ dup while
         over = if   drop -1   exit then
-        parent @ to me
+        parent @ to this
     repeat nip ( 0 ) ;
 fast}
 
 %dltree :: el@ ( i - val ) _nth-child ;
 %dltree :: el? ( i - val ) _nth-child .summary ;
 
-%dltree :: push ( item - ) me dlpush ; 
+%dltree :: push ( item - ) this dlpush ; 
 %dltree :: pop ( - item ) highest @ dup 0= abort" DLTREE:POP : Underflow." dup dlremove ; 
-%dltree :: unshift ( item - ) me dlunshift ; 
+%dltree :: unshift ( item - ) this dlunshift ; 
 %dltree :: shift ( - item ) lowest @ dup 0= abort" DLTREE:SHIFT : Underflow." dup dlremove ; 
-%dltree :: vacate ( - ) me dlclear ;
+%dltree :: vacate ( - ) this dlclear ;
 
-%dltree :: each ( xt - ) me dleach ;
+%dltree :: each ( xt - ) this dleach ;
 
-%dltree :: insert-under ( dltree - ) me dlinsert-under ;
-%dltree :: insert-over ( dltree - ) me dlinsert-over ;
+%dltree :: insert-under ( dltree - ) this dlinsert-under ;
+%dltree :: insert-over ( dltree - ) this dlinsert-over ;
 
 %dltree :: remove ( dltree - ) 
-    dup >parent @ me <> abort" DLTREE:REMOVE : Not my child."
+    dup >parent @ this <> abort" DLTREE:REMOVE : Not my child."
     dlremove ;
 
 %dltree :: removeat ( i - ) 
     _nth-child dlremove ;
 
 %dltree :: insertat ( dltree i - ) 
-    dup me #items <> if
+    dup this #items <> if
         _nth-child insert-under
     else
-        drop me push
+        drop this push
     then ;
 
 %dltree :: indexof ( dltree - )
-    dup >parent @ me <> abort" DLTREE:INDEXOF : Not my child."
+    dup >parent @ this <> abort" DLTREE:INDEXOF : Not my child."
     0 swap begin >prev @ ?dup while 1 u+ repeat ;
 
 %dltree :: peek ( - item ) 
@@ -197,8 +197,8 @@ aka #children #items
 || variable indent
 %dltree :: .items ( array - )
     item-count @ for
-        cr indent @ spaces i me el?
+        cr indent @ spaces i this el?
         4 indent +!
-        i me el@ .items
+        i this el@ .items
         -4 indent +!
     loop ;

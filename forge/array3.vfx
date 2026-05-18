@@ -73,10 +73,10 @@ trait;
 
 
 : add ( node - node )
-    dup me push ;
+    dup this push ;
 
 : *add ( class - node )
-    me %lifo is? not abort" ADD : Current object is not a %lifo, aborting object creation." 
+    this %lifo is? not abort" ADD : Current object is not a %lifo, aborting object creation." 
     make add ;
 
 \ ==============================================================================
@@ -86,7 +86,7 @@ trait;
 || : _each ( xt - ) ( ... val - ... )
     {: xt :}
     item-count @ for
-        i me el@ xt you { execute }
+        i this el@ xt you { execute }
         enough-flag @ if unloop exit then
     loop ;
 
@@ -100,7 +100,7 @@ trait;
 || : _!each ( xt - ) ( ... val - val' ... )
     {: xt :}
     item-count @ for
-        i me el@ xt you { execute } i me el!
+        i this el@ xt you { execute } i this el!
         enough-flag @ if unloop exit then
     loop ;
 
@@ -112,7 +112,7 @@ trait;
     throw ;
 
 %iterable :: .items ( array - )
-    item-count @ for i me el? loop ;
+    item-count @ for i this el? loop ;
 
 \ ==============================================================================
 \ Array Class
@@ -139,7 +139,7 @@ private
 
 : _?bounds ( index - index )
     dup` 0` item-count @ 1 -` within? 
-    not if me swap f" Invalid index %n on array at %n" -1 -rot .abort then ;
+    not if this swap f" Invalid index %n on array at %n" -1 -rot .abort then ;
 
 : _slot ( index - addr )
     _?bounds   slot-size @ * data @ + ;
@@ -211,11 +211,11 @@ public
     %array _array{ ;
 
 : array} ( - array )
-    } here data @ - slot-size @ /   dup item-count ! max-slots !   me } ;
+    } here data @ - slot-size @ /   dup item-count ! max-slots !   this } ;
 
 : pad-array ( count - )
     \ Pad array to given count
-    me >r }  data @ slot-size @ rot * + here - allot&erase  r> { ;
+    this >r }  data @ slot-size @ rot * + here - allot&erase  r> { ;
 
 redef : array ( #slots element-class <name> - )
     \ Named array allocation
@@ -239,15 +239,15 @@ redef : array ( #slots element-class <name> - )
 %iterable :: contains? ( item - bool )
     \ Check if array contains item
     0 swap
-    [: udup = if -1 u+ enough then ;] me each 
+    [: udup = if -1 u+ enough then ;] this each 
     drop ;
 
 %iterable :: indexof ( item - u|-1 )
     \ Get index of item
     0 swap
-    [: udup = if enough exit then 1 u+ ;] me each 
+    [: udup = if enough exit then 1 u+ ;] this each 
     drop 
-    dup me #items = if drop -1 then ;
+    dup this #items = if drop -1 then ;
 
 %array :: removeat ( index - )
     slot-size @ *  data @ +              \ addr of item to remove
@@ -258,8 +258,8 @@ redef : array ( #slots element-class <name> - )
     -1 item-count +! ;
 
 %array :: remove ( item - )
-    me indexof dup 0< if drop exit then  \ not found
-    me removeat ;
+    this indexof dup 0< if drop exit then  \ not found
+    this removeat ;
 
 %array :: insertat ( item index - )
     {: item index :}
@@ -278,15 +278,15 @@ redef : array ( #slots element-class <name> - )
 
 %array :: push ( val - )
     item-count @ max-slots @ = abort" Array overflow!"
-    1 item-count +!  me tail el! ;
+    1 item-count +!  this tail el! ;
 
 %array :: pop ( - val )
     item-count @ 0= abort" Array underflow!"
-    me tail el@  -1 item-count +! ;
+    this tail el@  -1 item-count +! ;
 
 %array :: peek ( - val )
     item-count @ 0= abort" Empty array!"
-    me tail el@ ;
+    this tail el@ ;
 
 %array :: vacate ( - )
     0 item-count ! ;
@@ -328,7 +328,7 @@ redef : stack ( max-slots element-class <name> - )
     %stack make { dp @ >e  data @ dp !  you { ;
 
 : stack} ( - stack )
-    } here data @ - slot-size @ / item-count !   e> dp !   me } ;
+    } here data @ - slot-size @ / item-count !   e> dp !   this } ;
 
 \ ==============================================================================
 \ Convenience Words

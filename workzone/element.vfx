@@ -86,13 +86,13 @@ defer being-dragged? ( element - flag )
 : snap-pos ( - )  x 2@ snap swap snap swap x 2! ;
 : move-by ( dx. dy. - )  2dup x 2+! ;
 
-: abspos  x 2@ me begin >parent @ ?dup while { x 2@ 2+ me } repeat ;
+: abspos  x 2@ this begin >parent @ ?dup while { x 2@ 2+ this } repeat ;
 : at-me
     snap-mode @
-    drag-through-target @ if me drag-through-target @ = else me being-dragged? then
+    drag-through-target @ if this drag-through-target @ = else this being-dragged? then
     and if
         x 2@ snap swap snap swap
-        me >parent @ ?dup if { abspos 2+ } then
+        this >parent @ ?dup if { abspos 2+ } then
     else
         abspos
     then
@@ -109,7 +109,7 @@ defer being-dragged? ( element - flag )
     2dup *lstring script ! load-script ;
 
 : memoize-include ( <path> - )
-    me %_element is? not abort" Current object is not an element."
+    this %_element is? not abort" Current object is not an element."
     bl parse set-script ;
 
 : >root ( element - root )
@@ -147,7 +147,7 @@ class: %element
 class;
 
 %element :: open     -closed ;
-%element :: close    +closed  me unfocus-if-descendant  me deselect-if-descendant ;
+%element :: close    +closed  this unfocus-if-descendant  this deselect-if-descendant ;
 
 %element :: .summary  
     object:.summary x 2p? ;
@@ -166,7 +166,7 @@ class;
     dup dlremove ?free ;
 
 %element :: delete
-    me delete-element ;
+    this delete-element ;
 
 \ -- Element Methods -----------------------------------------------------------
 
@@ -177,11 +177,11 @@ class;
 
 defer _sweep
 redef : sweep ( iterable - )
-    [: dup _sweep { unloaded? if me delete then } ;] swap each ;
+    [: dup _sweep { unloaded? if this delete then } ;] swap each ;
 ['] sweep is _sweep
 
 %element :: vacate
-    ['] unload me each  me sweep ;
+    ['] unload this each  this sweep ;
 
 %element :: push
     dup %_element is? not abort" ELEMENT:PUSH : Source is not an element."
@@ -200,34 +200,34 @@ redef : sweep ( iterable - )
     dltree:unshift ;
 
 %element :: process ( - )
-    me active? -exit
+    this active? -exit
     unloaded? ?exit
-    me _process
+    this _process
     opened? -exit
-    ['] process me each ;
+    ['] process this each ;
 
 : zoom*  zoom @ dup 2* ;
 
 %element :: draw
-    me active? -exit
+    this active? -exit
     \ TODO: fix this workaround
     vga-8x8 fnt!
     at-me  
-    me _draw 
+    this _draw 
 
     opened? -exit
     clipped? if
-        me clickbox 2over 2- clip{
-            ['] draw me each 
+        this clickbox 2over 2- clip{
+            ['] draw this each 
         clip}
     else
-        ['] draw me each 
+        ['] draw this each 
     then 
 ;
 
 %element :: clear
-    ['] unload me each
-    going @ not if me sweep then
+    ['] unload this each
+    going @ not if this sweep then
     0 to hovered
     0 to focused
     selection vacate ;
@@ -237,13 +237,13 @@ redef : sweep ( iterable - )
 : clone ( element - element' )
     as> \ scope into object. establishes EC
         cla @ make {     \ create new instance of same class
-            you me dup sizeof move  \ copy data
+            you this dup sizeof move  \ copy data
             0 dup dup dup dup
             parent ! prev ! next ! lowest ! highest !
             0 item-count !
             script @ ?dup if lcount *lstring script ! then
-            me on-clone
-        me } ;
+            this on-clone
+        this } ;
 
 defer _deep-clone
 : deep-clone ( element - element' )

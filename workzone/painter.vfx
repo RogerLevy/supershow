@@ -68,7 +68,7 @@ variable fgc
     display al_get_backbuffer al_set_target_bitmap ;
 
 : revert, ( - )
-    you [: me revert ;] s" Revert" option ;
+    you [: this revert ;] s" Revert" option ;
 
 class: %painter
     %ui-box derive
@@ -188,7 +188,7 @@ class: %painter
 
     :: _mousedown ( btn - )
         lmb = -exit  editable @ if 
-            me focus 
+            this focus 
             mouse>bmp  to lasty to lastx 
         then ;
 
@@ -238,7 +238,7 @@ class: %painter
     
     :: _mousewheel ( n - )
         {: n | old. rx. ry. factor. :}
-        me hovered = -exit
+        this hovered = -exit
         zm @ >p to old.
         n zm @ + 1 16 clamp zm !
         pmouse abspos 2- to ry. to rx.
@@ -246,8 +246,8 @@ class: %painter
         rx. factor. p* ry. factor. p* x 2+! ;
 
     || : ?mouse
-        editable @ if me focused = -exit then
-        me hovered = -exit
+        editable @ if this focused = -exit then
+        this hovered = -exit
         lmb held? <space> held? not and if 
             editable @ if stroke else eyedrop then 
         then
@@ -263,7 +263,7 @@ class: %painter
     :: _keydown ( key - )
         using? not if drop exit then
         \ dup <s> = ctrl? and if drop save-bitmap exit then
-        dup <z> = ctrl? and if drop me revert exit then
+        dup <z> = ctrl? and if drop this revert exit then
         dup <f> = if flood then
         drop ;
 
@@ -283,7 +283,7 @@ class: %painter
 
     :: forth@ ( - a len )
         hw-bmp @ 0= if s" " exit then
-        hw-bmp @ bmp>set$ f" %s me select" ;
+        hw-bmp @ bmp>set$ f" %s this select" ;
 
     || : clear, ( - )
         you [:
@@ -299,7 +299,7 @@ class: %painter
 class;
 
 : *painter ( bmpid - editor )
-    %painter *add { init-sw-albmp me } ;
+    %painter *add { init-sw-albmp this } ;
 
 : paint ( bmpid|_bitmap - )
     dup %_bitmap is? if >bmp @ then
@@ -338,7 +338,7 @@ REQUIRE %idir%/togglebox.vfx
 : container?  dup %panel is? swap %togglebox is? or ;
 
 : ?container ( - panel|0 )
-    [: container? ;] me find-ancestor ;
+    [: container? ;] this find-ancestor ;
 
 : ?painter ( - painter|0 )
     parent @ dup -exit
@@ -365,10 +365,10 @@ REQUIRE %idir%/tile-picker.vfx
 : update-sprites-bmp ( old-bmpid new-bmpid - )
     to new to old
     [: [ here ] {
-        me %sprite is? if
+        this %sprite is? if
             bmp @ old = if new  bmp ! then
         then
-        literal me each
+        literal this each
     } ;] session each ;
 
 : sprite>tileset ( #tiles sprite - )
@@ -428,8 +428,8 @@ REQUIRE %idir%/tile-picker.vfx
 : (refresh-painters) ( bmpid element - bmpid )
     [ here ]
     { 
-        me %painter is? if dup hw-bmp @ = if hw-bmp @ init-sw-albmp then then 
-        literal me each 
+        this %painter is? if dup hw-bmp @ = if hw-bmp @ init-sw-albmp then then 
+        literal this each 
     } ;
 
 : refresh-painters ( bmpid - )
@@ -442,7 +442,7 @@ variable new-#tiles  16 new-#tiles !
 
 : tileset, ( - )
     you [:
-        new-#tiles @ me sprite>tileset
+        new-#tiles @ this sprite>tileset
     ;] s" Convert to Tileset" option ;
 
 %sprite :: _context-menu ( menu - )
@@ -455,7 +455,7 @@ variable new-#tiles  16 new-#tiles !
 : painter-paint, ( - )
     selected %_bitmap is? -exit
     you [:
-        selected ?dup -exit >bmp @ ?dup me select  me focus
+        selected ?dup -exit >bmp @ ?dup this select  this focus
     ;] s" Paint" option ;
 
 %painter :: _context-menu ( menu - )

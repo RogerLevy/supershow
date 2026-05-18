@@ -156,7 +156,7 @@ cstring wordname$
         word-name$ place
         1 #contracts +!
         enabled on
-    me } ;
+    this } ;
 
 : lookup-contract-current ( addr:word-name len:word-name -- contract | 0 )
     \ Look up contract by word name, return 0 if not found
@@ -185,7 +185,7 @@ cstring wordname$
         vtor validator !
         vtor body>name test-name$ place
         enabled on
-    me } ;
+    this } ;
 
 : set-pre-validation ( validation contract -- )
     \ Attach validation to contract (pre)

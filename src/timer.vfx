@@ -12,10 +12,10 @@ class: %timer
 class;
 
 : clear-timers ( -- )
-    actives> me %timer is? -exit me unload ;
+    actives> this %timer is? -exit this unload ;
 
 || : act-timer
-    act> dur @ passed? -exit me unload xt1 @ >r ;
+    act> dur @ passed? -exit this unload xt1 @ >r ;
     
 || : (timer) ( time. xt -- )
     xt1 ! 0 max dur ! act-timer ;

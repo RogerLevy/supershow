@@ -72,6 +72,6 @@ class;
     display dialog al_show_native_file_dialog drop
     dialog al_get_native_file_dialog_count for
         dialog i al_get_native_file_dialog_path zcount
-        desktop { center } 0 i 40 * 2+ at %icon make { srcpath$ place me } desktop push
+        desktop { center } 0 i 40 * 2+ at %icon make { srcpath$ place this } desktop push
     loop
     dialog al_destroy_native_file_dialog ;

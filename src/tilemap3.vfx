@@ -33,7 +33,7 @@ global { %tilemap template map! }
 
 
 0 %tilemap :construct ( - )
-    ec ecp!   me map! ;
+    ec ecp!   this map! ;
 
 \ debug @ [if]
 \     crucial test: check-map ( - n:res )
@@ -52,7 +52,7 @@ global { %tilemap template map! }
 
 borrow array3>> slot
 : spot ( col row tilemap - a )
-    { 0 0`` me dims 1 1 2-`` 2clamp   w @ * + ta @ slot } ;
+    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot } ;
 
 : xy>cr ( x. y. - col row )
     xgap ygap 2/ 2>i ;
@@ -87,7 +87,7 @@ borrow array3>> slot
     e{ 
         <at
         ts @ >baseid @ pile!
-        0 0 me spot` me dims`` drawbg 
+        0 0 this spot` this dims`` drawbg 
     e} ;
 
 fast}

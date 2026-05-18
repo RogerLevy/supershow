@@ -23,7 +23,7 @@ trait;
 || : _eacha ( xt - ) ( ... a - ... )
     {: xt :}
     item-count @ for
-        i me index>slot xt you { execute }
+        i this index>slot xt you { execute }
         enough-flag @ if unloop exit then
     loop ;
 
@@ -37,7 +37,7 @@ trait;
 || : _each ( xt - ) ( ... a - ... )
     {: xt :}
     item-count @ for
-        i me index>val xt you { execute }
+        i this index>val xt you { execute }
         enough-flag @ if unloop exit then
     loop ;
 
@@ -56,51 +56,51 @@ trait;
     { dup 0 item-count @ 1 - within? } ;
 
 %iterable :: ?bounds ( n - n )
-    me in-bounds? not abort" ?BOUNDS : Index out of range!" ;
+    this in-bounds? not abort" ?BOUNDS : Index out of range!" ;
 
 \ Search operations:
 %iterable :: find-index ( xt - n | -1 ) ( a - b )
     {: xt :}
     item-count @ for
-        i me index>slot xt you { execute } if i unloop exit then
+        i this index>slot xt you { execute } if i unloop exit then
     loop -1 ;
 
 %iterable :: slot>index ( item - n | -1 ) ( a - b )
     {: item :}
     item-count @ for
-        i me index>val item = if i unloop exit then
+        i this index>val item = if i unloop exit then
     loop -1 ;
 
 %iterable :: contains? ( item - bool )
-    me slot>index 0 >= ;
+    this slot>index 0 >= ;
       
 \ Access helpers:
 \ For object/reference types:
 %iterable :: head-slot ( - a )
-    0 me ?bounds me index>slot ;
+    0 this ?bounds this index>slot ;
 
 %iterable :: tail-slot ( - a )
-    item-count @ 1 - me ?bounds me index>slot ;
+    item-count @ 1 - this ?bounds this index>slot ;
 
 \ For value types:
 %iterable :: head@ ( - ? )
-    0 me ?bounds me index>val ;
+    0 this ?bounds this index>val ;
 
 %iterable :: tail@ ( - ? )
-    item-count @ 1 - me ?bounds me index>val ;
+    item-count @ 1 - this ?bounds this index>val ;
 
 \ Functional operations:
 \ iterable :: map ( xt dest - )
 \     {: xt dest :}
 \     item-count @ for
-\         i me [] xt you { execute }
+\         i this [] xt you { execute }
 \         i dest [] !
 \     loop ;
 \ 
 \ iterable :: filter ( xt dest - count )
 \     {: xt dest | j :}
 \     item-count @ for
-\         i me [] dup xt you { execute } if
+\         i this [] dup xt you { execute } if
 \             j dest [] !
 \             j 1+ to j
 \         else drop then
@@ -138,18 +138,18 @@ class;
     align here data ! * allot&erase ;
 
 %array :: slot>index ( a - i )
-    data @ - slot-size @ / me ?bounds ;
+    data @ - slot-size @ / this ?bounds ;
 
 %array :: index>slot ( i - a )
-    me ?bounds slot-size @ * data @ + ;
+    this ?bounds slot-size @ * data @ + ;
 
 %array :: index>val ( i - ? )
-    me index>slot @ ;
+    this index>slot @ ;
 
 %array :: store-at ( n i - )
     \ TODO: add support for other types.  in the meantime,
     \ use the old [] to store other number types. (defined in back.vfx)
-    me index>slot ! ;
+    this index>slot ! ;
 
 %array :: redim ( #slots - )
     dup max-slots @ = if drop exit then
@@ -171,19 +171,19 @@ class;
 
 %stack :: push ( nth - )
     item-count @ max-slots @ = abort" Overflow."
-    1 item-count +!  me tail-slot ! ;
+    1 item-count +!  this tail-slot ! ;
 
 %stack :: pop ( - nth )
     item-count @ 0= abort" Underflow."
-    me tail-slot @  -1 item-count +! ;
+    this tail-slot @  -1 item-count +! ;
 
 %stack :: push-copy ( a - )
     item-count @ max-slots @ = abort" Overflow."
-    1 item-count +!  ( a ) me tail-slot slot-size @ move ;
+    1 item-count +!  ( a ) this tail-slot slot-size @ move ;
 
 %stack :: pop-ref ( - a )
     item-count @ 0= abort" Underflow."
-    me tail-slot  -1 item-count +! ;
+    this tail-slot  -1 item-count +! ;
 
 %stack :: redim ( #slots - )
     dup max-slots @ = if drop exit then
@@ -195,14 +195,14 @@ class;
 \ ------------------------------------------------------------------------------
 
 || : _array{ ( slot-size array-class - array )
-    0 -rot make { here data !  me } ;
+    0 -rot make { here data !  this } ;
 
 : array{ ( slot-size - array )
     %array _array{ ; 
 
 : array} ( array - array )
     { here data @ - slot-size @ /
-    dup item-count ! max-slots !   me } ;
+    dup item-count ! max-slots !   this } ;
 
 : pad-array  ( array count - array )
     \ Pad out an array being built, to given count
@@ -219,13 +219,13 @@ class: %object-array
 class;
 
 %object-array :: index>val ( n - ? ) 
-    me index>slot ;
+    this index>slot ;
 
 : object-array ( n class <name> - )
     {: count class0 :}
     create count class0 sizeof %object-array make {
         count for
-            class0 i me index>slot construct
+            class0 i this index>slot construct
         loop
     } ;
 
@@ -235,10 +235,10 @@ class;
     ofs1 arr1 index>slot` ofs2 arr2 index>slot` arr1 -> slot-size @ n * move ;
 
 %object-array :: store-at ( obj i - )
-    index>slot me s/slot move ;
+    index>slot this s/slot move ;
 
 %object-array :: each ( xt - )
-    me eacha ;
+    this eacha ;
 
 : object-array{ ( class - object-array )
     sizeof %object-array _array{ ;

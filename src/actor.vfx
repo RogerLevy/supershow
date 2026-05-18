@@ -57,7 +57,7 @@ class;
     at@ 2>p x 2! ;
 
 : init-actor ( actor - )
-    { me init } ;
+    { this init } ;
 
 \ =============================================================================
 \ Actor logic
@@ -68,7 +68,7 @@ c: %actor benched ;  \ controls behavior and physics
 : benched? ( actor - ) -> benched @ ;
 : bench ( actor - ) -> benched on ;
 : ?benched  benched @ if r> drop then ;
-: resurrect ( actor - ) { benched off   me init } ;
+: resurrect ( actor - ) { benched off   this init } ;
 
 \ Step
 : +gametime ( - )
@@ -122,17 +122,17 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
     \ Allows property settings between *{ } that can be picked up by INIT
     s" (one) { " evaluate
     '}' parse' evaluate  1 >in +!
-    s" me init }" evaluate ; immediate
+    s" this init }" evaluate ; immediate
 
 : passed? ( n. - flag ) time @ <= dup if 0 time ! then ;
 
-: from ( %actor x y - ) rot as> x 2@ 2>i 2+ at  ; \ me actor# priority ;
+: from ( %actor x y - ) rot as> x 2@ 2>i 2+ at  ; \ this actor# priority ;
 
 redef : halt  beha off  0 0 vx 2! ;
 
 : morph ( class - )
     >r x 2@ vx 2@
-    default me s/node move
+    default this s/node move
     r> cla !
     vx 2! x 2! init ;
 
@@ -145,7 +145,7 @@ redef : halt  beha off  0 0 vx 2! ;
 : expanded ( %actor amt - actor' )
     swap dummy copy as>
         dup negate dup x1 2+! 2 * dup w1 2+!
-        me ;
+        this ;
 
 : hitbox! ( x y w h - ) w1 2! x1 2! ;
 
@@ -167,8 +167,8 @@ redef : halt  beha off  0 0 vx 2! ;
 
 %actor :: .summary ( %actor - )
     11 push-foreground ." [ "
-    \ id @ dup 0 >= if ." #" . else drop me .name then
-    me .data
+    \ id @ dup 0 >= if ." #" . else drop this .name then
+    this .data
     cla @ .data
     .status
     ." at: " x 2@ 2>i swap . . 

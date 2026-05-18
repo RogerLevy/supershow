@@ -17,15 +17,15 @@ class;
     bmp @ -exit  x 2@ 2>i at bmp @ cput ;
 
 : ?pillory ( - )
-    me benched? if
+    this benched? if
         $ff5555ff rgba8 s" !" print
     then ;
 
 : backsprites ( - )
-    ec> batch> actives> prio @ ?exit me draw ?pillory ;
+    ec> batch> actives> prio @ ?exit this draw ?pillory ;
 
 : sprites ( - )
-    ec> batch> actives> prio @ -exit me draw ?pillory ;
+    ec> batch> actives> prio @ -exit this draw ?pillory ;
 
 \ =============================================================================
 \ Frame animation
