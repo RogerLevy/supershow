@@ -196,13 +196,16 @@ public
     item-type @ sizeof slot-size !
     max-slots !
     max-slots @ item-count !
-    slot-size @ 128 >= if pagealign else align then here data !   
-    max-slots @ slot-size @ * allot&erase 
-    object-array? if 
+    in-dict? if slot-size @ 128 >= if pagealign else align then then
+    max-slots @ slot-size @ * ?alloc data !
+    object-array? if
         item-count @ for
             item-type @ i _slot scaffold
         loop
     then ;
+
+%array :destruct
+    data @ free drop ;
 
 || : _array{ ( element-class array-class - )
     0 -rot make { here data !  you { ;
@@ -311,7 +314,8 @@ class;
     item-type !
     item-type @ sizeof slot-size !
     max-slots !
-    align here data !   max-slots @ slot-size @ * allot&erase ;
+    in-dict? if align then
+    max-slots @ slot-size @ * ?alloc data ! ;
 
 redef : stack ( max-slots element-class <name> - )
     \ Named stack allocation

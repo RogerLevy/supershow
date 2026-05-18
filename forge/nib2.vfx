@@ -257,6 +257,7 @@ continuation: ec> ( - ) ( - )
     cell field class-template
     cell field constructor-xt
     cell field constructor-#params
+    cell field destructor-xt
     cell field on-apply-xt
     cell field on-derive-xt
     cell field on-reopen-xt
@@ -353,26 +354,36 @@ redef : construct ( ... class addr - )
         cla @ -> constructor-xt @ ?dup if execute then
     } ;
 
-ec-cell allocator  \ xt ( ... n - a ior )
-
 : dict-allocator ( n - a ior )
     here swap allot 0 ;
 
-: in-dict ( - )
-    ['] dict-allocator allocator! ;
+['] dict-allocator value allocator@  \ xt ( n - a ior )
 
-: in-heap ( - )
-    ['] allocate allocator! ;
+: in-heap ( - ) ['] allocate to allocator@ ;
+: in-dict ( - ) ['] dict-allocator to allocator@ ;
+
+: in-heap? ( - flag )  allocator@ ['] allocate = ;
+: in-dict? ( - flag )  allocator@ ['] dict-allocator = ;
+
+: ?alloc ( n - a )
+    dup >r  allocator@ execute throw  dup r> erase ;
+
+: with-heap ( xt - )
+    allocator@ >r   in-heap   catch   r> to allocator@   throw ;
+
+: with-dict ( xt - )
+    allocator@ >r   in-dict   catch   r> to allocator@   throw ;
 
 redef : make ( ... class - object )
     \ TODO: validate class
     dup -> instance-size @ allocator@ execute throw >r
     ( class ) r@ construct r> ;
 
+: hmake ( ... class - object )
+    ['] make with-heap ;
+
 : dmake ( ... class - object )
-    \ TODO: validate class
-    dup -> instance-size @ here swap allot >r
-    ( class ) r@ construct r> ;
+    ['] make with-dict ;
 
 : object ( ... class <name> - ) ( - object )
     bl parse screate dmake drop ;
@@ -1031,13 +1042,24 @@ redef : ; ( - )
 : stub ( - )
     -1 r> >name count f" %s : Not implemented" .abort ;
 
-: :construct ( #params class - )
+: :construct ( #params class - ) ( ... - ) 
     classifier abort" :CONSTRUCT : Constructors can only be defined outside of a classifier definition."
     dup >cla @ %class <> abort" :CONSTRUCT : Passed object is not a class - constructors can only be defined for classes."
     {
-        constructor-#params !    
+        constructor-#params !
         my-name s" construct" :method constructor-xt !
     } ;
+
+: :destruct ( class - ) ( - )
+    classifier abort" :DESTRUCT : Destructors can only be defined outside of a classifier definition."
+    dup >cla @ %class <> abort" :DESTRUCT : Passed object is not a class - destructors can only be defined for classes."
+    {
+        my-name s" destroy" :method destructor-xt !
+    } ;
+
+: destroy ( object - )
+    dup { cla @ -> destructor-xt @ ?dup if execute then }
+    free drop ;
 
 : derive ( class - )
     {: source-class | dest-class :}
@@ -1080,9 +1102,10 @@ redef : ; ( - )
         dest-class dup -> class-template @ >cla !
     then
     
-    \ Copy constructor
+    \ Copy constructor/destructor
     source-class -> constructor-xt @  dest-class -> constructor-xt !
     source-class -> constructor-#params @  dest-class -> constructor-#params !
+    source-class -> destructor-xt @  dest-class -> destructor-xt !
 
     \ Copy on-derive and on-reopen
     source-class -> on-derive-xt @  dest-class -> on-derive-xt !
