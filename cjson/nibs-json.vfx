@@ -56,7 +56,7 @@ private
 
 public
 also cjson>>
-borrow nib2>> prop+
+borrow nibs>> prop+
 
 : add-properties-to ( obj cjson - )
     {: obj cjson | property0 tmpl-addr :}

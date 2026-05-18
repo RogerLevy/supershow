@@ -37,11 +37,11 @@ include %idir%/lib/lstring.vfx    \ Cell-counted strings
 \ include %idir%/lib/counter.vfx    \ Required by mersenne for seeding
 \ include %idir%/lib/mersenne.vfx   \ RNG
 
-include %idir%/nib2.vfx           \ NIBS (Nib 2.0) OOP system core
+include %idir%/nibs.vfx           \ NIBS (Nib 2.0) OOP system core
 
 quit
-include %idir%/nib2-tools.vfx     \ NIBS introspection tools
-include %idir%/nib2-compact.vfx   \ Compact class syntax parser (c:)
+include %idir%/nibs-tools.vfx     \ NIBS introspection tools
+include %idir%/nibs-compact.vfx   \ Compact class syntax parser (c:)
 
 include %idir%/oversight.vfx      \ Contract-based validation system
 include %idir%/checks.vfx         \ Core Forth word safety validations

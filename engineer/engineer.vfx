@@ -85,7 +85,7 @@ create fresh-rootec  rootec EC_MAX_SIZE move,
 : vfxforth-entrypoint ( hinst hpinst lpcommand nshow -- res )
     [ ' EntryPoint >body @ compile, ] ;
 
-borrow nib2>> init-nibs
+borrow nibs>> init-nibs
 
 : run-main ( - )
     c" main" find if execute else drop then ;

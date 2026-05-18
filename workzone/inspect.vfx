@@ -1,6 +1,6 @@
 public
 
-borrow nib2>> prop+
+borrow nibs>> prop+
 
 class: %inspector 
     %panel derive
