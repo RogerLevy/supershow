@@ -12,7 +12,7 @@ variable snap-mode   \ grid snapping toggle
 
 variable drag-through-target  \ non-bolted ancestor to move instead of selection
 
-: this ( - element|0 ) selection #items dup -exit drop selection peek ;
+: selected ( - element|0 ) selection #items dup -exit drop selection peek ;
 
 redef : *lstring ( a n - a' )
     dup cell+ 256 max allocate throw >r r@ lplace r> ;
@@ -137,7 +137,7 @@ defer being-dragged? ( element - flag )
 
 : deselect-if-descendant ( ancestor - )
     selection #items 0= if drop exit then
-    this swap descendant? if selection vacate then ;
+    selected swap descendant? if selection vacate then ;
 
 \ -- Element Class -------------------------------------------------------------
 

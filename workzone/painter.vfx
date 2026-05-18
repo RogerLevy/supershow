@@ -453,9 +453,9 @@ variable new-#tiles  16 new-#tiles !
     common-options, ;
 
 : painter-paint, ( - )
-    this %_bitmap is? -exit
+    selected %_bitmap is? -exit
     you [:
-        this ?dup -exit >bmp @ ?dup me select  me focus
+        selected ?dup -exit >bmp @ ?dup me select  me focus
     ;] s" Paint" option ;
 
 %painter :: _context-menu ( menu - )

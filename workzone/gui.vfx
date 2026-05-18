@@ -819,7 +819,7 @@ defer _element-below
 : target-element ( - element|0 )
     \ Returns selected element if under mouse, otherwise hovered element
     selection #items if
-        mouse this { in-me? } if this exit then
+        mouse selected { in-me? } if selected exit then
     then
     hovered ;
 
@@ -830,8 +830,8 @@ defer _element-below
     mouse-moved-since-click? if hovered exit then
     selection #items 0= if hovered exit then
     \ If selected element is under mouse and mouse hasn't moved, show cycle target
-    mouse this { in-me? } if
-        this me element-below ?dup ?exit
+    mouse selected { in-me? } if
+        selected me element-below ?dup ?exit
         topmost-selectable exit
     then
     hovered ;
@@ -864,7 +864,7 @@ defer _element-below
 : cycle-select ( - )
     \ Cycle to element below the current selection
     selection #items 0= if exit then
-    this me element-below ?dup if
+    selected me element-below ?dup if
         select
     else
         topmost-selectable ?dup if select then
@@ -874,11 +874,11 @@ defer _element-below
     \ Returns true if cycling was set up, false otherwise
     mouse-moved-since-click? if false exit then
     selection #items 0= if false exit then
-    mouse this { in-me? } not if false exit then
+    mouse selected { in-me? } not if false exit then
     \ Don't cycle if the element has a custom click handler
-    this >CLA @ -> click @  %element -> click @  <> if false exit then
+    selected >CLA @ -> click @  %element -> click @  <> if false exit then
     \ Selected element is under mouse and mouse hasn't moved - set up cycling
-    this to click-candidate
+    selected to click-candidate
     true ;
 
 : attach-to ( source target - )
@@ -933,7 +933,7 @@ defer cloned ( element - ) ['] drop is cloned
                     lmb hovered handle-click
                     hovered -exit
                     try-cycle-select if
-                        this { bolted? } not if lmb begin-drag then
+                        selected { bolted? } not if lmb begin-drag then
                     else
                         \ hovered ctrl? if +select else select then
                         hovered select
@@ -1004,7 +1004,7 @@ defer cloned ( element - ) ['] drop is cloned
         drag-moved on
         \ Drag-through: on first movement, find non-bolted ancestor to move instead
         drag-through-target @ 0= if
-            this ?dup if
+            selected ?dup if
                 dup { bolted? } if
                     find-drag-through-target
                     dup 0= if drop dragging off exit then
@@ -1187,14 +1187,14 @@ require %idir%/inspect.vfx
 
 : attach,
     selection #items if
-        you >parent @ this = ?exit
+        you >parent @ selected = ?exit
     else
         exit
     then
     you [:
         selection #items -exit
-        this me = ?exit
-        this me attach-to
+        selected me = ?exit
+        selected me attach-to
     ;]
     s" Attach" option ;
 
