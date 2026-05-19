@@ -1325,7 +1325,7 @@ variable errsp   estack errsp !
 : restore-osp   ep> osp !  ep> to this ;
 
 : save-nibs           ( save-ds    )  save-osp  2 ;
-: restore-nibs  drop  ( restore-ds )  restore-osp ;
+: restore-nibs  2 = if restore-osp then ;
 
 ['] save-nibs ['] restore-nibs extends-catch
 
