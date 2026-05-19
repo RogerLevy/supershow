@@ -11,10 +11,11 @@ variable winy
 : save-window-pos
     fullscreen? ?exit
     display winx winy al_get_window_position
-    s{
+    [:
         .sintvar winx 
         .sintvar winy 
-    s} session-ini-path write ;
+        str@ session-ini-path fwrite 
+    ;] strout ;
 
 : restore-window-pos
     fullscreen? ?exit

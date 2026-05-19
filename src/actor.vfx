@@ -108,6 +108,9 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
 : hitbox ( - x1 y1 x2 y2 )
     x 2@ 2>i x1 2@ 2+  w1 2@ 2over 2+ ; \ 1 1 2- ;
 
+: overlap? ( x1 y1 x2 y2 x3 y3 x4 y4 - flag )
+    2swap 2rot rot >= -rot <= and >r rot >= -rot <= and r> and ;
+
 : hit? ( obj obj - f )
     2dup = if 2drop 0 exit then  \ actors can't collide with themselves
     over free? over free? or if 2drop 0 exit then

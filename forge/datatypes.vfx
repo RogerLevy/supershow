@@ -45,7 +45,7 @@ cell DATATYPE %lstring
 ['] df@ ['] df! [: df@ f. ;] %double xts!
 
 ['] 2@ ['] 2! [: 2@ swap . . ." ` " ;] %int2 xts!
-['] 2@ ['] 2! [: 2p? ." ` " ;] %fixed2 xts!
+['] 2@ ['] 2! [: swap p? p? ." ` " ;] %fixed2 xts!
 [: dup sf@ 4 + sf@ ;] [: dup 4 + sf! sf! ;] [: dup sf@ f. 4 + sf@ f. ." ` " ;] %float2 xts!
 [: dup df@ 8 + df@ ;] [: dup 8 + df! df! ;] [: dup df@ f. 8 + df@ f. ." ` " ;] %double2 xts!
 

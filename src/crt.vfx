@@ -1,6 +1,4 @@
 require %idir%/checks.vfx
-\ require %idir%/mode.vfx
-\ require %idir%/tweak.vfx
 require %idir%/shader.vfx
 
 \ ------------------------------------------------------------------------------

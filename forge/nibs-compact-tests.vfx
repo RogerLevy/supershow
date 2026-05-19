@@ -1,0 +1,75 @@
+\ ==============================================================================
+\ Compact class syntax tests
+\ Load after forge.vfx.  Inspect with .SUMMARY and ->property accessors.
+\ ==============================================================================
+
+\ --- support traits ---
+
+trait: %mobile  trait;
+trait: %drawable  trait;
+
+\ --- 1. minimal class ---
+
+c: %empty ;
+
+\ --- 2. plain properties, field space first ---
+
+c: %point  128
+    x y ;
+
+\ --- 3. field space after traits (new behaviour) ---
+
+c: %thing  %mobile  %drawable  64
+    id  cnt ;
+
+\ --- 4. field space before traits (existing behaviour) ---
+
+c: %thing2  64  %mobile  %drawable
+    id  cnt ;
+
+\ --- 5. saved properties ---
+
+c: %vec  128
+    x!  y!  z! ;
+
+\ --- 6. typed properties ---
+
+c: %typed  128
+    n:n   p:p   f:f   xt:xt ;
+
+\ --- 7. addr and ref properties ---
+
+c: %refs  128
+    ptr:a   obj:%point ;
+
+\ --- 8. combined save + type ---
+
+c: %mixed  128
+    score!:n   speed!:p ;
+
+\ --- 9. sized property ---
+
+c: %named  256
+    name 32 ;
+
+\ --- 10. sized + saved ---
+
+c: %named2  256
+    name! 32 ;
+
+\ --- 11. derive + traits + field space + properties ---
+
+c: %actor  %thing  %mobile  128
+    hp!:n   mp!:n   sprite:a ;
+
+\ --- 12. reopen class and add properties ---
+
+c: %point
+    z ;
+
+\ --- summary ---
+
+cr ." === compact class tests loaded ===" cr
+cr ." Classes defined: %empty %point %thing %thing2 %vec %typed %refs %mixed %named %named2 %actor" cr
+cr ." Try: %actor .SUMMARY" cr
+cr ." Try: %actor make { hp .  hp }" cr

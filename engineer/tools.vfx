@@ -19,7 +19,7 @@
 
 || : ?notfound ( fp len - )
     {: fp len :} 
-    fp len file-exists? not if
+    fp len fexists? not if
         fp len f" File not found: %s" -1 -rot .abort
     then ;
 
@@ -37,8 +37,8 @@
     then
 
     \ Project?
-    fn len home$ count f" %s/%s/main.vfx" file-exists? 
-    fn len f" %s/main.vfx" file-exists? or if
+    fn len home$ count f" %s/%s/main.vfx" fexists? 
+    fn len f" %s/main.vfx" fexists? or if
         fn len f" ldp %s" evaluate
         exit
     then
@@ -50,7 +50,7 @@
 
     project$ count fn len instring not 
     project$ count nip 0= or if
-        fn len -file $cwd
+        fn len fpath $cwd
     then
 
     fn len f" ?hone %s" >hone ;
@@ -92,14 +92,14 @@ pop-order
         wd@ '\' ending name[ place 
         s" ." >abspath path[ place
     else
-        name[ count f" %s\main.vfx" file-exists? if
+        name[ count f" %s\main.vfx" fexists? if
             name[ count path[ place
         else
             name[ count 
             home$ count f" %s\%s" >lowercase path[ place
         then 
     then
-    path[ count f" %s\main.vfx" file-exists? not if
+    path[ count f" %s\main.vfx" fexists? not if
         name[ count f" '%s' doesn't exist or is not a project!" type cr
         exit 
     then

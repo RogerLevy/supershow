@@ -91,7 +91,6 @@ borrow nibs>> init-nibs
 
 : init-engineer ( - )
     reset-format-buffers
-    reset-strout-buffers
     identity 
     vga-8x8 fnt! 
     reset-rootec
@@ -139,7 +138,6 @@ previous
     rs
     hold off
     init-home-path
-    init-mersenne
     init-allegro
     *display
     init-vga-font

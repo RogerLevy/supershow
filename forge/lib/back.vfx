@@ -7,9 +7,6 @@ aka >. >p
 aka .> >i 
 aka 1i pfloor
 
-aka file@ load-file
-aka >datadir find-dat-path
-
 redef aka wcount lcount
 aka wplace lplace
 redef aka wappend lappend
@@ -23,12 +20,6 @@ aka array[ array{
 aka array] array}
 aka fast[ fast{
 aka fast] fast}
-aka write[ write{
-aka write] write}
-aka s[ s{
-aka s] s}
-aka z[ z{
-aka z] z}
 aka data[ temp{
 aka data] temp}
 aka +m m{

@@ -198,7 +198,7 @@ extern int SHCreateDirectoryExA( void* hwnd, void* zpath, void* psa );
 \ Dictionary compilation (compile-time)
 \ =============================================================================
 
-redef : slurp ( fp len - )
+: file, ( fp len - )
     {: fp len | fid :}
     fp len expanded
     r/o open-file ?dup failed? if
@@ -212,4 +212,4 @@ redef : slurp ( fp len - )
     fp len f" Slurped: %s" .info ;
 
 : lslurp ( fp len - lstr )
-    here -rot 2dup fsize dup , , slurp ;
+    here -rot 2dup fsize dup , ,  file,  ;

@@ -4,6 +4,7 @@
 
 : >p 16 lshift ;
 : >i 65536 / ;
+: 2>i >i swap >i swap ;  
 : p>f s>f 65536e f/ ;
 : f>p 65536e f* f>s ;
 : p* 65536 */ ;
@@ -19,6 +20,17 @@
 : ptan p>f  deg>rad ftan f>p ;
 : patan p>f deg>rad fatan f>p ;
 : psqrt p>f fsqrt f>p ;
+: plerp ( src dest n. - )  >r over - r> p* + ;
+
+: 2>p >p swap >p swap ;
+: 2p>f swap p>f p>f ;
+: 2f>p f>p f>p swap ;
+: 2p. swap p. p. ; 
+: 2p? 2@ 2p. ;
+: 2pfloor pfloor swap pfloor swap ;
+: 2p* ( x. y. x. y. - x. y. ) rot p* >r p* r> ;
+: 2p/ ( x. y. x. y. - x. y. ) rot swap p/ >r p/ r> ;
+
 
 || : (>FIXED)	\ c-addr u -- flag ; F: -- f | --
 \ *G Try to convert the string at c-addr/u to a floating point number.
