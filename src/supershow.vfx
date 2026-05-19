@@ -9,6 +9,9 @@
 \ Dependencies
 \ =============================================================================
 
+MODULE %idir%/gamemath.vfx          \ 2D vector math
+MODULE %idir%/border.vfx           \ TV border / integer scaling
+
 MODULE %idir%/checks.vfx           \ Validations
 MODULE %idir%/mode.vfx             \ Game modes w/ separate logic and rendering
 MODULE %idir%/tweak.vfx            \ Persistent variable control

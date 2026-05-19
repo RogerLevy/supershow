@@ -28,7 +28,6 @@ include %idir%/window.vfx
 fload %idir%/../forge/lib/allegro5/graphics.vfx   \ Graphics functions
 fload %idir%/../forge/lib/allegro5/vga13h.vfx     \ VGA text support (don't remove!)
 fload %idir%/../forge/lib/allegro5/input.vfx      \ Input functions
-fload %idir%/border.vfx     \ TV border / scaling
 fload %idir%/go.vfx         \ Main Loop
 fload %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)
 include %idir%/trampoline.vfx
