@@ -32,16 +32,90 @@
 : eol?  preword c@ 0= ;
 : ?term preword 1 + c@ ';' = dup if consume then ;
 
+\ =============================================================================
+\ Property suffix parsing  ( name[!][:type] )
+\
+\   !         mark as saved ( <save )
+\   :n        TYPE_INT
+\   :a        TYPE_ADDR
+\   :$        TYPE_CSTRING
+\   :l$       TYPE_LSTRING
+\   :p        TYPE_FIXED
+\   :f        TYPE_FLOAT
+\   :xt       TYPE_XT
+\   :%class   TYPE_OBJREF + reftype
+\
+\ These can be combined: savedprop!  typedprop:n  combo!:$  ref:%actor
+\ A following number is still the property size: bigprop! 256
+\ =============================================================================
+
+|| variable first-property-seen
+
+|| : char-pos ( a len c - i )
+    {: a len c | i :}
+    len 0= if -1 exit then
+    0 to i
+    begin i len < while
+        a i + c@ c = if i exit then
+        i 1+ to i
+    repeat
+    -1 ;
+
+|| variable meta-save
+|| variable meta-type
+|| variable meta-ref
+
+|| : clear-meta
+    meta-save off  meta-type off  meta-ref off ;
+
+|| : apply-type-code ( a len - )
+    2dup s" n"  s= if 2drop TYPE_INT     meta-type ! exit then
+    2dup s" a"  s= if 2drop TYPE_ADDR    meta-type ! exit then
+    2dup s" $"  s= if 2drop TYPE_CSTRING meta-type ! exit then
+    2dup s" l$" s= if 2drop TYPE_LSTRING meta-type ! exit then
+    2dup s" p"  s= if 2drop TYPE_FIXED   meta-type ! exit then
+    2dup s" f"  s= if 2drop TYPE_FLOAT   meta-type ! exit then
+    2dup s" xt" s= if 2drop TYPE_XT      meta-type ! exit then
+    over c@ [char] % = if
+        sfind dup 0= if drop -1 abort" Unknown class in property type annotation" then
+        >body meta-ref !  TYPE_OBJREF meta-type !  exit
+    then
+    2drop -1 abort" Unknown property type code" ;
+
+|| : parse-meta ( a len - a namelen )
+    \ strip ! and :type suffixes; populate meta-* side-effect variables
+    clear-meta
+    {: a len | bang-i colon-i :}
+    a len [char] ! char-pos to bang-i
+    a len [char] : char-pos to colon-i
+    bang-i  0 >= if  meta-save on  then
+    colon-i 0 >= if
+        a colon-i + 1+  len colon-i - 1-  apply-type-code
+    then
+    \ name ends at first of ! or :
+    bang-i 0 >= colon-i 0 >= and if  bang-i colon-i min
+    else bang-i  0 >= if  bang-i
+    else colon-i 0 >= if  colon-i
+    else len  then then then
+    a swap ;
+
+|| : apply-meta ( - )
+    meta-type @ ?dup if  current-property classifier >property-type !  then
+    meta-ref  @ ?dup if  current-property classifier >property-reftype !  then
+    meta-save @ if  <save  then ;
+
 : *property ( - )
-    bl parse 2dup
-    sfind if
+    first-property-seen on
+    bl parse parse-meta ( a namelen )
+    2dup sfind if
         >body valid-classifier? if
             >pad count fe" '%s' is a classifier name. Use @class, +trait, or \"trait\" syntax."
             -1 -rot .abort
         then
     else drop then
     parse-size
-    f" %n nproperty %s" evaluate ;
+    f" %n nproperty %s" evaluate
+    apply-meta ;
 
 : is-class? ( ? - f )
     dup valid-object? not if drop 0 exit then
@@ -105,15 +179,17 @@
     then 
     0 ;
 
+: ?fieldspace ( - f )
+    first-property-seen @ if 0 exit then
+    preword size? if eval field-space -1 else 0 then ;
+
 || redef : token ( - )
+    ?fieldspace ?exit           \ standalone number before first property = field space
     ?invalid
-    ?class ?exit \ catch 0= if consume exit then
+    ?class ?exit
     ?trait ?exit
     ?word ?exit
     *property ;
-
-: ?fieldspace ( - ) 
-    preword size? if eval field-space then ;    
 
 : next-line
     refill 0= abort" Unexpected end of file."
@@ -121,9 +197,9 @@
 
 : c:
     class:
+    first-property-seen off
     ?comment
     eol? if next-line then
-    ?fieldspace
     begin ?term not while
         token
         eol? if next-line then

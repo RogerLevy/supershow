@@ -71,6 +71,18 @@
     
     found-items 0= if ."        (no traits applied)" cr then ;
 
+|| : .prop-list ( list - )
+    \ print property names; append ! to saved (persistent) properties
+    list-count {: | cnt :} 0 to cnt
+    for
+        cnt 0= if cr 2 indent then
+        list-next
+        dup body>name type
+        this >serialize-flag @ if [char] ! emit then
+        space
+        cnt 1 + 10 mod to cnt
+    loop drop cr ;
+
 : .class ( class - )
     \ Print detailed information about a class
     {
@@ -83,7 +95,7 @@
     ."     Mapped space: " next-ofs @ ?dup if . ." bytes" else ." none" then
         instance-size @ next-ofs @ - ?dup if ."  ("  . ." remaining)" then cr
     ."     Classifier #: " classifier# @ . cr
-    ."     Properties: " property-list .list
+    ."     Properties: " property-list .prop-list
     ."     Protocols: (TODO:)" cr \ protocol-list .list
     ."     Dependents: " dependents .list 
     
@@ -99,7 +111,7 @@
     cr
     ."     Trait: " this body>name type cr
     ."     Classifier #: " classifier# @ . cr
-    ."     Properties: " property-list .list
+    ."     Properties: " property-list .prop-list
     ."     Protocols: " protocol-list .list
     ."     Dependents: " dependents .list
     
