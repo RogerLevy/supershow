@@ -18,7 +18,7 @@ constant s/cjson
 public
 : j@n  -> valueint @ ;
 : j@f  -> valuedouble df@ ;
-: j@u  j@f f>d drop ;
+: j@u  j@f f>d drop ;   \ unsigned
 : j@p  -> valuedouble df@ f>p ;
 : j@z  -> valuestring @ ;
 : j@s  -> valuestring @ zcount ;

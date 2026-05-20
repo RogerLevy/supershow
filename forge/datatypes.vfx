@@ -7,14 +7,11 @@ fast{ optimising on
 \ Value types - el@ returns the value (auto-dereferences)
 1 DATATYPE %byte
 1 DATATYPE %char
-\ 2 DATATYPE %half
 cell DATATYPE %int
 4 DATATYPE %float
 8 DATATYPE %double
 cell DATATYPE %fixed
 
-\ 1 2 * DATATYPE %char2
-\ 2 2 * DATATYPE %half2
 cell 2 * DATATYPE %int2
 4 2 * DATATYPE %float2
 8 2 * DATATYPE %double2
@@ -38,7 +35,6 @@ cell DATATYPE %lstring
 
 ['] c@ ['] c! [: c@ . ;] %byte xts!
 ['] c@ ['] c! [: c@ emit ;] %char xts!
-\ ['] w@ ['] w! [: h@ . ;] %half xts!
 ['] @ ['] ! ['] ? %int xts!
 ['] @ ['] ! ['] p? %fixed xts!
 ['] sf@ ['] sf! [: sf@ f. ;] %float xts!
