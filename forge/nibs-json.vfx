@@ -12,17 +12,15 @@ require %idir%/cjson2.vfx
 
 private
 
-    also cjson2>>
-
     0 value val-addr
 
-    : ser-json-cell    ( zname cjson - ) val-addr @ -rot add-int ;
-    : ser-json-int     ( zname cjson - ) val-addr @ -rot add-int ;
-    : ser-json-fixed   ( zname cjson - ) val-addr @ -rot add-fixed ;
-    : ser-json-float   ( zname cjson - ) val-addr sf@ add-float ;
-    : ser-json-cstring ( zname cjson - ) val-addr count >zpad -rot add-string ;
+    : ser-json-cell    ( zname cjson - ) val-addr @ -rot cjson-add-int ;
+    : ser-json-int     ( zname cjson - ) val-addr @ -rot cjson-add-int ;
+    : ser-json-fixed   ( zname cjson - ) val-addr @ -rot cjson-add-fixed ;
+    : ser-json-float   ( zname cjson - ) val-addr sf@ cjson-add-float ;
+    : ser-json-cstring ( zname cjson - ) val-addr count >zpad -rot cjson-add-string ;
     : ser-json-lstring ( zname cjson - )
-        val-addr @ ?dup if lcount else s" " then >zpad -rot add-string ;
+        val-addr @ ?dup if lcount else s" " then >zpad -rot cjson-add-string ;
 
     create ser-json-table
         ' ser-json-cell ,
@@ -60,16 +58,15 @@ private
         cla @ >property-type @ cells des-json-table + @ execute ;
 
     : suppose ( a len - )
-        ['] .evaluate catch ?dup if  .throw  2drop  then ;    
+        ['] .evaluate catch ?dup if  .throw  2drop  then ;
 
 public
-also cjson2>>
 borrow nibs>> prop+
 
 : add-properties-to ( obj cjson - )
     {: obj cjson | property0 tmpl-addr :}
     obj {
-        cla @ >zname z" class" cjson add-string
+        cla @ >zname z" class" cjson cjson-add-string
 
         cla @ -> property-list list-count for
             list-next to property0
@@ -85,29 +82,30 @@ borrow nibs>> prop+
     } ;
 
 : save-as-json ( object path len - )
-    serjson> add-properties-to ;
+    {: obj path len :}
+    path len [: obj swap add-properties-to ;] serjson ;
 
 : *json ( object - cjson )
     {: | cjson :}
-    {   
-        new-object to cjson
-        this cjson add-properties-to 
+    {
+        cjson-new-object to cjson
+        this cjson add-properties-to
 
         this script@ dup if
-            >zpad "script" cjson add-string
+            >zpad "script" cjson cjson-add-string
         else 2drop then
 
-        this ['] forth@ catch ?dup 0= if 
+        this ['] forth@ catch ?dup 0= if
             dup if
-                >zpad "forth" cjson add-string
+                >zpad "forth" cjson cjson-add-string
             else 2drop then
         else
             .throw drop
         then
 
         \ Call on-serialize hook for custom serialization
-        cjson this on-serialize 
-    cjson } 
+        cjson this on-serialize
+    cjson }
 ;
 
 : _load-script
@@ -119,17 +117,16 @@ borrow nibs>> prop+
         cla @ -> property-list list-count for
             list-next to property0
             property0 cla @ >serialize-flag @  if
-                property0 >zname cjson swap ?get-item if
+                property0 >zname cjson swap cjson-?get-item if
                     this property0 prop+ to val-addr
                     cjson property0 des-property-json
                 then
             then
         loop drop
         cjson "script" ?j>z ?dup if zcount _load-script then
-        cjson "forth" ?j>z ?dup if zcount suppose then 
+        cjson "forth" ?j>z ?dup if zcount suppose then
         cjson this on-deserialize
     } ;
 
 : load-json ( path len - cjson )
     load-file udup parse-json swap free drop ;
-

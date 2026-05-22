@@ -112,8 +112,21 @@ private
 
 public
 
-: .json ( cjson - ) 
+: .json ( cjson - )
     serialize-cjson udup type cjson-free ;
+
+\ Builder API (prefixed aliases for use without also cjson2>>)
+aka cjson-new-object  new-object
+aka cjson-new-array   new-array
+aka cjson-new-string  new-string
+aka cjson-add-item    add-item
+aka cjson-add-string  add-string
+aka cjson-add-int     add-int
+aka cjson-add-float   add-float
+aka cjson-add-fixed   add-fixed
+aka cjson-add-object  add-object
+aka cjson-add-array   add-array
+aka cjson-?get-item   ?get-item
 
 aka j>j get-item 
 : ?j>j ( json key - json'|0 ) ?get-item ;

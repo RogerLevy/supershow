@@ -2,9 +2,7 @@
 \ Save/Load System for Element Trees
 \ =============================================================================
 
-require %vfxland5%/cjson/nibs-json2.vfx
-
-also cjson2>>
+require %vfxland5%/forge/nibs-json.vfx
 
 \ -- Serialization ------------------------------------------------------------
 
@@ -21,17 +19,17 @@ defer _element>json
     \ Add children array if element has children
     \ Skip children only for external elements that are not the root
     el #children 0> el external? not is-root? or and if
-        new-array to children-arr
+        cjson-new-array to children-arr
         el >lowest @
         el #children for
             dup { temporary? } not if
                 dup .summary cr
-                dup false _element>json 0 children-arr add-object
+                dup false _element>json 0 children-arr cjson-add-object
             then
             >next @
         loop
         drop
-        children-arr "children" cjson add-array
+        children-arr "children" cjson cjson-add-array
     then
     cjson ;
 ['] element>json is _element>json
@@ -54,9 +52,9 @@ defer _json>element
         then
 
         \ Recursively create children
-        cjson "children" ?get-item ?dup if
+        cjson "children" ?j>j ?dup if
             jcount for
-                dup i get-item _json>element this push
+                dup i j>j _json>element this push
             loop drop
         then
     this } ;
@@ -66,12 +64,13 @@ defer _json>element
 \ -- High-level API -----------------------------------------------------------
 
 : save-gui ( element path len - )
-    dup 0= abort" SAVE-GUI : Path is empty!"
-    2dup f" SAVE-GUI %s" type cr
-    serjson> ( element json ) >r true element>json "root" r> add-object ;
+    {: el path len :}
+    len 0= abort" SAVE-GUI : Path is empty!"
+    path len f" SAVE-GUI %s" type cr
+    path len [: >r  el true element>json "root" r> cjson-add-object ;] serjson ;
 
 : load-root ( json - element )
-    "root" get-item json>element ;
+    "root" j>j json>element ;
 
 : load-autoloads ( json - )
     "autoloads" ?j>j ?dup if
