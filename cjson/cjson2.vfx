@@ -130,7 +130,7 @@ aka j>j get-item
 : ?j>z ( json key - z$|0 )    ?get-item dup -exit j@z ;
 \ no ?J>S , too complicated
 
-: jlen ( jarray - n ) _cJSON_GetArraySize@4 ;
+: jsize ( jarray - n ) _cJSON_GetArraySize@4 ;
 : jcount ( jarray - array-json n ) dup _cJSON_GetArraySize@4 ;
 
 borrow array3>> enough-flag
@@ -165,18 +165,18 @@ borrow array3>> enough-flag
     r> enough-flag !
     throw ;
 
-: parse-json ( a len - cjson ) _cJSON_ParseWithLength@8 ;
+: parse-json ( a len - cjson ) 
+    _cJSON_ParseWithLength@8 ;
 
 : save-json ( json path len - )
     {: json path len :}
     json serialize-cjson 
-        udup path len write 
+        udup path len fwrite 
         cjson-free
     json destroy-json ;
 
-|| 0 value path 0 value len 0 value xt 0 value cjson
-continuation: serjson> ( path len [xt] - ) ( cjson - ) 
-    to xt to len to path
+: serjson ( path len xt - ) ( cjson - ) 
+    {: path len xt | cjson :}
     new-object to cjson
     cjson xt ?execute 
     cjson path len save-json ;
