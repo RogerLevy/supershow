@@ -8,13 +8,13 @@
 : lookup ( $ wl - a )
     {: $ wl | buf[ 256 ] :}
     $ count buf[ place
-    push-order
+    save-order
     only  wl +order definitions buf[ find if
         >body 
     else
         $create here 0 , 
     then
-    pop-order ;
+    restore-order ;
 
 : dictionary ( - <name> ) ( - wl )
     create wordlist drop ;

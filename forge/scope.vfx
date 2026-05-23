@@ -53,12 +53,12 @@ variable public-xt  ' forth public-xt !
 
 \ Importing words from other files
 : borrow ( - <vocabulary> <word> )
-    push-order 
+    save-order 
     private
     ' >body @ +order
     bl parse 2dup 
     s" synonym " >pad -rot $+ s"  " $+ -rot $+ count evaluate
-    pop-order ;
+    restore-order ;
 
 \ New system 2026.02.17
 \ SCOPE creates a wordlist if it doesn't already exist
@@ -76,8 +76,8 @@ variable public-xt  ' forth public-xt !
 
 : the-wordlist2  wl$ count search-context if >body else 0 then ;
 
-: private:  push-order the-wordlist2 +order definitions ;
-: private;  pop-order ;
+: private:  save-order the-wordlist2 +order definitions ;
+: private;  restore-order ;
 
 : wlname2
     \ create `SCOPEING`
@@ -108,9 +108,9 @@ variable public-xt  ' forth public-xt !
 
 : floaded included ;
 : fload getPathSpec included ;
-redef : include  push-order /order getPathSpec included pop-order ;
-redef : included push-order /order included pop-order ;
-redef : require  push-order /order getPathSpec required pop-order ;
-redef : required push-order /order required pop-order ;
+redef : include  save-order /order getPathSpec included restore-order ;
+redef : included save-order /order included restore-order ;
+redef : require  save-order /order getPathSpec required restore-order ;
+redef : required save-order /order required restore-order ;
 : ?included  2dup fileExist? if included else 2drop then ;
 : ?required  2dup fileExist? if required else 2drop then ;

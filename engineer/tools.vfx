@@ -60,11 +60,11 @@
     ld-action$ place
     honing on ;
     
-push-order
+save-order
 honing-wl +order definitions
 : require include ;
 : required included ;
-pop-order
+restore-order
 
 : rld ( - )
     project$ count $cwd

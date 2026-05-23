@@ -15,9 +15,6 @@ create buf 256 allot
 
 public
 
-: expanded ( a len - a' len' )
-    over buf 1 - = abort" EXPANDED: Source is buffer!"
-    >pad buf $expand buf count ;
 
 : wd@ ( - a len )
     buf 256 buf GetCurrentDirectory ;

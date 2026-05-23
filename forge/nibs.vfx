@@ -451,11 +451,11 @@ create %protocol  %class dmake {
     } ;
 
 : begin-classifier ( class - )
-    push-order only forth definitions
+    save-order only forth definitions
     create dmake to classifier
     1 classifier -> #openings +!
     allocate-classifier-id
-    pop-order ;
+    restore-order ;
 
 : end-classifier ( - )
     0 to classifier ;
@@ -482,13 +482,13 @@ create %protocol  %class dmake {
     does> this swap ->property ;
  
 : create-property ( <name> - property ) 
-    push-order only forth definitions 
+    save-order only forth definitions 
     create %property dmake {
         2 cells allocate-static-offset
         MAGIC_PROPERTY magic !
     this }     
     s" does-property" evaluate   \ late-bound for easy Oversight integration
-    pop-order ;  
+    restore-order ;  
     
 : defining-a-trait? ( - b )
     classifier >cla @ %trait = ;
@@ -627,12 +627,12 @@ create %protocol  %class dmake {
 : nstatic ( size <name> - ) ( - a )
     classifier 0= abort" STATIC : Can't define a static outside of a classifier definition."
     %static already? if drop ' drop exit then
-    push-order only forth definitions
+    save-order only forth definitions
     create %static dmake {
         ( size ) allocate-static-offset
         MAGIC_FIELD magic !
     }
-    pop-order
+    restore-order
     does> -> offset @ cla @ + ;
 
 : static ( <name> - ) ( - a )
@@ -907,12 +907,12 @@ defer protocol-validations ( obj protocol - obj protocol )
     then ;
 
 || : :method ( classname-a classname-len protocolname-a protocolname-len - xt )
-    push-order only forth definitions
+    save-order only forth definitions
     warnings? >r -warnings
     2swap ?-% 
     f" : %s:%s" >uppercase 
     evaluate
-    pop-order 
+    restore-order 
     state on
     r> to warnings?
     here ; 

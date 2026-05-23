@@ -2,9 +2,9 @@ private
 
 : column  out @ - spaces ;
 : file-color ( z$ - n )
-    push-order sandbox ['] ls>> >body @ +order
+    save-order sandbox ['] ls>> >body @ +order
     zcount '.' ending sfind if execute else drop 15 then 
-    pop-order ;
+    restore-order ;
 
 : (dirs)          \ ^WIN32_FIND_DATA --
     >r

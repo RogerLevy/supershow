@@ -6,14 +6,14 @@ magic-id MAGIC_TWEAK TWK
 : tweak ( n - <name> )
     \ Define a variable with initial value n, but only if the name doesn't already exist
     \    in CURRENT.
-    push-order
+    save-order
     only current @ +order
     MAGIC_TWEAK already? not if 
         create , MAGIC_TWEAK ,
     else
         drop ' drop
     then
-    pop-order ;
+    restore-order ;
 
 : (?.tweak) ( thread# nfa - f )
     nip

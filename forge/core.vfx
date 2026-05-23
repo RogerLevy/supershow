@@ -241,11 +241,11 @@ include %idir%/../textmode/textmode-tools.vfx
 
 aka parse' parse
 
-: parse ( - a len )
+: parse ( n - a len )
     parse-word ;
 : preword ( - pad )
     >in @ bl parse rot >in ! >pad ;
-: preparse ( - a len )
+: preparse ( n - a len )
     >in @ swap parse-word rot >in ! ;
 
 : ?constant ( n - <name> ) ( - n )
@@ -407,7 +407,7 @@ aka save-exe save
 : z$= zcount rot zcount s= ;
 : ext? ( fn len ext len - flag ) 2swap '.' ending s= ;
 : ['] ( <name> - xt ) state @ if postpone ['] else ' then ; immediate
-: body>name ( a - a' ) body> >name count ;
+: body>name ( a - a' n ) body> >name count ;
 : u+  rot + swap ;
 
 \ Search order stack
@@ -417,13 +417,13 @@ variable sosp   search-order-stack sosp ! \ object stack pointer
 : sos-pop ( - ? ) -4 sosp c+!  sosp @ @ ;
 : sos-pushes ( ... n - ) dup >r for sos-push loop r> sos-push ;
 : sos-pops ( - ... n ) sos-pop dup >r for sos-pop loop r> ;
-: push-order ( - ) get-order sos-pushes get-current sos-push ;
-: pop-order ( - ) sos-pop set-current sos-pops set-order ;
+: save-order ( - ) get-order sos-pushes get-current sos-push ;
+: restore-order ( - ) sos-pop set-current sos-pops set-order ;
 
 : >shout ( a len - ) 
-    2>r push-order 2r>
+    2>r save-order 2r>
     ['] evaluate catch ?dup if .throw 2drop then
-    pop-order ;
+    restore-order ;
 
 : shout" ( - <string>" )
     \ Late-bound execution; don't care if it succeeds.  
@@ -563,3 +563,11 @@ redef : set-bit ( bit# addr - )
 redef : test-bit ( bit# adr - b )
     >r 8 /mod ( bit-ofs byte-ofs )
     r> + c@ 1 rot lshift and 0<> ;
+
+
+
+
+create _buf 256 allot
+: expanded ( a len - a' len' )
+    over _buf 1 - = abort" EXPANDED: Source is buffer!"
+    >pad _buf $expand _buf count ;

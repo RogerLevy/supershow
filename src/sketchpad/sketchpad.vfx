@@ -170,5 +170,5 @@ public
 
 honing @ [if]
 sketchpad
-push-order \ TODO: is this needed anymore? (see ?HONE)
+save-order \ TODO: is this needed anymore? (see ?HONE)
 [then]
