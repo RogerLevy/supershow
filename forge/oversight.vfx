@@ -10,26 +10,11 @@
 \       is not intuitive, showing the wrong source location.
 \ ------------------------------------------------------------------------------
 
-\ =============================================================================
-\ Temporary Logging Shims (until logging.vfx bug is fixed)
-\ =============================================================================
-
 module
-forth-forth-public
+forth-public
 
-: log  push-attribute type pop-attribute cr ;
-
-: log-warning ( addr:string len:string -- )
-    f" [WARN] %s" 6 log ;
-: log-error ( addr:string len:string -- )
-    f" [ERROR] %s" 4 log ;
-: log-debug ( addr:string len:string -- )
-    f" [DEBUG] %s" 3 log ;
-: log-info ( addr:string len:string -- )
-    f" [INFO] %s" 7 log ;
-    
 \ =============================================================================
-\ Other private utilities
+\ Private utilities
 \ =============================================================================
 
 private
@@ -243,7 +228,7 @@ errdef err_oversight "ERR: Validation failed."
     res 0= if
         val -> validator @ >name count
         c -> word-name$ count 
-        f" %s : VALIDATION FAILED: %s" log-error
+        f" %s : VALIDATION FAILED: %s" .warn
         caller-rp (.rs) cr
         .s
         err_oversight throw
@@ -251,7 +236,7 @@ errdef err_oversight "ERR: Validation failed."
     res 1 = if
         val -> validator @ >name count 
         c -> word-name$ count 
-        f" %s : VALIDATION NOTE: %s" log-warning
+        f" %s : VALIDATION NOTE: %s" .info
         caller-rp (.rs) cr
         .s cr
     then ;
@@ -266,7 +251,7 @@ errdef err_oversight "ERR: Validation failed."
     c -> enabled @ 0= if impl-xt execute exit then
     
     c -> pre-str$ @ $ff and if  \ faster than c@ which compiles a call fsr
-        c -> pre-str$ count log-debug
+        c -> pre-str$ count .debug
     then
 
     c dup -> pre-val @ dup if run-validation else 2drop then
@@ -274,7 +259,7 @@ errdef err_oversight "ERR: Validation failed."
     c dup -> post-val @ dup if run-validation else 2drop then
     
     c -> post-str$ @ $ff and if
-        c -> post-str$ count log-debug
+        c -> post-str$ count .debug
     then ;
     
 || : does-wrapper
@@ -595,7 +580,7 @@ redef : ; ( -- )
         c ,                             \ Store contract reference
         immediate? ,                    \ Immediate flag
     else
-        bl parse f" Contract for `%s` not found, wrapping skipped." log-warning
+        bl parse f" Contract for `%s` not found, wrapping skipped." .warn
     then ;
 
 3 cells constant s/wrapper
