@@ -33,6 +33,9 @@
 \ s" spaced" s" %-10s out" printf
 \ spaced     out ok
 
+module
+forth-public
+
 || variable min-field-width
 || create left-justify 1 allot
 || create pad-char 1 allot

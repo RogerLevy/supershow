@@ -1,12 +1,13 @@
 \ ==============================================================================
 \ Array System v3 - Type-based arrays with smart element access
 \ ==============================================================================
+module
 \
 \ Design Goals:
 \ - Type-based construction (explicit what array holds)
 \ - Unified element access (EL hides slot abstraction)
 \ - Smart dereferencing based on type
-\ - No public slot address exposure
+\ - No forth-public slot address exposure
 \ - Performance escape hatch via private SLOT
 \
 \ Public API:
@@ -172,7 +173,7 @@ private
 \ Public Element Access
 \ ==============================================================================
 
-public
+forth-public
 
 %array :: el@ ( index - value/ref )
     _slot _@ ;

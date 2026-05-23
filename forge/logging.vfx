@@ -3,6 +3,7 @@
 \  Writes timestamped messages to console and logs\ subdirectory
 \ ------------------------------------------------------------------------------
 
+module
 private
 
 \ Log file management
@@ -206,7 +207,7 @@ $1200 constant FORMAT_MESSAGE_FROM_SYSTEM_IGNORE_INSERTS  \ FROM_SYSTEM | IGNORE
         a f" %n"
     then ;
 
-public
+forth-public
 
 \ Write to both console and file
 : log ( a c - )

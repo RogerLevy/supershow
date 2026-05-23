@@ -1,3 +1,4 @@
+module
 private
 
 1 constant tinymt32-sh0
@@ -117,7 +118,7 @@ create mersenne tinymt32-size allot&erase
 
 : ?abs abs over 0< if negate then ;
 
-public
+forth-public
 
 : rnd32 ( - n )
     mersenne tinymt32-generate-uint32 ;

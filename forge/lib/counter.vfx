@@ -1,7 +1,8 @@
+module
 private
 extern bool QueryPerformanceCounter( void * count );
 extern bool QueryPerformanceFrequency( void * lpFrequency );
-public
+forth-public
 
 : DCOUNTER ( -- d )
     0 0 SP@ QueryPerformanceCounter DROP SWAP ;

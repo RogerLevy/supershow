@@ -10,6 +10,7 @@ require %idir%/cjson2.vfx
 %object :: on-serialize ( cjson - ) drop ;    \ override to add custom JSON data
 %object :: on-deserialize ( cjson - ) drop ;  \ override to read custom JSON data
 
+module
 private
 
     0 value val-addr
@@ -60,7 +61,7 @@ private
     : suppose ( a len - )
         ['] .evaluate catch ?dup if  .throw  2drop  then ;
 
-public
+forth-public
 borrow nibs>> prop+
 
 : add-properties-to ( obj cjson - )

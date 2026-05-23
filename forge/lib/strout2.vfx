@@ -3,6 +3,9 @@
 \   strout ( xt - )       Redirect output, execute xt, free buffer
 \   str@  ( - a len )     Inside xt: get captured output as string
 
+module
+forth-public
+
 || aligned-page strout-stack
 || variable ssp   strout-stack ssp !
 || : ss-push ( ? - ) cell ssp c+!  ssp @ ! ;

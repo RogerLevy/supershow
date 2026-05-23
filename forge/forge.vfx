@@ -22,22 +22,20 @@ include %idir%/core.vfx           \ Miscellaneous utility words / core extension
 include %idir%/module.vfx
 include %idir%/../test/module-test.vfx
 
+include %idir%/fixed.vfx          \ 16.16 fixed-point math
+include %idir%/format.vfx         \ Printf-style string formatting
+include %idir%/logging.vfx        \ Printf-style string formatting
+include %idir%/lib/fstools.vfx    \ Filesystem utilities
+include %idir%/lib/lstring.vfx    \ Cell-counted strings
+include %idir%/lib/strout2.vfx    \ Capture console output
+include %idir%/lib/counter.vfx  
 
 quit
 
-
-include %idir%/scope.vfx          \ Per-file public/private words; search order stack
-include %idir%/fixed.vfx          \ 16.16 fixed-point math
-include %idir%/format.vfx         \ Printf-style string formatting
-include %idir%/logging.vfx         \ Printf-style string formatting
-include %idir%/lib/fstools.vfx    \ Filesystem utilities
-include %idir%/lib/lstring.vfx    \ Cell-counted strings
-include %idir%/lib/strout2.vfx     \ Capture console output
-include %idir%/lib/counter.vfx  
 include %idir%/nibs.vfx           \ NIBS (Nib 2.0) OOP system core
-
 include %idir%/nibs-tools.vfx     \ NIBS introspection tools
 include %idir%/nibs-compact.vfx   \ Compact class syntax parser (c:)
+include %idir%/nibs-json.vfx   \ Compact class syntax parser (c:)
 
 include %idir%/oversight.vfx      \ Contract-based validation system
 include %idir%/checks.vfx         \ Core Forth word safety validations

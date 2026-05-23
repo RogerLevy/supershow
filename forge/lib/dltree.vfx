@@ -1,4 +1,5 @@
-public
+module
+forth-forth-public
 
 trait: %dltree
     is-a %iterable
@@ -131,7 +132,7 @@ private
     lowest @ 
     swap 0 max for -> next @ loop ;
 
-public
+forth-public
 
 : descendant? ( dltree1 dltree2 - flag )  
     \ Check if dltree1 is a child of dltree2

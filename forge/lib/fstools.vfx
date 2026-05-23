@@ -2,6 +2,7 @@
 \ Filesystem Tools
 \ =============================================================================
 
+module
 private
 
 create buf 256 allot
@@ -13,7 +14,7 @@ create buf 256 allot
 2 constant ERROR_FILE_NOT_FOUND
 3 constant ERROR_PATH_NOT_FOUND
 
-public
+forth-public
 
 
 : wd@ ( - a len )
