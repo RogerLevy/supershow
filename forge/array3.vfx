@@ -69,8 +69,10 @@ trait;
 : tail ( iterable - n iterable ) dup >item-count @ 1 - swap ;
 : head ( iterable - 0 iterable ) 0 swap ;
 
-|| variable enough-flag
+forth-public
+variable enough-flag
 : enough  enough-flag on ;
+private
 
 
 : add ( node - node )
