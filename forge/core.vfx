@@ -571,3 +571,7 @@ create _buf 256 allot
 : expanded ( a len - a' len' )
     over _buf 1 - = abort" EXPANDED: Source is buffer!"
     >pad _buf $expand _buf count ;
+
+\ Iteration control
+variable enough-flag
+: enough  enough-flag on ;
