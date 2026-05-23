@@ -369,6 +369,12 @@ redef : forth-public ( - )
     current-module mod module-accessible? not if abort" Can only reexport an accessible module." then
     current-module mod add-reexport ;
 
+: import: ( - )
+    begin bl preparse s" ;" s= if bl parse 2drop exit then import again ;
+
+: reexport: ( - )
+    begin bl preparse s" ;" s= if bl parse 2drop exit then reexport again ;
+
 \ ------------------------------------------------------------------------------
 \ [forth] module  (special: always available, public wl = forth-wordlist)
 \ ------------------------------------------------------------------------------
