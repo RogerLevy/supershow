@@ -240,7 +240,6 @@ redef : module ( - )
         bl preparse bracket-name? if
             bl parse >bare-name    \ consume token, strip brackets
         else
-            bl parse 2drop
             file-module-name
         then
         ?module
@@ -264,6 +263,15 @@ redef : public ( - )
 redef : private ( - )
     current-module ?dup 0= abort" PRIVATE : No current module"
     mod.priv-wl @ set-current ;
+
+redef : forth-public ( - )
+    current-module ?dup 0= abort" FORTH-PUBLIC : No current module"
+    {: mod :}
+    only forth
+    mod mod.imports @ +imports-order
+    mod mod.pub-wl @ +order
+    mod mod.priv-wl @ +order
+    forth-wordlist set-current ;
 
 \ Single-line private: temporarily go private, compile one line, restore
 : || ( - )
