@@ -32,18 +32,18 @@ crucial test: valid-address ( addr -- addr n:result )
 crucial test: reasonable-size ( n -- n n:result )
     \ Validate size is reasonable (0 to 256MB, warn over 16MB)
     dup 0 268435456 within 0= if
-        0 s" Excessive buffer size (>256MB)" log-error exit
+        0 s" Excessive buffer size (>256MB)" .warn exit
     then    \ Max 256MB (256 * 1024 * 1024)
     dup 16777216 u<= else-warn \ Warn over 16MB (16 * 1024 * 1024)
-    dup 0> if s" Large buffer size (>16MB)" log-warning then ;
+    dup 0> if s" Large buffer size (>16MB)" .warn then ;
 
 crucial test: reasonable-allocation ( n -- n n:result )
     \ Validate allocation size is reasonable (1 to 256MB, warn over 16MB)
     dup 0 268435456 within 0= if
-        0 s" Excessive buffer size (>256MB)" log-error exit
+        0 s" Excessive buffer size (>256MB)" .warn exit
     then    \ Max 256MB (256 * 1024 * 1024)
     dup 16777216 u<= else-warn \ Warn over 16MB (16 * 1024 * 1024)
-    dup 0> if s" Large buffer size (>16MB)" log-warning then ;
+    dup 0> if s" Large buffer size (>16MB)" .warn then ;
 
 crucial test: valid-char ( n -- n n:result )
     \ Validate character is in 0-255 range (warn if outside)
@@ -64,18 +64,18 @@ crucial test: reasonable-length ( n -- n n:result )
 : check-reasonable-size ( n -- n n:result )  
     \ Colon equivalent of reasonable-size validator
     dup 0 256 mb within 0= if
-        0 s" Excessive buffer size (>256MB)" log-error exit
+        0 s" Excessive buffer size (>256MB)" .warn exit
     then    \ Max 256MB (256 * 1024 * 1024)
     dup 32 mb u<= else-warn 
-    dup 0> if s" Large buffer size (>32MB)" log-warning then ;
+    dup 0> if s" Large buffer size (>32MB)" .warn then ;
 
 : check-reasonable-allocation ( n -- n n:result )
     \ Colon equivalent of reasonable-allocation validator  
     dup 0 256 mb within 0= if
-        0 s" Excessive buffer size (>256MB)" log-error exit
+        0 s" Excessive buffer size (>256MB)" .warn exit
     then    
     dup 32 mb u<= else-warn 
-    dup 0> if s" Large buffer size (>32MB)" log-warning then ;
+    dup 0> if s" Large buffer size (>32MB)" .warn then ;
 
 : check-valid-char ( n -- n n:result )
     \ Colon equivalent of valid-char validator
@@ -117,7 +117,7 @@ crucial test: check-type-params ( addr len -- addr len n:result )
     else
         len 32768 u<= else-warn to len-result
         len-result fix? nip if
-            s" String length over 32768, limiting..." log-warning
+            s" String length over 32768, limiting..." .warn
             len 32768 umin to len
         then
     then
@@ -128,11 +128,11 @@ crucial test: check-move-params ( addr1 addr2 u -- addr1 addr2 u n:result )
     \ Validate move operation parameters
     {: addr1 addr2 u | addr1-result addr2-result size-result final :}
     addr1 check-valid-address to addr1-result drop
-    addr1-result 0 >= if s" Invalid source address" log-error then
+    addr1-result 0 >= if s" Invalid source address" .warn then
     addr2 check-valid-address to addr2-result drop
-    addr2-result 0 >= if s" Invalid destination address" log-error then
+    addr2-result 0 >= if s" Invalid destination address" .warn then
     u check-reasonable-size to size-result drop
-    size-result 0 >= if s" Invalid size" log-error then
+    size-result 0 >= if s" Invalid size" .warn then
     
     addr1 addr2 u
     addr1-result addr2-result and size-result and ;
@@ -141,11 +141,11 @@ crucial test: check-fill-params ( addr u char -- addr u char n:result )
     \ Validate fill operation parameters
     {: addr u char | addr-result size-result char-result final :}
     addr check-valid-address to addr-result drop
-    addr-result 0 >= if s" Invalid address" log-error then
+    addr-result 0 >= if s" Invalid address" .warn then
     u check-reasonable-size to size-result drop
-    size-result 0 >= if s" Invalid size" log-error then
+    size-result 0 >= if s" Invalid size" .warn then
     char check-valid-char to char-result drop
-    char-result 0 >= if s" Invalid fill character" log-error then
+    char-result 0 >= if s" Invalid fill character" .warn then
     
     addr u char
     addr-result size-result and char-result and ;
@@ -154,9 +154,9 @@ crucial test: check-fill-params ( addr u char -- addr u char n:result )
 \     \ Validate place operation with self-healing (clamp length to buffer)
 \     {: addr1 len addr2 | dest-result src-result final :}
 \     addr1 check-valid-address to src-result drop      \ Source valid
-\     src-result 0 >= if s" Invalid source address" log-error then
+\     src-result 0 >= if s" Invalid source address" .warn then
 \     addr2 check-valid-address to dest-result drop     \ Destination valid
-\     dest-result 0 >= if s" Invalid destination address" log-error then
+\     dest-result 0 >= if s" Invalid destination address" .warn then
 \     
 \     addr1 len addr2
 \     dest-result src-result and ;
@@ -176,7 +176,7 @@ crucial test: check-star-slash ( n1 n2 n3 -- n1 n2 n3 n:result )
     
     \ Check division by zero first
     n3 0= if 0
-        s" Division by zero" log-error
+        s" Division by zero" .warn
         exit
     then
     -1 ;
@@ -195,7 +195,7 @@ charmful test: check-float-to-single ( r -- r n:result )
     \ Simple range check for typical single-cell range
     fdup -2147483648.0e f>= fover 2147483647.0e f<= and else-warn
     dup 0 >= if
-        s" Float-to-single range check failed (only reported on first failure for word)" log-warning
+        s" Float-to-single range check failed (only reported on first failure for word)" .warn
         current-validation @ off \ validation disables individually for each word on its first failure
     then ;
 
@@ -207,7 +207,7 @@ crucial test: check-filename ( addr len mode -- addr len n:result )
     \ Validate filename parameters
     {: addr len mode | addr-result final :}
     addr check-valid-address to addr-result drop
-    addr-result 0 >= if s" Invalid filename address" log-error then
+    addr-result 0 >= if s" Invalid filename address" .warn then
     
     addr len mode
     addr-result len 0 260 within? and ;
@@ -221,7 +221,7 @@ crucial test: check-io-buffer ( addr u file -- addr u n:result )
     \ Validate I/O buffer parameters
     {: file | addr-result size-result :}
     over check-valid-address to addr-result drop
-    addr-result 0 >= if s" Invalid buffer address" log-error then
+    addr-result 0 >= if s" Invalid buffer address" .warn then
     dup check-reasonable-size to size-result drop
     
     file addr-result size-result and ;
@@ -266,9 +266,9 @@ crucial test: check-allot-size ( n -- n n:result )
     \ Validate allot size
     {: | size-result space-result :}
     check-reasonable-size to size-result
-    \ size-result 0 >= if s" Large allocation size" log-warning then
+    \ size-result 0 >= if s" Large allocation size" .warn then
     dup unused <= to space-result             \ Check available space
-    space-result 0= if s" Insufficient memory space" log-error then
+    space-result 0= if s" Insufficient memory space" .warn then
     size-result space-result and ;
 
 \ ==============================================================================
@@ -281,9 +281,9 @@ crucial test: check-char-store-params ( n addr -- n addr n:result )
     \ Combined validator for c! - validates both character and address
     {: | char-result addr-result final :}
     over check-valid-char to char-result drop
-    char-result 0 >= if s" check-char-value failed" log-error then
+    char-result 0 >= if s" check-char-value failed" .warn then
     dup check-valid-address to addr-result drop
-    addr-result 0 >= if s" check-store-address failed" log-error then
+    addr-result 0 >= if s" check-store-address failed" .warn then
     
     char-result addr-result and ;
 
@@ -292,17 +292,17 @@ crucial test: check-place-params ( addr1 len addr2 -- addr1 len addr2 n:result )
     {: addr1 len addr2 | addr-result src-result dest-result len-result :}
 
     addr1 check-valid-address to src-result drop      \ Source valid
-    src-result 0 >= if s" Invalid source address" log-error then
+    src-result 0 >= if s" Invalid source address" .warn then
 
     addr2 check-valid-address to dest-result drop     \ Destination valid
-    dest-result 0 >= if s" Invalid destination address" log-error then
+    dest-result 0 >= if s" Invalid destination address" .warn then
 
     src-result dest-result and to addr-result
     
     addr-result 0< if
         len 0 255 within? else-warn to len-result
         len 0 255 clamp to len 
-        len-result 0 >= if s" Invalid source length - clamped" log-warning then
+        len-result 0 >= if s" Invalid source length - clamped" .warn then
     then 
     
     addr1 len addr2
