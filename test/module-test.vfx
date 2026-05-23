@@ -1,0 +1,69 @@
+module
+    private
+    : word1 ." module-test:word1 executed" cr ;
+
+    public
+    : word2 ." module-test:word2 executed" cr ;
+
+module [c]
+    public
+    : word6 ." c:word6 executed" cr ; 
+    : word7 ." c:word7 executed" cr ; 
+
+module [a]
+    private
+    : word1 ." a:word1 executed" cr ;
+
+    public
+    : word2 ." a:word2 executed" cr ;
+
+    || : word3  ." a:word6 executed" cr ;
+    : word4     ." a:word4 executed" cr ;
+    : word7 ." a:word7 executed" cr ; 
+
+    import [c]
+    reexport [c]
+    
+    \ reexport [module-test] \ throws error [OK]
+
+only forth definitions
+: word4  ." forth:word4 executed" cr ;
+
+module [b]
+    import [a]
+    import [a]    \ <-- doesn't import twice [OK]
+    \ import %idir%/nomodule-file.vfx \ <-- threw error "didn't declare module" [OK]
+    import [%idir%/module-file.vfx]
+    \ word1     \ <-- this wasn't found [OK]
+    word2
+
+    \ should throw error:
+    \ : word4 [module-test] word2 ; 
+    \ [module-test] word2
+
+    \ [OK]
+    import [module-test]
+    : word5 [module-test] word2 [a] word2 ;
+    [module-test] word2 [a] word2 [forth] word4
+
+    \ word3   \ isn't found [OK]
+    word4     \ is found [OK]
+
+    word6     \ (from [C]) is found [OK]
+
+    [c] word7 \ [OK] 
+    [a] word7 \ [OK]
+
+\ Throws circular import error [OK]:
+\ module [c]
+\     import [b]
+
+module [d]
+    import [module-file]
+    import-as [%idir%/other/module-file.vfx] [other-module-file]
+
+    public
+    : asdf ." My ASDF" cr ;
+    asdf
+    [other-module-file] asdf
+    [module-file] asdf

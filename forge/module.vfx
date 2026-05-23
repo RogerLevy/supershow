@@ -1,0 +1,380 @@
+\ ==============================================================================
+\ Module System
+\ Replaces scope.vfx
+\ ==============================================================================
+
+\ ------------------------------------------------------------------------------
+\ Module struct
+\ ------------------------------------------------------------------------------
+
+0
+cell field mod.pub-wl        \ public wordlist handle
+cell field mod.priv-wl       \ private wordlist handle
+cell field mod.imports       \ linked list head of imports (0 = none)
+cell field mod.reexports     \ linked list head of reexports (0 = none)
+cell field mod.srcfile       \ zstring pointer to source file name (for collision detection)
+constant /module
+
+0
+cell field imp.mod            \ pointer to imported module struct
+cell field imp.next           \ next node (0 = end)
+constant /imp-node
+
+\ ------------------------------------------------------------------------------
+\ State
+\ ------------------------------------------------------------------------------
+
+0 value current-module       \ currently active module (0 = top-level / [forth])
+
+\ ------------------------------------------------------------------------------
+\ Import list operations
+\ ------------------------------------------------------------------------------
+
+: module-imports. ( mod - )
+    {: mod | node :}
+    mod body>name type ."  imports:" cr
+    mod mod.imports @ to node
+    begin node while
+        ."   " node imp.mod @ body>name type cr
+        node imp.next @ to node
+    repeat ;
+
+: module. ( mod - )
+    module-imports. ;
+
+: module-imported? ( mod1 mod2 - f )
+    \ is mod2 directly imported by mod1?
+    {: mod1 mod2 | node :}
+    mod1 mod.imports @ to node
+    begin node while
+        node imp.mod @ mod2 = if -1 exit then
+        node imp.next @ to node
+    repeat
+    0 ;
+
+: imports-transitively? ( mod1 mod2 - f )
+    \ does mod1 directly or transitively import mod2?
+    {: mod1 mod2 | node :}
+    mod1 mod2 module-imported? if -1 exit then
+    mod1 mod.imports @ to node
+    begin node while
+        node imp.mod @ mod2 recurse if -1 exit then
+        node imp.next @ to node
+    repeat
+    0 ;
+
+: module-accessible? ( mod1 mod2 - f )
+    \ is mod2 directly imported by mod1, or reexported by any of mod1's imports?
+    {: mod1 mod2 | node rnode :}
+    mod1 mod2 module-imported? if -1 exit then
+    mod1 mod.imports @ to node
+    begin node while
+        node imp.mod @ mod.reexports @ to rnode
+        begin rnode while
+            rnode imp.mod @ mod2 = if -1 exit then
+            rnode imp.next @ to rnode
+        repeat
+        node imp.next @ to node
+    repeat
+    0 ;
+
+: add-import ( mod imported-mod - )
+    {: mod imported-mod :}
+    here ( node )
+    imported-mod ,          \ imp.mod
+    mod mod.imports @ ,     \ imp.next
+    mod mod.imports ! ;
+
+: add-reexport ( mod imported-mod - )
+    {: mod imported-mod :}
+    here ( node )
+    imported-mod ,          \ imp.mod
+    mod mod.reexports @ ,   \ imp.next
+    mod mod.reexports ! ;
+
+\ ------------------------------------------------------------------------------
+\ Module name helpers
+\ ------------------------------------------------------------------------------
+
+\ module-name -> [module-name]
+create mnb 256 allot
+: >bracket-name ( a u - a' u' )
+    {: a u :}
+    s" [" mnb place a u mnb append s" ]" mnb append 
+    mnb count ;
+
+\ [module-name] -> module-name  (strips brackets)
+: >bare-name ( a u - a' u' )
+    1 /string 1 - ;
+
+\ True if string looks like [name]  (starts with [ ends with ])
+: bracket-name? ( a u - f )
+    dup 2 < if 2drop 0 exit then
+    over c@ '[' = >r
+    + 1- c@ ']' = r> and ;
+
+\ Module name from current source file
+: file-module-name ( - a u )
+    CurrSourceName -path -ext ;
+
+\ ------------------------------------------------------------------------------
+\ Module words  ( [name] words live in forth-wordlist, body = module struct )
+\ ------------------------------------------------------------------------------
+
+: find-module ( a u - mod | 0 )
+    -path -ext >bracket-name
+    forth-wordlist search-wordlist
+    dup -exit
+    drop >body ;
+
+: find-module-exact ( a u - mod | 0 )
+    \ look up by full path, no stripping
+    >bracket-name
+    forth-wordlist search-wordlist
+    dup -exit
+    drop >body ;
+
+: interpret-word-in ( a u wid - )
+    {: wid | word[ 64 ] :}
+    word[ place
+    word[ count
+    wid search-wordlist ( 0 | xt 1 | xt -1 )
+    0= abort" Word not found in module."
+    drop
+
+    save-order 
+    wid 1 set-order
+    word[ count parser
+    restore-order
+    execute ;
+
+: does-module
+    does> ( mod )
+        {: m :}
+        \ current-module 0= abort" DOES-MODULE : No current module."
+        current-module m = ?exit
+        current-module m module-accessible? not if
+            m body>name type ."  not imported." -1 abort 
+        then
+
+        bl parse m mod.pub-wl @ interpret-word-in ;
+
+        \ bl preparse 
+        \ m mod.pub-wl @ search-wordlist ( 0 | xt 1 | xt -1 )
+        \ 0= abort" Word not found in module."
+        \ drop
+
+        \ save-order 
+        \ m mod.pub-wl @ 1 set-order
+        \ bl parse parser
+        \ restore-order
+        \ execute ;
+
+: make-module ( a u - mod )
+    \ create [name] in forth-wordlist; struct lives in word body
+    wordlist >r wordlist >r
+    save-order also forth definitions
+    >bracket-name screate here
+    r> ,                    \ mod.pub-wl
+    r> ,                    \ mod.priv-wl
+    0 ,                     \ mod.imports
+    0 ,                     \ mod.reexports
+    CurrSourceName drop ,   \ mod.srcfile
+    immediate
+    does-module
+    restore-order ;
+
+\ ------------------------------------------------------------------------------
+\ Search order management
+\ ------------------------------------------------------------------------------
+
+\ Walk linked list recursively so tail (first inserted) is processed first,
+\ giving last-imported highest priority — matching live import order.
+
+: +reexports-order ( node - )
+    dup 0= if drop exit then
+    dup imp.next @ recurse
+    imp.mod @ mod.pub-wl @ +order ;
+
+: +mod-order ( mod - )
+    dup mod.reexports @ +reexports-order
+    mod.pub-wl @ +order ;
+
+: +imports-order ( node - )
+    dup 0= if drop exit then
+    dup imp.next @ recurse
+    imp.mod @ +mod-order ;
+
+: build-module-search-order ( mod - )
+    \ Set search order: priv-wl, pub-wl, all imported pub-wls (+reexports), forth
+    only forth
+    dup mod.imports @ +imports-order
+    dup mod.pub-wl @ +order
+        mod.priv-wl @ +order
+    definitions ;             \ compilation target = top of order = priv-wl
+
+\ Find or create a module by bare name
+: ?module ( a u - mod )
+    2dup find-module ?dup if nip nip exit then
+    make-module ;
+
+\ Find or create a module by full path (no stripping)
+: ?module-exact ( a u - mod )
+    2dup find-module-exact ?dup if nip nip exit then
+    make-module ;
+
+\ ------------------------------------------------------------------------------
+\ `module` word
+\ ------------------------------------------------------------------------------
+
+0 value qualified-import?   \ when set, module uses full srcfile path as key
+create qualified-key-buf 256 allot   \ counted string: full srcfile path, set by module
+
+redef : module ( - )
+    qualified-import? if
+        0 to qualified-import?
+        CurrSourceName -ext qualified-key-buf place
+        qualified-key-buf count ?module-exact
+    else
+        \ peek at next token; if [bracketed], use it; otherwise use filename
+        bl preparse bracket-name? if
+            bl parse >bare-name    \ consume token, strip brackets
+        else
+            bl parse 2drop
+            file-module-name
+        then
+        ?module
+    then
+    to current-module
+    current-module build-module-search-order ;
+
+redef : global ( - )
+    only forth definitions  0 to current-module ;
+
+\ ------------------------------------------------------------------------------
+\ public / private switching
+\ ------------------------------------------------------------------------------
+
+redef : public ( - )
+    current-module ?dup 0= abort" PUBLIC : No current module"
+    dup mod.pub-wl @ set-current
+    dup mod.priv-wl @ +order        \ keep private in search order
+    drop ;
+
+redef : private ( - )
+    current-module ?dup 0= abort" PRIVATE : No current module"
+    mod.priv-wl @ set-current ;
+
+\ Single-line private: temporarily go private, compile one line, restore
+: || ( - )
+    get-current >r
+    current-module ?dup if 
+        mod.priv-wl @ set-current 
+    else 
+        -1 abort" || : No current module" 
+    then
+    0 parse evaluate
+    r> set-current ; immediate
+
+\ ------------------------------------------------------------------------------
+\ import
+\ ------------------------------------------------------------------------------
+
+: find-or-load ( name - mod )
+    {: name | mod :}
+    name count find-module to mod
+    mod 0= if
+        save-order
+        current-module >r
+        name count expanded included   \ file must call `module`
+        r> to current-module
+        restore-order
+        name count find-module to mod
+        mod 0= if abort" Imported file did not declare a module." then
+    then
+    mod ;
+
+: check-import ( mod - mod )
+    dup current-module = abort" Tried to import current module into itself."
+    dup current-module imports-transitively? if abort" Circular import detected." then ;
+
+: do-import ( mod - )
+    current-module over module-imported? not if
+        current-module over add-import
+    then
+    drop
+    get-current >r
+    current-module build-module-search-order
+    r> set-current ;
+
+: import ( - <[name]> )
+    {: | name[ 256 ] mod :}
+    bl parse 2dup bracket-name? 0= abort" IMPORT: expected [module-name]"
+    >bare-name name[ place
+    name[ find-or-load check-import to mod
+    mod do-import ;
+
+: import-as ( - <[name]> <[localname]> )
+    {: | name[ 256 ] cmd[ 256 ] key[ 256 ] saved-key[ 256 ] mod save-qi :}
+
+    \ parse source module name
+    bl parse 2dup bracket-name? 0= abort" IMPORT-AS: expected [module-name]"
+    >bare-name name[ place
+
+    \ load file with qualified naming (full srcfile path as key)
+    \ save/restore reentrancy state in case we're nested inside another import-as
+    qualified-import? to save-qi
+    qualified-key-buf count saved-key[ place
+    0 qualified-key-buf c!
+    -1 to qualified-import?
+    save-order  current-module >r
+        name[ count expanded included   \ module populates qualified-key-buf
+    r> to current-module  restore-order
+    qualified-key-buf count key[ place   \ copy into local before restoring
+    save-qi to qualified-import?
+    saved-key[ count qualified-key-buf place
+
+    \ find and register the module
+    key[ c@ 0= abort" Imported file did not declare a module."
+    key[ count find-module-exact to mod
+    mod check-import to mod
+    mod do-import
+
+    \ create [localname] alias in private wordlist via aka
+    bl parse 2dup bracket-name? 0= abort" IMPORT-AS: expected [localname]"
+    get-current >r
+    current-module mod.priv-wl @ set-current
+    also forth                              \ ensure forth-wordlist is searchable for aka
+    s" aka " cmd[ place
+    cmd[ append                          \ [localname] first
+    s"  " cmd[ append
+    key[ count >bracket-name cmd[ append \ then existing [qualified-name]
+    cmd[ count evaluate
+    previous
+    r> set-current ;
+
+: reexport ( - <[name]> )
+    {: | mod :}
+    bl parse 2dup bracket-name? 0= abort" REEXPORT: expected [module-name]"
+    >bare-name find-module to mod
+    mod 0= if abort" Module not found for reexport." then
+    current-module mod module-accessible? not if abort" Can only reexport an accessible module." then
+    current-module mod add-reexport ;
+
+\ ------------------------------------------------------------------------------
+\ [forth] module  (special: always available, public wl = forth-wordlist)
+\ ------------------------------------------------------------------------------
+
+redef : [forth] ( <word> - )
+    bl parse forth-wordlist interpret-word-in ; immediate
+
+\ ------------------------------------------------------------------------------
+\ Include order preservation (same as scope.vfx)
+\ ------------------------------------------------------------------------------
+
+: /order only forth definitions ;
+
+redef : include
+    current-module >r  save-order /order getPathSpec included restore-order  r> to current-module ;
+redef : included
+    current-module >r  save-order /order included restore-order  r> to current-module ;

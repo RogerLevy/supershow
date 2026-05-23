@@ -15,10 +15,16 @@ optimising off  \ DO NOT REMOVE, it breaks continuations
 \ =============================================================================
 
 include %idir%/file-fix.vfx       \ Fix bug in VFX Forth INCLUDE 
-
 include %idir%/backtick.vfx       \ Ignore trailing backticks; like commas in C
 include %idir%/strlit.vfx
 include %idir%/core.vfx           \ Miscellaneous utility words / core extensions
+
+include %idir%/module.vfx
+include %idir%/../test/module-test.vfx
+
+
+quit
+
 
 include %idir%/scope.vfx          \ Per-file public/private words; search order stack
 include %idir%/fixed.vfx          \ 16.16 fixed-point math
