@@ -7,6 +7,9 @@
 \ 12/23/2025 TODO: implement automatic template resize in >TEMPLATE
 \ 12/23/2025 TODO: don't need to SAVE-DS in non-debug builds
 
+module [nibs]
+forth-public
+
 optimising on
 
 1024 ?constant #max-classifiers

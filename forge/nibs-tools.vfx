@@ -3,6 +3,9 @@
 \ Claude wrote the initial version of this but it's been heavily modified
 \ ------------------------------------------------------------------------------
 
+module [nibs]
+forth-public
+
 || 0 value target-class
 || 0 value target-bit
 || 0 value found-items

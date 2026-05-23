@@ -3,6 +3,9 @@
 \ Python script to perform expansion, but it's still useful for quick
 \ experiments and stuff that I don't need help from Claude with.
 
+module [nibs]
+forth-public
+
 || redef : number? ( a len - f )
     isnumber? case
         1 of drop -1 exit endof
