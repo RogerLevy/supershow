@@ -33,7 +33,7 @@ module [b]
     import [a]
     import [a]    \ <-- doesn't import twice [OK]
     \ import %idir%/nomodule-file.vfx \ <-- threw error "didn't declare module" [OK]
-    import [%idir%/module-file.vfx]
+    import %idir%/module-file.vfx
     \ word1     \ <-- this wasn't found [OK]
     word2
 
@@ -61,7 +61,7 @@ module [b]
 
 module [d]
     import [module-file]
-    import-as [%idir%/other/module-file.vfx] [other-module-file]
+    import-as %idir%/other/module-file.vfx [other-module-file]
 
     public
     : asdf ." My ASDF" cr ;

@@ -44,6 +44,11 @@ create mnb 256 allot
     over c@ '[' = >r
     + 1- c@ ']' = r> and ;
 
+: >module-name ( a u - a' u' )
+    \ Strip brackets if present; return bare name.
+    \ Lets import/import-as accept either [name] or name.
+    2dup bracket-name? if >bare-name then ;
+
 : file-module-name ( - a u )
     CurrSourceName -path -ext ;
 
@@ -312,8 +317,7 @@ redef : forth-public ( - )
 
 : import ( - <[name]> )
     {: | name[ 256 ] mod :}
-    bl parse 2dup bracket-name? 0= abort" IMPORT: expected [module-name]"
-    >bare-name name[ place
+    bl parse >module-name name[ place
     name[ find-or-load check-import to mod
     mod do-import ;
 
@@ -321,8 +325,7 @@ redef : forth-public ( - )
     {: | name[ 256 ] cmd[ 256 ] key[ 256 ] saved-key[ 256 ] mod save-qi :}
 
     \ parse source module name
-    bl parse 2dup bracket-name? 0= abort" IMPORT-AS: expected [module-name]"
-    >bare-name name[ place
+    bl parse >module-name name[ place
 
     \ load file with qualified naming (full srcfile path as key)
     \ save/restore reentrancy state in case we're nested inside another import-as
@@ -344,7 +347,7 @@ redef : forth-public ( - )
     mod do-import
 
     \ create [localname] alias in private wordlist via aka
-    bl parse 2dup bracket-name? 0= abort" IMPORT-AS: expected [localname]"
+    bl parse >module-name >bracket-name   \ normalize then re-bracket for alias
     get-current >r
     current-module mod.priv-wl @ set-current
     also forth                              \ ensure forth-wordlist is searchable for aka
