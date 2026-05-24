@@ -2,6 +2,8 @@
 \ Better VFX error reporting
 \ ------------------------------------------------------------------------------
 
+module [engineer]
+
 private
 
 0

@@ -1,8 +1,10 @@
+module [ls]
+
 private
 
 : column  out @ - spaces ;
 : file-color ( z$ - n )
-    save-order sandbox ['] ls>> >body @ +order
+    save-order sandbox ['] [ls] >body @ +order
     zcount '.' ending sfind if execute else drop 15 then 
     restore-order ;
 

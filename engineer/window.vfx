@@ -2,11 +2,15 @@
 \ Window position save/restore
 \ =============================================================================
 
+module [engineer]
+
 variable winx
 variable winy
 
 : session-ini-path ( - a n )
     s" %home%/session.ini" slashes expand ;
+
+public
 
 : save-window-pos
     fullscreen? ?exit
@@ -28,9 +32,13 @@ variable winy
 \ Window management
 \ =============================================================================
 
+forth-public
+
 extern void * GetForegroundWindow( );
 extern bool SetForegroundWindow( void * hwnd );
 GetForegroundWindow value vfx-hwnd
+
+public
 
 : >display ( - )
     flushOP-gen drop \ flush buffered output (VFX)

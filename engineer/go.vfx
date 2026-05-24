@@ -2,6 +2,22 @@
 \ Framerate independence
 \ =============================================================================
 
+module [engineer]
+
+\ =============================================================================
+\ Main Loop Support
+\ =============================================================================
+
+private
+
+: spin ( - )
+    going @ -exit
+    {: | ev[ /ALLEGRO_EVENT ] :}
+    frame-queue ev[ al_wait_for_event
+    frame-queue al_flush_event_queue ;
+
+public
+
 redef : ticks  ( n - ms )
     s>f 1000e tps f/ f* f>s ;
 
@@ -11,18 +27,6 @@ redef : ticks  ( n - ms )
     usdelta s>f 1000000e f/ to sdelta
     ustime 1000 m/ to mstime
     sdelta f>p to pdelta ;
-
-|| : spin ( - )
-    going @ -exit
-    {: | ev[ /ALLEGRO_EVENT ] :}
-    frame-queue ev[ al_wait_for_event
-    frame-queue al_flush_event_queue ;
-
-\ =============================================================================
-\ Main Loop Support
-\ =============================================================================
-
-public
 
 : poll ( - )
     poll-keyboard  
@@ -45,6 +49,7 @@ public
 \ =============================================================================
 
 private
+
 : system-events ( - )
     ALLEGRO_EVENT_DISPLAY_CLOSE happened? if
         bye
@@ -58,7 +63,7 @@ private
         display al_get_display_height to winh
     then ;
 
-|| : ?event ( - flag )
+: ?event ( - flag )
     alqueue the-event al_get_next_event 0<> dup -exit
     >r system-events r> ;
 
@@ -80,8 +85,6 @@ public
 : ?w/f  <enter> pressed?  alt? and if w/f -keys then ;
 : ?bye  <f4> pressed?  alt? and if bye then ;
 : system-controls  ?quit ?w/f ?bye ;
-
-public
 
 : process-input  poll pump ;
 : draw-game  cls 0 0 at 'show @ ?execute ;

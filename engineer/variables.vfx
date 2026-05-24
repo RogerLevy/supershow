@@ -1,3 +1,7 @@
+module [engineer]
+
+public
+
 variable 'show ( - ) \ app logic and rendering
 ' noop 'show !
 \ defer desktop ( - ) \ default behavior of SHOW (restored on EMPTY)
@@ -37,6 +41,8 @@ variable user-zoom
 \ Add protection from unintentional redefinitions (use REDEF) 
 \ Extended with early-out when honing or not including
 \ =============================================================================
+
+private
 
 : vfxland-redefhook2 ( - ) 
     honing @ 'sourcefile @ 0= or if

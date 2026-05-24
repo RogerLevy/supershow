@@ -1,3 +1,6 @@
+module [allegro5]
+forth-public
+
 ec-cell pal
 
 create vga13h

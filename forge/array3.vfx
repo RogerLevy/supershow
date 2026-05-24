@@ -1,7 +1,6 @@
 \ ==============================================================================
 \ Array System v3 - Type-based arrays with smart element access
 \ ==============================================================================
-module
 \
 \ Design Goals:
 \ - Type-based construction (explicit what array holds)
@@ -23,6 +22,10 @@ module
 \
 \ See datatypes.vfx for the atomic element types.
 \ ==============================================================================
+
+module
+
+forth-public
 
 fast{ optimising on 
 
@@ -68,8 +71,6 @@ trait;
 : empty? ( iterable - bool ) >item-count @ 0= ;
 : tail ( iterable - n iterable ) dup >item-count @ 1 - swap ;
 : head ( iterable - 0 iterable ) 0 swap ;
-
-
 
 : add ( node - node )
     dup this push ;

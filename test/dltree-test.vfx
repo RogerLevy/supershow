@@ -1,4 +1,4 @@
-REQUIRE %vfxland5%/forge/lib/dltree.vfx
+REQUIRE %vfxland5%/lib/dltree.vfx
 
 -warnings
 

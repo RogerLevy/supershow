@@ -25,7 +25,7 @@ it's part of my "physicality" project
 
 \ -- Dependencies --------------------------------------------------------------
 
-REQUIRE %vfxland5%/forge/lib/dltree.vfx
+REQUIRE %vfxland5%/lib/dltree.vfx
 REQUIRE %vfxland5%/supershow/traits.vfx
 REQUIRE %vfxland5%/supershow/bitmap.vfx
 REQUIRE %vfxland5%/supershow/sprites.vfx

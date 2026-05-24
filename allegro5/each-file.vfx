@@ -1,3 +1,6 @@
+module [allegro5]
+public
+
 : each-file ( path:a n xt - ) ( path n - )
     -rot expand >zpad al_create_fs_entry locals| e xt |
     e al_open_directory if

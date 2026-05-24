@@ -16,12 +16,18 @@
 \ Note: Frame timing is controlled by spin, which waits for the frame timer.
 \ =============================================================================
 
-\ Save original BusyIdle action
-\ Note: action-of is standard ANS Forth; alternatively use ['] BusyIdle >body @
-['] BusyIdle >body @ value 'original-busyidle
+module [engineer]
+
+public
 
 \ Flag to control REPL game mode
 variable repl-game-active
+
+private
+
+\ Save original BusyIdle action
+\ Note: action-of is standard ANS Forth; alternatively use ['] BusyIdle >body @
+['] BusyIdle >body @ value 'original-busyidle
 
 create gds 2 mb allot
 
@@ -77,9 +83,6 @@ fast}
 : install-repl-game-hook ( - )
     ['] game-busyidle is BusyIdle ;
 
-: uninstall-repl-game-hook ( - )
-    'original-busyidle is BusyIdle ;
-
 : repl-game-installed? ( - flag )
     ['] BusyIdle >body @ ['] game-busyidle = ;
 
@@ -92,6 +95,11 @@ fast}
     going on
     frame-timer al_resume_timer
     spin ;
+
+public
+
+: uninstall-repl-game-hook ( - )
+    'original-busyidle is BusyIdle ;
 
 \ Start game in REPL mode - IDE stays responsive
 : repl-go ( - )

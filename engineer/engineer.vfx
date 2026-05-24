@@ -2,6 +2,8 @@
 \ Engineer 1.0 internal version 2 (regressed)
 \ ------------------------------------------------------------------------------
 
+module [engineer]
+
 \ =============================================================================
 \ %vfxland5% string macro
 \ =============================================================================
@@ -25,20 +27,22 @@ include %idir%/window.vfx
 \ Game services
 \ =============================================================================
 
-fload %idir%/../forge/lib/allegro5/graphics.vfx   \ Graphics functions
-fload %idir%/../forge/lib/allegro5/vga13h.vfx     \ VGA text support (don't remove!)
-fload %idir%/../forge/lib/allegro5/input.vfx      \ Input functions
-fload %idir%/go.vfx         \ Main Loop
-fload %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)
+import %idir%/../allegro5/allegro5.vfx
+reexport [allegro5]
+
+include %idir%/go.vfx         \ Main Loop
+include %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)
 include %idir%/trampoline.vfx
 
 \ =============================================================================
 \ Reset System Classifiers
 \ =============================================================================
 
-|| : fresh,  dup , /classifier move, ;
+private
 
-|| create fresh-classifiers   0
+: fresh,  dup , /classifier move, ;
+
+create fresh-classifiers   0
     1 + %object fresh,    
     1 + %iterable fresh,
     1 + %lifo fresh,
@@ -51,21 +55,23 @@ include %idir%/trampoline.vfx
     1 + %array fresh,
     1 + %stack fresh,   
     1 + %global fresh,
-|| constant #freshes
+constant #freshes
 
-|| : reset+ ( a - a' )
+: reset+ ( a - a' )
     @+ udup ( src src dest ) /classifier move 
     /classifier + ;
 
-|| create fresh-all-classifiers classifiers #max-classifiers cells move,
+create fresh-all-classifiers classifiers #max-classifiers cells move,
 
-|| : reset-system-classifiers ( - )
+: reset-system-classifiers ( - )
     fresh-classifiers #freshes for reset+ loop drop
     fresh-all-classifiers classifiers #max-classifiers cells move ;
 
 \ =============================================================================
 \ Reset Root EC
 \ =============================================================================
+
+private
 
 create fresh-rootec  rootec EC_MAX_SIZE move,
 
@@ -75,6 +81,8 @@ create fresh-rootec  rootec EC_MAX_SIZE move,
 \ Entry Points  
 \ =============================================================================
 
+private
+
 : init-vfx-console
     -1 line# !
     hWndMain to vfx-hwnd
@@ -83,8 +91,6 @@ create fresh-rootec  rootec EC_MAX_SIZE move,
 
 : vfxforth-entrypoint ( hinst hpinst lpcommand nshow -- res )
     [ ' EntryPoint >body @ compile, ] ;
-
-borrow nibs>> init-nibs
 
 : run-main ( - )
     c" main" find if execute else drop then ;
@@ -103,22 +109,10 @@ borrow nibs>> init-nibs
     ['] run-main is boot
     honing off ;
 
-redef : empty ( - )
-    rs
-    init-engineer
-    reset-engineer
-    only forth definitions
-    empty ; 
-
 \ Isolation tool - for verifying that modules in a project can be loaded
 \ individually.
-VARIABLE isolation
-REDEF : MODULE  isolation @ if empty then require ;
-
-: cartridge ( - )
-    empty hold off
-    s" main.vfx" fileExist? if s" main.vfx" floaded then 
-    repl-go ;
+\ VARIABLE isolation
+\ REDEF : MODULE  isolation @ if empty then require ;
 
 also substitutions 
     aka vfxland5$ vfxland5
@@ -133,6 +127,20 @@ previous
 : dev-init  init-xrefs init-paths ;
 : init-home-path  ?.. wd@ home$ place ;
 
+public
+
+redef : empty ( - )
+    rs
+    init-engineer
+    reset-engineer
+    only forth definitions
+    empty ; 
+
+: cartridge ( - )
+    empty hold off
+    s" main.vfx" fileExist? if s" main.vfx" included then 
+    repl-go ;
+
 : frigid ( - )
     \ Initialize runtime environment 
     rs
@@ -144,6 +152,12 @@ previous
     0d to ustime 
     init-engineer ;
 
+\ =============================================================================
+\ Turnkey creation
+\ =============================================================================
+
+private
+
 : release-entrypoint ( - )
     \ Release cold start sequence - initialize all systems and begin execution
     debug off frigid boot  blocking-go ;
@@ -151,9 +165,7 @@ previous
 : debug-entrypoint ( - )
     vfxforth-entrypoint init-vfx-console ;
 
-\ =============================================================================
-\ Turnkey creation
-\ =============================================================================
+public
 
 : save-release ( - <path> )
     ['] release-entrypoint is EntryPoint
@@ -185,16 +197,17 @@ previous
 \ Development tool commands
 \ =============================================================================
 
-fload %idir%/tools.vfx
-fload %idir%/ls.vfx
+include %idir%/tools.vfx
+import %idir%/ls.vfx
 
-public
-include %vfxland5%/forge/lib/back.vfx           \ Backward compatibility shim
+\ public
+\ include %vfxland5%/lib/back.vfx           \ Backward compatibility shim
 
 \ =============================================================================
 \ Kickoff
 \ =============================================================================
-public
+
+private
 
 : dev-entrypoint ( hinst hpinst lpcommand nshow -- res )
     init-nibs
@@ -219,6 +232,8 @@ public
 
 ['] dev-entrypoint is EntryPoint
 ['] dev-cold is .cold
+
+public
 
 : save-dev ( - <path> )
     ['] dev-entrypoint is EntryPoint

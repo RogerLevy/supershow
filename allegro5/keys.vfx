@@ -2,6 +2,9 @@
 \ Key constants
 \ ------------------------------------------------------------------------------
 
+module [allegro5]
+public
+
 1 constant <A>  
 2 constant <B>  
 3 constant <C>  

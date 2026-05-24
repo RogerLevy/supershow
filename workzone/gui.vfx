@@ -6,7 +6,7 @@ variable overview
 
 \ -- Dependencies --------------------------------------------------------------
 
-REQUIRE %vfxland5%/forge/lib/dltree.vfx
+REQUIRE %vfxland5%/lib/dltree.vfx
 REQUIRE %vfxland5%/lib/mouse.vfx
 REQUIRE %idir%/shapes.vfx
 REQUIRE %idir%/colors.vfx

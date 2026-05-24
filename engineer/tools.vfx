@@ -1,8 +1,12 @@
+module [engineer]
+
+public
+
 \ Try/Honing - Convenient code testing
 
 : ?hone ( - <path> )
     honing @ if honing-wl +order then
-    bl parse ['] floaded catch
+    bl parse ['] included catch
     honing @ if honing-wl -order then 
     throw ;
 

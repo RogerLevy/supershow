@@ -3,13 +3,14 @@
 require %idir%/../lib/file.fth
 require %idir%/../lib/configtools.fth
 include %idir%/../forge/forge.vfx
-include %idir%/../forge/lib/allegro5/allegro5.vfx
-
-\\
+include %idir%/../allegro5/allegro5.vfx
 include %idir%/engineer.vfx
 ProtectedExterns
 
+
 256 1024 * 1024 * set-size \ set dictionary size for exported executable
+
+module [engineer]
 cwd ..
 save-dev bin\engineer
 save-xref
