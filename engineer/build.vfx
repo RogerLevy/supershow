@@ -1,6 +1,12 @@
 \ true constant verbose-compilation
 +xrefs 256 1024 * xref-kb
-include %idir%/main.vfx
+require %idir%/../lib/file.fth
+require %idir%/../lib/configtools.fth
+include %idir%/../forge/forge.vfx
+include %idir%/../forge/lib/allegro5/allegro5.vfx
+
+\\
+include %idir%/engineer.vfx
 ProtectedExterns
 
 256 1024 * 1024 * set-size \ set dictionary size for exported executable
