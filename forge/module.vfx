@@ -4,6 +4,7 @@
 \ ==============================================================================
 
 0 value current-module       \ currently active module (0 = top-level / [forth])
+create current-package 256 allot  \ package prefix of current module (counted string)
 
 save-order vocabulary moduleing
 
@@ -51,6 +52,21 @@ create mnb 256 allot
 
 : file-module-name ( - a u )
     CurrSourceName -path -ext ;
+
+: module-name>package ( a u - a' u' )
+    \ Prefix up to last '.', or full name if no dot.
+    {: a u | i :}
+    u to i
+    begin i while
+        a i 1- + c@ '.' = if a i 1- exit then
+        i 1- to i
+    repeat
+    a u ;
+
+: bare-name? ( a u - f )
+    \ True if string contains no path separators
+    2dup s" /" search nip nip 0= >r
+         s" \" search nip nip 0= r> and ;
 
 \ ------------------------------------------------------------------------------
 \ Query predicates
@@ -124,6 +140,26 @@ create mnb 256 allot
     dup -exit
     drop >body ;
 
+create qname-buf 256 allot
+: find-module-qualified ( a u - mod | 0 )
+    \ File paths (has path separator): strip path/ext via find-module.
+    \ Dotted names (qualified, no path sep): look up exactly.
+    \ Bare names: try as-is first, then package-qualified.
+    {: a u | mod :}
+    a u bare-name? 0= if
+        a u find-module exit
+    then
+    a u s" ." search nip nip if
+        a u find-module-exact exit
+    then
+    a u find-module to mod
+    mod if mod exit then
+    current-package c@ 0= if 0 exit then
+    current-package count qname-buf place
+    s" ." qname-buf append
+    a u qname-buf append
+    qname-buf count find-module-exact ;
+
 : interpret-word-in ( a u wid - )
     {: wid | word[ 64 ] :}
     word[ place
@@ -189,7 +225,7 @@ create mnb 256 allot
     definitions ;             \ compilation target = top of order = priv-wl
 
 : ?module ( a u - mod )
-    2dup find-module ?dup if nip nip exit then
+    2dup find-module-qualified ?dup if nip nip exit then
     make-module ;
 
 : ?module-exact ( a u - mod )
@@ -203,16 +239,15 @@ create mnb 256 allot
 0 value qualified-import?
 create qualified-key-buf 256 allot
 
-: find-or-load ( name - mod )
-    {: name | mod :}
-    name count find-module to mod
+: find-or-load ( name path - mod )
+    \ name: registry name (bare or dotted)  path: file path to load if needed
+    {: name path | mod :}
+    name count find-module-qualified to mod
     mod 0= if
-        save-order
-        current-module >r
-        name count expanded included   \ file must call `module`
-        r> to current-module
-        restore-order
-        name count find-module to mod
+        save-order  current-module >r
+        path count expanded included   \ file must call `module`
+        r> to current-module  restore-order
+        name count find-module-qualified to mod
         mod 0= if abort" Imported file did not declare a module." then
     then
     mod ;
@@ -265,7 +300,8 @@ redef : module ( - )
     qualified-import? if
         0 to qualified-import?
         CurrSourceName -ext qualified-key-buf place
-        qualified-key-buf count ?module-exact
+        qualified-key-buf count 2dup module-name>package current-package place
+        ?module-exact
     else
         \ peek at next token; if [bracketed], use it; otherwise use filename
         bl preparse bracket-name? if
@@ -273,6 +309,7 @@ redef : module ( - )
         else
             file-module-name
         then
+        2dup module-name>package current-package place
         ?module
     then
     to current-module
@@ -315,24 +352,21 @@ redef : forth-public ( - )
 \ import / reexport
 \ ------------------------------------------------------------------------------
 
-: bare-name? ( a u - f )
-    \ True if string contains no path separators
-    2dup s" /" search nip nip 0= >r
-         s" \" search nip nip 0= r> and ;
-
 : import ( - <[name]> )
     {: | name[ 256 ] path[ 256 ] mod :}
     bl parse >module-name name[ place
-    \ Bare name (no path sep)? Probe %idir%/name.vfx first.
+    \ Resolve file path separately; name[ stays clean for registry lookup.
     name[ count bare-name? if
         s" %idir%/" path[ place
         name[ count path[ append
         s" .vfx" path[ append
-        path[ count expanded fileexists? if
-            path[ count name[ place
+        path[ count expanded fileexists? 0= if
+            name[ count path[ place   \ no %idir% file; use name as path fallback
         then
+    else
+        name[ count path[ place
     then
-    name[ find-or-load check-import to mod
+    name[ path[ find-or-load check-import to mod
     mod do-import ;
 
 : import-as ( - <[name]> <[localname]> )
@@ -376,7 +410,7 @@ redef : forth-public ( - )
 : reexport ( - <[name]> )
     {: | mod :}
     bl parse 2dup bracket-name? 0= abort" REEXPORT: expected [module-name]"
-    >bare-name find-module to mod
+    >bare-name find-module-qualified to mod
     mod 0= if abort" Module not found for reexport." then
     current-module mod module-accessible? not if abort" Can only reexport an accessible module." then
     current-module mod add-reexport ;
@@ -410,11 +444,25 @@ create _inc-buf 256 allot
         then
     then ;
 
+\ Package save stack (handles nested includes)
+16 constant max-pkg-depth
+create pkg-save-stack max-pkg-depth 256 * allot
+0 value pkg-sp
+
+: push-package  current-package count  pkg-save-stack pkg-sp 256 * +  place  pkg-sp 1+ to pkg-sp ;
+: pop-package   pkg-sp 1- to pkg-sp  pkg-save-stack pkg-sp 256 * + count  current-package place ;
+
 redef : include
-    current-module >r  save-order getPathSpec ?idir-path included restore-order  r> to current-module ;
+    current-module >r  push-package
+    save-order getPathSpec ?idir-path included restore-order
+    pop-package  r> to current-module ;
 redef : require
-    current-module >r  save-order getPathSpec ?idir-path required restore-order  r> to current-module ;
+    current-module >r  push-package
+    save-order getPathSpec ?idir-path required restore-order
+    pop-package  r> to current-module ;
 redef : included
-    current-module >r  save-order included restore-order  r> to current-module ;
+    current-module >r  push-package
+    save-order included restore-order
+    pop-package  r> to current-module ;
 
 restore-order

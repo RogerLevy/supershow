@@ -1,0 +1,6 @@
+module [pkg]
+    import sub          \ bare name — should resolve to [pkg.sub]
+    reexport [sub]      \ bare bracket name — should resolve to [pkg.sub]
+
+    public
+    : pkg-word ." pkg:pkg-word executed" cr ;

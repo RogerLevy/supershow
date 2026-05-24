@@ -1,0 +1,4 @@
+module [pkg.sub]
+public
+
+redef : sub-word ." pkg.sub:sub-word executed" cr ;

@@ -1,0 +1,50 @@
+\ Package-qualified module name tests
+
+require pkg-sub   \ ensure [pkg.sub] is fully populated before tests run
+
+\ --- Test 1: current-package set correctly ---
+module [pkg.sub]
+    \ current-package should be "pkg" here
+    current-package count s" pkg" compare 0= [IF] ." [OK] current-package = pkg" cr [ELSE] ." [FAIL] current-package wrong" cr [THEN]
+
+\ --- Test 2: bare import resolves within package ---
+\ pkg.vfx imports 'sub' (bare) and reexports [sub] (bare bracket)
+\ Both should resolve to [pkg.sub] without error.
+module [pkg]
+    import sub          \ resolves to [pkg.sub]
+    reexport [sub]      \ resolves to [pkg.sub]
+
+    public
+    : pkg-word ." pkg:pkg-word executed" cr ;
+
+\ --- Test 3: fully qualified import from outside ---
+module [consumer]
+    import pkg.sub      \ dotted — looks up [pkg.sub] directly
+    import pkg          \ gets pkg-word, sub-word via reexport
+
+    public
+    : run-tests
+        sub-word        \ visible via import pkg.sub
+        pkg-word        \ visible via import pkg
+        \ sub-word        \ also visible via pkg's reexport of [sub]
+    ;
+
+    run-tests
+
+\ --- Test 4: current-package restored after include ---
+module [outer.mod]
+    current-package count s" outer" compare 0= [IF] ." [OK] before include: current-package = outer" cr [ELSE] ." [FAIL] before include: current-package wrong" cr [THEN]
+    include pkg-sub     \ declares [pkg.sub], sets current-package to "pkg" temporarily
+    current-package count s" outer" compare 0= [IF] ." [OK] after include: current-package restored to outer" cr [ELSE] ." [FAIL] after include: current-package not restored" cr [THEN]
+
+\ --- Test 5: root module (no dot) — current-package = full name ---
+module [rootmod]
+    current-package count s" rootmod" compare 0= [IF] ." [OK] current-package = rootmod" cr [ELSE] ." [FAIL] current-package wrong for root module" cr [THEN]
+
+\ --- Should fail: reexport of non-imported module ---
+\ module [bad]
+\     reexport [pkg.sub]  \ not imported — should abort 
+
+\ --- Should fail: import self ---
+\ module [selfimport]
+\     import selfimport   \ circular — should abort 
