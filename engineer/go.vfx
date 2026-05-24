@@ -42,8 +42,6 @@ redef : ticks  ( n - ms )
 
 : ?idle  debug @ if (EmptyIdle) then ;
 
-: present  display al_flip_display ?idle spin ;
-
 \ =============================================================================
 \ Event handler
 \ =============================================================================
@@ -81,6 +79,8 @@ redef : event? ( - flag )
 
 public
 
+: present  display al_flip_display ?idle spin ;
+    
 : ?quit  esc-quits @ -exit  <esc> pressed? shift? not and throw ;
 : ?w/f  <enter> pressed?  alt? and if w/f -keys then ;
 : ?bye  <f4> pressed?  alt? and if bye then ;

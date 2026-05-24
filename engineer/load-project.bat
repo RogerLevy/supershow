@@ -6,4 +6,4 @@ if exist main.vfx (
 ) else (
     echo No main.vfx found, starting Engineer normally
     engineer.exe %*
-)go
+)

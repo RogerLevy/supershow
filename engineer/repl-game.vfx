@@ -105,7 +105,8 @@ public
 : repl-go ( - )
     install-repl-game-hook
     going @ if
-        cr ." Game already running." cr exit
+        \ cr ." Game already running." cr 
+        exit
     then
     repl-pre                    \ Initialize game state (REPL version)
     repl-game-active on
