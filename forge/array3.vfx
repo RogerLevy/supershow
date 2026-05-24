@@ -9,7 +9,7 @@
 \ - No forth-public slot address exposure
 \ - Performance escape hatch via private SLOT
 \
-\ Public API:
+\ Forth Public API:
 \   el@       ( index array - value/ref )   - Smart element access
 \   EL!      ( value index array - )       - Store element
 \   !EL      ( index array xt - )          - Fetch-transform-store
@@ -17,14 +17,13 @@
 \   !EACH    ( array xt - )                - Modify all elements
 \   #ITEMS   ( array - n )                 - Element count
 \
-\ Private API (use via borrow):
+\ Public API:
 \   SLOT     ( index array - addr )        - Raw slot address
 \
 \ See datatypes.vfx for the atomic element types.
 \ ==============================================================================
 
-module
-
+module [array]
 forth-public
 
 fast{ optimising on 
@@ -143,9 +142,6 @@ private
 
 : _slot ( index - addr )
     _?bounds   slot-size @ * data @ + ;
-
-: slot ( index array - addr )
-    { _slot } ;
 
 \ TODO: Handle embedded cstrings, bytes, halfwords, floats, and pairs
 : _@ ( a - val )
@@ -373,7 +369,10 @@ redef : stack ( max-slots element-class <name> - )
 
 ))
 
-aka >el el@
+public 
+
+: slot ( index array - addr )
+    { _slot } ;
 
 optimising off fast}
 
