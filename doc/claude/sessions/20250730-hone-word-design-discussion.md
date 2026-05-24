@@ -105,7 +105,7 @@ hone-handler: try-event-hone ( name-addr name-len -- handled? )
 
 \ Future extensions:
 hone-handler: try-bitmap-hone ( name-addr name-len -- handled? )
-    2dup f" %s.png" file-exists? if
+    2dup f" %s.png" fexists? if
         2drop bitmap-hone-setup -1
     else  
         2drop 0
@@ -140,7 +140,7 @@ hone-handler: try-bitmap-hone ( name-addr name-len -- handled? )
 Users can extend it easily:
 ```forth
 hone-handler: try-music-hone ( name-addr name-len -- handled? )
-    2dup f" %s.ogg" file-exists? if
+    2dup f" %s.ogg" fexists? if
         2drop music-hone-setup -1
     else 2drop 0 then ;
 ```

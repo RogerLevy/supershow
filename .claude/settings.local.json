@@ -44,7 +44,9 @@
       "WebSearch",
       "Bash(git log:*)",
       "WebFetch(domain:www.forth.com)",
-      "Bash(sfk:*)"
+      "Bash(sfk:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

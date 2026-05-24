@@ -19,7 +19,7 @@
   Directory Operations:
   - DIR-EXISTS? - Check if directory exists
   - ENSURE-DIR - Create directory with error handling
-  - FIND-DAT-PATH - Locate dat/ asset directory
+  - >asset-path - Locate dat/ asset directory
 
   Directory Enumeration (each-file.vfx)
 
@@ -59,7 +59,7 @@
   VFX Forth Standard (vfxcore2.vfx)
 
   - OPEN-FILE / CLOSE-FILE / READ-FILE / WRITE-FILE
-  - FILE-SIZE / FILE-POSITION / FILE-EXISTS?
+  - FILE-SIZE / FILE-POSITION / fexists?
   - CREATE-FILE / DELETE-FILE
 
   The main files are:
