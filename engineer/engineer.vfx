@@ -5,12 +5,12 @@
 module [engineer]
 
 \ =============================================================================
-\ %vfxland5% string macro
+\ %supershow% string macro
 \ =============================================================================
 
 also substitutions definitions
-    cstring vfxland5
-    s" %idir%\.." expand vfxland5 place
+    cstring supershow
+    s" %idir%\.." expand supershow place
     cstring home
     cstring project
 only forth definitions
@@ -92,6 +92,8 @@ private
 : vfxforth-entrypoint ( hinst hpinst lpcommand nshow -- res )
     [ ' EntryPoint >body @ compile, ] ;
 
+public
+
 : run-main ( - )
     c" main" find if execute else drop then ;
 
@@ -114,16 +116,18 @@ private
 \ VARIABLE isolation
 \ REDEF : MODULE  isolation @ if empty then require ;
 
-also substitutions 
-    aka vfxland5$ vfxland5
+also substitutions
+    aka supershow$ supershow
     aka home$ home
     aka project$ project
 previous
 
+private
+
 : ?..  wd@ '\' ending s" bin" s= if s" .." $cwd then ;
 : init-xrefs  +xrefs  256 1024 * xref-kb ;
-: init-vfxland5-path  s" %bin%\.." expand vfxland5$ place ;
-: init-paths  init-vfxland5-path  ;
+: init-supershow-path  s" %bin%\.." expand supershow$ place ;
+: init-paths  init-supershow-path  ;
 : dev-init  init-xrefs init-paths ;
 : init-home-path  ?.. wd@ home$ place ;
 
@@ -201,7 +205,7 @@ include %idir%/tools.vfx
 import %idir%/ls.vfx
 
 \ public
-\ include %vfxland5%/lib/back.vfx           \ Backward compatibility shim
+\ include %supershow%/lib/back.vfx           \ Backward compatibility shim
 
 \ =============================================================================
 \ Kickoff
@@ -227,6 +231,7 @@ private
     boot 
     backup remember 
     ." Starting engine..." cr
+    s" module [engineer]" evaluate 
     repl-go 
     >vfx ;
 

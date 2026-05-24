@@ -4,12 +4,11 @@
 
 \ -- Dependencies --------------------------------------------------------------
 
-REQUIRE %vfxland5%/lib/dltree.vfx
-REQUIRE %vfxland5%/supershow/traits.vfx
-REQUIRE %vfxland5%/supershow/bitmap.vfx
-REQUIRE %vfxland5%/supershow/sprites.vfx
-REQUIRE %vfxland5%/supershow/tileset.vfx
-REQUIRE %vfxland5%/supershow/autoload.vfx
+REQUIRE %supershow%/supershow/traits.vfx
+REQUIRE %supershow%/supershow/bitmap.vfx
+REQUIRE %supershow%/supershow/sprites.vfx
+REQUIRE %supershow%/supershow/tileset.vfx
+REQUIRE %supershow%/supershow/autoload.vfx
 REQUIRE %idir%/shapes.vfx
 REQUIRE %idir%/arrow.vfx
 REQUIRE %idir%/colors.vfx

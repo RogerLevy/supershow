@@ -202,7 +202,7 @@ borrow filename-without-extension/ borrowed-word   \ import another file's priva
 - Each project's `main.vfx` includes required modules in dependency order
 - `private` keyword creates file-local namespaces for encapsulation
 - Use relative paths for includes within same project
-- Use `%vfxland5%` macro for VFXLand5 stack components (e.g., `include %vfxland5%/spunk/loader.vfx`)
+- Use `%supershow%` macro for VFXLand5 stack components (e.g., `include %supershow%/spunk/loader.vfx`)
 
 ## Status Files
 

@@ -21,6 +21,8 @@ include %idir%/core.vfx           \ Miscellaneous utility words / core extension
 
 include %idir%/module.vfx
 \ include %idir%/../test/module-test.vfx
+\ include %idir%/../test/package-test.vfx
+\ quit
 
 include %idir%/fixed.vfx          \ 16.16 fixed-point math
 include %idir%/format.vfx         \ Printf-style string formatting
@@ -40,3 +42,4 @@ include %idir%/../cjson/cjson2.vfx
 include %idir%/nibs-json.vfx   
 include %idir%/checks.vfx         \ Core Forth word safety validations
 include %idir%/array3.vfx         \ NIBS arrays
+include %idir%/dltree.vfx         \ Doubly-linked tree

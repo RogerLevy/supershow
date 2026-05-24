@@ -93,7 +93,7 @@ trait;
     then ;
 
 fast{
-borrow array3>> enough-flag
+
 : _dleach ( xt dltree - ) ( ... dltree - ... )
     >lowest @ dup if
         begin dup enough-flag @ not and while
@@ -122,12 +122,11 @@ borrow array3>> enough-flag
         0 item-count !
     then ;
 
-borrow array3>> _?bounds
-
 private
 
 : _nth-child ( n - dltree )
-    _?bounds
+    dup 0 item-count @ 1 - within?
+    not if this swap f" Invalid index %n on dltree at %n" -1 -rot .abort then
     dup item-count @ 1 - = if drop highest @ exit then
     lowest @ 
     swap 0 max for -> next @ loop ;

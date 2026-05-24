@@ -1,7 +1,5 @@
 # Module System
 
-`forge/module.vfx` — replaces `scope.vfx`.
-
 Provides per-module public/private wordlists, explicit imports, reexports, circular-import detection, and qualified module access.
 
 ---
@@ -102,7 +100,7 @@ Module names may contain dots:
 module [foo.bar]
 ```
 
-The prefix up to the last dot (`foo`) becomes the **current package**. Subsequent bare-name `import`s are tried package-qualified first:
+The parent prefix (up to the last dot — `foo` for `foo.bar`) becomes the **current package**. Subsequent bare-name `import`s are tried package-qualified first:
 
 ```forth
 import [baz]    \ looks for [baz] first, then [foo.baz]

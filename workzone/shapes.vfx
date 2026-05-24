@@ -1,6 +1,6 @@
-require %vfxland5%/supershow/actor.vfx
-require %vfxland5%/supershow/stage.vfx
-require %vfxland5%/supershow/mode.vfx
+require %supershow%/supershow/actor.vfx
+require %supershow%/supershow/stage.vfx
+require %supershow%/supershow/mode.vfx
 
 \ Color and thickness are stored in each shape's execution context.
 \ So to set a shape's color or thickness:

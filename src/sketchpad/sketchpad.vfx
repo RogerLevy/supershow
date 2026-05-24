@@ -25,8 +25,8 @@
 
 private
 
-fload %vfxland5%/lib/mouse.vfx
-fload %vfxland5%/lib/help.vfx
+fload %supershow%/lib/mouse.vfx
+fload %supershow%/lib/help.vfx
 
 \ ==============================================================================
 

@@ -1,4 +1,4 @@
-REQUIRE %vfxland5%\supershow\supershow.vfx
+REQUIRE %supershow%\supershow\supershow.vfx
 REQUIRE %idir%/workspace.vfx
 REQUIRE %idir%/jsonfile.vfx
 
@@ -9,7 +9,7 @@ REQUIRE %idir%/jsonfile.vfx
     {: | zcmd zcmd-len :}
     zcommand zcount to zcmd-len to zcmd 
     zcmd-len -exit
-    zcmd zcmd-len -path f" %s.wsj" file-exists? if
+    zcmd zcmd-len -path f" %s.wsj" fexists? if
         zcmd zcmd-len 
     else
         \ load-wsj-dialog 
@@ -20,10 +20,10 @@ jsonfile %idir%/default.wsj
 
 : new
     s" " sessionpath$ place 
-    s" %BIN%/default.wsj" expand file-exists? if
+    s" %BIN%/default.wsj" expand fexists? if
         s" %BIN%/default.wsj" load-session
     else
-        s" default.wsj" expand file-exists? if
+        s" default.wsj" expand fexists? if
             s" default.wsj" load-session
         else
             default.wsj >json @ load-root to session 

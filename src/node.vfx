@@ -1,6 +1,3 @@
-REQUIRE %vfxland5%/lib/dltree.vfx
-REQUIRE %vfxland5%/supershow/traits.vfx
-
 512 ?constant s/node
 1024 ?constant MAX_NODES
 

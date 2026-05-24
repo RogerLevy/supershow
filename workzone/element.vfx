@@ -1,6 +1,5 @@
-REQUIRE %vfxland5%/lib/dltree.vfx
-REQUIRE %vfxland5%/cjson/cjson2.vfx
-REQUIRE %vfxland5%/supershow/traits.vfx
+REQUIRE %supershow%/cjson/cjson2.vfx
+REQUIRE %supershow%/supershow/traits.vfx
 
 ECONTEXT gui-ec
 0 value hovered

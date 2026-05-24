@@ -2,12 +2,6 @@
 \ Stage - Actor System
 \ ------------------------------------------------------------------------------
 
-REQUIRE %idir%/checks.vfx
-REQUIRE %idir%/utilities.vfx
-REQUIRE %idir%/traits.vfx
-REQUIRE %idir%/actor.vfx
-REQUIRE %idir%/node.vfx
-
 public
 
 ec-cell stg
@@ -41,12 +35,12 @@ continuation: actives> ( - ) ( - )
         \ Compare SP to previous SP.
         \ The data stack grows downward.
         dup sp@ cell+ cell+ > if
-            s{ ." Positive stack imbalance in logic for actor " this .summary
-            s} log-warning .rs .s 
+            [: ." Positive stack imbalance in logic for actor " this .summary
+            str@ log ;] strout .rs .s   \ "
         then
         dup sp@ cell+ cell+ < if
-            s{ ." Negative stack imbalance in logic for actor " this .summary
-            s} log-warning .rs .s
+            [: ." Negative stack imbalance in logic for actor " this .summary
+            str@ log ;] strout .rs .s   \ "
         then
     then
     sp! ;
@@ -203,10 +197,10 @@ continuation: who> ( - actor|0 ) ( - f )
         class0 body>name update-name$ place
     then
     
-    update-name$ count f" %s.vfx" file-exists? if
+    update-name$ count f" %s.vfx" fexists? if
         update-name$ count f" ?hone %s.vfx" >hone
     else
         update-name$ count f" ?hone scripts\%s.vfx" >hone
     then
     this { class0 init-by-class }
-    update-name$ count f" %s/" sprivate ;
+    update-name$ count f" module [%s]" evaluate ;

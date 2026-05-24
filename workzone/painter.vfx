@@ -4,7 +4,7 @@
 
 REQUIRE %idir%/gui.vfx
 REQUIRE %idir%/shapes.vfx
-REQUIRE %vfxland5%/supershow/bitmap.vfx
+REQUIRE %supershow%/supershow/bitmap.vfx
 REQUIRE %idir%/flood.vfx
 
 BITMAP %idir%/painter-cursors.png
