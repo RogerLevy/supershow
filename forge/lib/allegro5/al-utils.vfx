@@ -2,7 +2,7 @@
 \ Allegro Utilities
 \ ------------------------------------------------------------------------------
 module
-forth-forth-public
+forth-public
 
 variable zoom  2 zoom !
 320 value appw
