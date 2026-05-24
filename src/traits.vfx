@@ -1,3 +1,6 @@
+module [supershow.core]
+public
+
 require %idir%/checks.vfx
 
 trait: %object

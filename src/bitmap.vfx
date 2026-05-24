@@ -1,7 +1,6 @@
-require %idir%/checks.vfx
-require %idir%/utilities.vfx
-require %idir%/traits.vfx
-require %idir%/asset.vfx
+module [supershow.bitmap]
+import core
+public
 
 65536 ?constant #bitmaps
 

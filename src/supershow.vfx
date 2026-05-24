@@ -1,67 +1,46 @@
-\ ------------------------------------------------------------------------------
-\ Supershow
-\
-\ minimalist 2D game engine with actors, sprite animation, sample playback,
-\ and tilemaps.
-\ ------------------------------------------------------------------------------
+module [supershow.core]
+	import engineer
+	public
+	include checks               \ Validations
+	include utilities            \ Math helpers, audio, and misc utilities
+	include traits               \ Object traits
+	include asset                \ Base asset
+	include %idir%/../lib/mersenne.vfx  \ RNG
+	include node
 
-\ =============================================================================
-\ Dependencies
-\ =============================================================================
+module [supershow.assets]
+	import bitmap
+	reexport [bitmap]
+	import tileset
+	reexport [tileset]
+	\ import tilemap
+	\ reexport [tilemap]
 
-MODULE %idir%/gamemath.vfx          \ 2D vector math
-MODULE %idir%/border.vfx           \ TV border / integer scaling
+module [supershow]
+	import engineer
+	reexport [engineer]
+	import core
+	reexport [core]	
+	import assets
+	reexport [assets]
+	import waveplay             \ Audio engine
+	reexport [waveplay]
+	import shader               \ Shaders 
+	reexport [shader]
 
-MODULE %idir%/checks.vfx           \ Validations
-MODULE %idir%/mode.vfx             \ Game modes w/ separate logic and rendering
-MODULE %idir%/tweak.vfx            \ Persistent variable control
-MODULE %idir%/waveplay.vfx         \ Audio engine
-MODULE %idir%/utilities.vfx        \ Math helpers, audio, and misc utilities
-MODULE %idir%/traits.vfx           \ Object traits
-MODULE %idir%/asset.vfx            \ Base asset class
-MODULE %idir%/shader.vfx           \ Shaders 
-\ MODULE %idir%/crt.vfx              \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
+	\ Actor system
+	include actor
+	include stage                \ Actor/sprite system
+	include timer 
+	include sprites   
+	include udlr                 \ Movement utilities
+	\ include tmcol                \ Tilemap collision detection
+	\ include tread                \ Tilemap data reading
 
-\ =============================================================================
-\ Actor system
-\ =============================================================================
-
-MODULE %idir%/actor.vfx
-MODULE %idir%/stage.vfx            \ Actor/sprite system
-
-\ =============================================================================
-\ Bitmaps and tilemaps
-\ =============================================================================
-
-MODULE %idir%/bitmap.vfx           \ Bitmaps
-MODULE %idir%/tileset.vfx          \ Tilesets
-MODULE %idir%/tilemap2.vfx         \ Tilemap rendering & Tileset class
-MODULE %idir%/sprites.vfx          \ Sprite animation (MODULEs %tileset)
-
-MODULE %idir%/timer.vfx
-
-\ =============================================================================
-\ Tilemap collision
-\ =============================================================================
-
-MODULE %idir%/udlr.vfx             \ Movement utilities
-MODULE %idir%/tmcol.vfx            \ Tilemap collision detection
-MODULE %idir%/tread.vfx            \ Tilemap data reading
-
-\ =============================================================================
-\ Audio
-\ =============================================================================
-
-MODULE %idir%/waveplay.vfx
-
-\ =============================================================================
-\ Convenience facilities
-\ =============================================================================
-
-MODULE %idir%/autoload.vfx
-
-\ include %idir%/persist.vfx
-\ include %idir%/scene.vfx            \ Scene management
-\ include %idir%/autoclass.vfx        \ Auto-generate classes from bitmaps
-
-MODULE %idir%/runtime.vfx
+	\ ?
+	include mode                 \ Game modes w/ separate logic and rendering
+	include tweak                \ Persistent variable control	
+	include border               \ TV border / ininclude 
+	\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
+	include autoload    
+	include runtime    

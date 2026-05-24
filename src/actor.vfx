@@ -1,8 +1,3 @@
-REQUIRE %idir%/checks.vfx
-REQUIRE %idir%/utilities.vfx
-REQUIRE %idir%/traits.vfx
-REQUIRE %idir%/node.vfx
-
 variable clock  clock on
 variable gamelife
 0d 2value gametime

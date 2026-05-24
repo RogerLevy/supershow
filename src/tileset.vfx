@@ -1,6 +1,8 @@
-require %idir%/checks.vfx
-require %idir%/asset.vfx
-require %idir%/bitmap.vfx
+module [supershow.tileset]
+import core
+import array
+import bitmap
+public
 
 ec-cell pile
 
@@ -79,17 +81,16 @@ class;
 : instakill?  meta $40 and 0<> ;
 : trap?  meta $10 and 0<> ;
 
-borrow array3>> slot
 : load-metas-for ( fp len tileset - )
     \ load tile metas from a binary file directly into the global table
-    { baseid @ global-metas slot` #tiles @ cells` 2swap read } ; 
+    { [: ( a len )
+        baseid @ global-metas slot` 
+        #tiles @ cells rot min` 
+        move
+    ;] swap fread } ; 
 
 : load-metas-from ( tileset - ) 
     \ copy tile metas that have been stored in a tileset into the global table
-    { 0 metas-array @ slot`   this 0 tile global-metas slot`   #tiles @ cells` move } ;
-
-\ =============================================================================
-\ Backward compatibility
-\ =============================================================================
-
-aka tileset %tileset
+    { 0 metas-array @ slot`   
+    this 0 tile global-metas slot`   
+    #tiles @ cells` move } ;

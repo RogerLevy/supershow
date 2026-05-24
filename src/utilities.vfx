@@ -1,5 +1,3 @@
-require %idir%/checks.vfx
-
 \ =============================================================================
 \ Utilities
 \ =============================================================================
@@ -22,6 +20,9 @@ continuation: batch>  begin-batch  ( xt ) catch  end-batch  throw ;
 
 : -memfile ( ALLEGRO_FILE_fp - )
     al_fclose drop ;
+
+: >asset-path ( a n - a n )
+    s" dat" dir-exists? if s" " else s" ..\" then f" %sdat\%s" ;
 
 \ =============================================================================
 \ Trigonometry

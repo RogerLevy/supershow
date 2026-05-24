@@ -1,5 +1,3 @@
-require %idir%/checks.vfx
-
 class: %mode
     prop drw :xt
     prop beha :xt

@@ -1,8 +1,7 @@
-require %idir%/checks.vfx
-\ require %idir%/mode.vfx
-\ require %idir%/tweak.vfx
-\ require %idir%/shader.vfx
-\ require %idir%/crt.vfx
+module [supershow.waveplay]
+import core
+import allegro5
+public
 
 \ ------------------------------------------------------------------------------
 \ Simple sample-based audio
@@ -127,20 +126,20 @@ defer voice? ( smp - f )
     clear-handles ;
 
 : load-samples ( - )
-    s" smp" find-dat-path dir-exists? -exit
+    s" smp" >asset-path dir-exists? -exit
     clear-handles
     current @ also forth definitions
-    s" smp" find-dat-path ['] (load-sample) each-file
+    s" smp" >asset-path ['] (load-sample) each-file
     previous current ! ;
 
 : init-samples ( - )
     load-samples ;
 
 : reload-samples ( - )
-    s" smp" find-dat-path dir-exists? -exit
+    s" smp" >asset-path dir-exists? -exit
     clear-handles
     current @ also forth definitions
-    s" smp" find-dat-path ['] (reload-sample) each-file
+    s" smp" >asset-path ['] (reload-sample) each-file
     previous current ! ;
 
 \ =============================================================================
@@ -164,8 +163,8 @@ defer voice? ( smp - f )
 
 : stream-bgm ( fp len loopmode - )
     >r 
-    2dup file-exists? not if
-        s" bgm\" find-dat-path f" %s%s"
+    2dup fexists? not if
+        s" bgm\" >asset-path f" %s%s"
     then
     r> stream-audiofile ;
 

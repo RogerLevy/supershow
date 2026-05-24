@@ -1,0 +1,68 @@
+\ ------------------------------------------------------------------------------
+\ Supershow
+\
+\ minimalist 2D game engine with actors, sprite animation, sample playback,
+\ and tilemaps.
+\ ------------------------------------------------------------------------------
+
+module [supershow]
+import engineer
+
+\ =============================================================================
+\ Dependencies
+\ =============================================================================
+
+\ import waveplay             \ Audio engine
+\ reexport [waveplay]
+
+include checks               \ Validations
+include utilities            \ Math helpers, audio, and misc utilities
+include traits               \ Object traits
+include asset                \ Base asset class
+
+
+include mode                 \ Game modes w/ separate logic and rendering
+include tweak                \ Persistent variable control
+
+include shader               \ Shaders 
+include border               \ TV border / ininclude 
+
+\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
+
+\ =============================================================================
+\ Actor system
+\ =============================================================================
+
+include actor
+include stage                \ Actor/sprite system
+
+\ =============================================================================
+\ Bitmaps and tilemaps
+\ =============================================================================9
+
+include bitmap               \ Bitmaps
+include tileset              \ Tilesets
+include tilemap2             \ Tilemap rendering & Tileset class
+include sprites              \ Sprite animation (MODULEs %tileset)
+
+include timer    
+
+\ =============================================================================
+\ Tilemap collision
+\ =============================================================================
+
+include udlr                 \ Movement utilities
+include tmcol                \ Tilemap collision detection
+include tread                \ Tilemap data reading
+
+\ =============================================================================
+\ Convenience facilities
+\ =============================================================================
+
+include autoload    
+
+\ include persist    
+\ include scene                \ Scene management
+\ include autoclass            \ Auto-generate classes from bitmaps
+
+include runtime    
