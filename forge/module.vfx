@@ -315,9 +315,23 @@ redef : forth-public ( - )
 \ import / reexport
 \ ------------------------------------------------------------------------------
 
+: bare-name? ( a u - f )
+    \ True if string contains no path separators
+    2dup s" /" search nip nip 0= >r
+         s" \" search nip nip 0= r> and ;
+
 : import ( - <[name]> )
-    {: | name[ 256 ] mod :}
+    {: | name[ 256 ] path[ 256 ] mod :}
     bl parse >module-name name[ place
+    \ Bare name (no path sep)? Probe %idir%/name.vfx first.
+    name[ count bare-name? if
+        s" %idir%/" path[ place
+        name[ count path[ append
+        s" .vfx" path[ append
+        path[ count expanded fileexists? if
+            path[ count name[ place
+        then
+    then
     name[ find-or-load check-import to mod
     mod do-import ;
 
@@ -384,9 +398,23 @@ redef : [forth] ( <word> - )
 \ Include order preservation (same as scope.vfx)
 \ ------------------------------------------------------------------------------
 
+create _inc-buf 256 allot
+: ?idir-path ( a u - a' u' )
+    \ Bare name (no path sep)? Probe %idir%/name.vfx; return path if found.
+    2dup bare-name? if
+        s" %idir%/" _inc-buf place
+        2dup _inc-buf append
+        s" .vfx" _inc-buf append
+        _inc-buf count expanded fileexists? if
+            2drop _inc-buf count exit
+        then
+    then ;
+
 redef : include
-    current-module >r  save-order /order getPathSpec included restore-order  r> to current-module ;
+    current-module >r  save-order getPathSpec ?idir-path included restore-order  r> to current-module ;
+redef : require
+    current-module >r  save-order getPathSpec ?idir-path required restore-order  r> to current-module ;
 redef : included
-    current-module >r  save-order /order included restore-order  r> to current-module ;
+    current-module >r  save-order included restore-order  r> to current-module ;
 
 restore-order
