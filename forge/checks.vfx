@@ -462,25 +462,25 @@ wrap-word as
 redef : (->property) ( property - ) ( obj - a )
     \ dynamically called by old ->
     \ optimizes down to 2 instructions when compiled with validations off
-    validations @ if 
+    validations @ if
         ( property ) ?literal s" ->property" evaluate
     exit then
-    3 cells + @ ?literal \ -> offset @ ?literal 
-    fast{ s" over >cla @ + @ +" evaluate fast} 
+    2 cells + @ ?literal \ -> offset @ ?literal
+    fast{ s" over >cla @ + @ +" evaluate fast}
 ; immediate
 
 : validate-object
-    dup valid-object? not 
+    dup valid-object? not
         abort" VALIDATE-OBJECT : Invalid object." ;
 
 redef : -> ( object <name> - a )
     preword find not abort" -> : Field name not found"
-    >body cell+ cell+ @ MAGIC_PROPERTY = if
+    >body cell+ @ MAGIC_PROPERTY = if
         validations @ if   s" validate-object" evaluate   then
-        ' >body s" (->property)" evaluate 
+        ' >body s" (->property)" evaluate
     else
-        ' >body 3 cells + @ ?literal s" +" evaluate
-    then ; immediate 
+        ' >body 2 cells + @ ?literal s" +" evaluate
+    then ; immediate
 
 :noname  ( obj protocol - obj protocol )
     safety @ -exit

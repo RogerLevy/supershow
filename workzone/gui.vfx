@@ -227,14 +227,12 @@ class: %ui-box
 
     template { 100. 100. w 2! } 
 
-    EC_MAX_SIZE nprop ec  template { ec clear-ec }
-
     :: clickbox ( - x1. y1. x2. y2. ) abspos w 2@ box ;
 
 class;
 
 0 %ui-box :construct ( - )
-    at@p x 2!   ec ecp! in-heap ;
+    at@p x 2!  in-heap ;
 
 \ -- Selection -----------------------------------------------------------------
 

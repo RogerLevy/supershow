@@ -1,7 +1,6 @@
 REQUIRE %supershow%/cjson/cjson2.vfx
 REQUIRE %supershow%/supershow/traits.vfx
 
-ECONTEXT gui-ec
 0 value hovered
 0 value focused   \ Element with keyboard focus
 1024 %addr stack selection
@@ -142,7 +141,7 @@ defer being-dragged? ( element - flag )
 
 class: %element
     is-a %_element
-    template { gui-ec ecp! in-heap }
+    template { in-heap }
 class;
 
 %element :: open     -closed ;
@@ -152,7 +151,7 @@ class;
     object:.summary x 2p? ;
 
 0 %element :construct ( - )
-    at@p x 2!  gui-ec ecp! in-heap ;
+    at@p x 2!  in-heap ;
 
 : ?free ?dup if ['] free catch 2drop then ;
 

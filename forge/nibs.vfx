@@ -43,34 +43,31 @@ variable osp   os osp ! \ object stack pointer
     this body>name ;
 
 redef : field ( ofs size <name> - n ) ( a - a )
-    create 0 , 0 , MAGIC_FIELD , over , +
-    does> 3 cells + @ this + ;
+    create 0 , MAGIC_FIELD , over , +
+    does> 2 cells + @ this + ;
 
 0
     cell field cla
-    cell field ecp
 dup constant /object-base
     cell field magic
 constant /magical-base
 
-' cla >body 3 cells + @ constant cla-offset
-' ecp >body 3 cells + @ constant ecp-offset
+' cla >body 2 cells + @ constant cla-offset
 
 : >cla  s" cla-offset +" evaluate ; immediate
-: >ecp  s" ecp-offset +" evaluate ; immediate
 
 : (->property) ( obj property - a' )
-    3 cells + @ ?literal 
-    s" over >cla @ + @ +" evaluate 
+    2 cells + @ ?literal
+    s" over >cla @ + @ +" evaluate
 ; immediate
 
 redef : -> ( object <name> - a )
     preword find not abort" -> : Field name not found"
-    >body cell+ cell+ @ MAGIC_PROPERTY = if
-        ' >body s" (->property)" evaluate 
+    >body cell+ @ MAGIC_PROPERTY = if
+        ' >body s" (->property)" evaluate
     else
-        ' >body 3 cells + @ ?literal s" +" evaluate
-    then ; immediate 
+        ' >body 2 cells + @ ?literal s" +" evaluate
+    then ; immediate
 
 : already? ( ? <name> - b <name> )
     {: n :}
@@ -145,51 +142,48 @@ aka me! this!
 \ ==============================================================================
 \ Execution context
 \ ==============================================================================
-\ Each object has a pointer to an execution context (EC).
-\ Fields that are part of the EC "inherit" values up the object stack, when fetching.
-\ The "default" EC is called ROOTEC.
-\ We can create our own EC's to use in classes or individual objects, 
-\ or use e{ e} for special cases where we need a throwaway EC. 
-\ e{ e} save/restore the current object's EC in a dedicated stack (the old EC stack).
+\ The current EC is the top of the global EC stack (ecsp).
+\ Fields that are part of the EC "inherit" values up the EC stack, when fetching.
+\ The "default" EC is called ROOTEC and is always at the stack bottom.
+\ Use e{ e} for throwaway EC scopes (copy-on-enter, discard-on-exit).
 
 0 value s/ec
 256 constant EC_MAX_SIZE
 
-: ecp@ ( - ec ) this >ecp @ ;
-: ecp! ( ec - ) this >ecp ! ;
-
 : sentinels,  256 cell/ 0 do $DEADBEEF , loop ;
 
-: clear-ec ( ec - ) 
+: clear-ec ( ec - )
     dp @ swap dp ! sentinels, dp ! ;
 
-: econtext ( <name> - )
+|| : econtext ( <name> - )
     create sentinels, ;
 
 econtext rootec
 
-|| variable _osp
-|| 0 value ofs
-|| 0 value ec
+aligned-page ecs
+variable ecsp
+
+: ecp@ ( - ec ) ecsp @ @ ;
+: ecp! ( ec - ) ecsp @ ! ;
+
+rootec ecs !   \ initialize stack bottom with rootec
+ecs ecsp !     \ ecsp starts at the bottom
+
+|| variable _ecsp2
+|| 0 value ofs2
+|| 0 value ec2
 : >ecfa ( ofs - val )
-    \ find EC field in object stack.  
-    \ search for a non-$DEADBEEF, starting at top object, returning the EC field if found.   
-    \ stop at object = 0.
-    \ if no used field found, return the top object's EC field. 
-    \ if 0 not found (after 16 iterations), return the top object's EC field.
-    to ofs
-    osp @ _osp !
-    ecp@ to ec
+    \ search EC stack from top down for a non-$DEADBEEF value at ofs.
+    \ stops at rootec; falls back to top EC field if nothing found.
+    to ofs2
+    ecsp @ _ecsp2 !
     16 for
-        ec if 
-            ec ofs + dup @ $DEADBEEF <> if unloop exit else drop then
-        else
-            ecp@ ofs + unloop exit 
-        then
-        -4 _osp c+!
-        _osp @ @ ?dup if >ecp @ else 0 then to ec
-    loop 
-    ecp@ ofs + ;
+        _ecsp2 @ @ to ec2
+        ec2 ofs2 + dup @ $DEADBEEF <> if unloop exit else drop then
+        ec2 rootec = if ecp@ ofs2 + unloop exit then
+        -4 _ecsp2 c+!
+    loop
+    ecp@ ofs2 + ;
 
 : does-ec-getter  does> @ >ecfa @ ;
 : does-ec-setter  does> @ ecp@ + ! ;
@@ -197,8 +191,8 @@ econtext rootec
 : ec-cell ( <name> - ) ( - n ) ( n - )
     \ Creates getter ( MYVAR@ ) and setter ( MYVAR! )
     bl parse 2dup
-    f" %s@" screate s/ec , does-ec-getter 
-    f" %s!" screate s/ec , does-ec-setter 
+    f" %s@" screate s/ec , does-ec-getter
+    f" %s!" screate s/ec , does-ec-setter
     cell +to s/ec ;
 
 : does-ec-fgetter  does> @ >ecfa sf@ ;
@@ -207,29 +201,26 @@ econtext rootec
 : ec-float ( <name> - ) ( - n ) ( n - )
     \ Creates getter ( MYVAR@ ) and setter ( MYVAR! )
     bl parse 2dup
-    f" %s@" screate s/ec , does-ec-fgetter 
-    f" %s!" screate s/ec , does-ec-fsetter 
+    f" %s@" screate s/ec , does-ec-fgetter
+    f" %s!" screate s/ec , does-ec-fsetter
     cell +to s/ec ;
 
 \ Temporary contexts
-aligned-page ecs
-variable ecsp ecs ecsp !
-
-:noname  4096 256 / for sentinels, loop ; 
+:noname  4096 256 / for sentinels, loop ;
     pagealign here swap execute constant tcs
 
 variable tcsp  tcs tcsp !
 
-|| : _e{  ( ec - ) 
-    4 ecsp c+!  ecp@ ecsp @ !   ecp! ;
+|| : _e{  ( ec - )
+    4 ecsp c+!  ecsp @ ! ;
 
-|| : _e}  ( - )    
-    ecsp @ @ ecp!  -4 ecsp c+! ;
+|| : _e}  ( - )
+    -4 ecsp c+! ;
 
 : e{ ( - )
-    ecp@ 
-    tcsp @ ( ec ec ) dup _e{  tcs - 256 + 4095 and tcs + tcsp ! 
-    ( ec ) ecp@ s/ec move ;
+    ecp@
+    tcsp @ ( old-ec new-ec ) dup _e{  tcs - 256 + 4095 and tcs + tcsp !
+    ( old-ec ) ecp@ s/ec move ;
 
 : e} ( - )
     _e}
@@ -239,9 +230,11 @@ continuation: ec> ( - ) ( - )
     e{ execute e} ;
 
 : reset-ec-stack
-    dp @ 
+    rootec ecs !
+    ecs ecsp !
+    dp @
     tcs dp !
-    4096 256 / for sentinels, loop 
+    4096 256 / for sentinels, loop
     dp ! ;
 
 \ ==============================================================================
@@ -286,7 +279,7 @@ drop
     1 next-classifier# +! ;
 
 || : (classifier) ( class - class )
-    here swap , rootec , /classifier 2 cells - allot&erase
+    here swap , /classifier cell- allot&erase
     dup to classifier
     {
         /classifier instance-size !
@@ -345,15 +338,12 @@ create-class %trait {
 
 : scaffold ( class addr - )
     swap over >cla !   \ Store class pointer
-    dup >r copy-template 
-    ecp@ r> -> ecp ! ;
+    copy-template ;
 
 redef : construct ( ... class addr - )
     swap over >cla !   \ Store class pointer
-    ecp@ >r
     {
         this copy-template
-        r> this -> ecp !
         cla @ -> constructor-xt @ ?dup if execute then
     } ;
 
@@ -395,7 +385,7 @@ redef : make ( ... class - object )
 \ Members
 \ ==============================================================================
 
-here to this 0 , rootec , 
+here to this 0 ,
 
 create %property  %class dmake {
     (add-object-system-trait-bit)
@@ -474,7 +464,7 @@ create %protocol  %class dmake {
 
 : ->property ( obj property - a' )
     over >r >r
-    dup >cla @ r@ 3 cells + @ + @ dup >r +    
+    dup >cla @ r@ 2 cells + @ + @ dup >r +
     r> if 2r> 2drop exit then
     r> body>name 
     r> >cla @ body>name
@@ -830,8 +820,7 @@ create %protocol  %class dmake {
     class0 -> class-template @ ?dup 0= if
         class0 dmake class0 -> class-template !
         class0 -> class-template @ class0 sizeof cell /string erase
-        1024 allot&erase  
-        rootec class0 -> class-template @ -> ecp !
+        1024 allot&erase
         class0 -> class-template @
     then ;
 
@@ -1374,7 +1363,7 @@ global as in-dict
     fresh-next-classifier# @ next-classifier# ! 
     fresh-/static @ to /static
     reset-object-stack
-    global this!  rootec ecp!  in-dict
+    global this!  in-dict
     reset-ec-stack
     fresh/ec @ to s/ec
     0 to classifier 

@@ -19,8 +19,6 @@ class: %tilemap
     is-a %dimensional
     prop ta :ref %array
     prop ts :ref %tileset
-    EC_MAX_SIZE nprop ec
-    template { ec clear-ec }
 class;
 
 ec-cell map
@@ -33,7 +31,7 @@ global { %tilemap template map! }
 
 
 0 %tilemap :construct ( - )
-    ec ecp!   this map! ;
+    this map! ;
 
 \ debug @ [if]
 \     crucial test: check-map ( - n:res )
