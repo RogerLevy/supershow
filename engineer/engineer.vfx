@@ -52,8 +52,9 @@ create fresh-classifiers   0
     1 + %static fresh,
     1 + %protocol fresh,
     1 + %array fresh,
-    1 + %stack fresh,   
+    1 + %stack fresh,
     1 + %global fresh,
+    1 + %dltree fresh,
 constant #freshes
 
 : reset+ ( a - a' )
