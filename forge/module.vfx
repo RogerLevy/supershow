@@ -202,14 +202,18 @@ create qname-buf 256 allot
 \ Walk linked list recursively so tail (first inserted) is processed first,
 \ giving last-imported highest priority — matching live import order.
 
+defer +mod-order
+
 : +reexports-order ( node - )
     dup 0= if drop exit then
     dup imp.next @ recurse
-    imp.mod @ mod.pub-wl @ +order ;
+    imp.mod @ +mod-order ;
 
-: +mod-order ( mod - )
+: (+mod-order) ( mod - )
     dup mod.reexports @ +reexports-order
     mod.pub-wl @ +order ;
+
+' (+mod-order) is +mod-order
 
 : +imports-order ( node - )
     dup 0= if drop exit then
@@ -289,8 +293,19 @@ only forth definitions also moduleing
         node imp.next @ to node
     repeat ;
 
+
+: module-reexports. ( mod - )
+    {: mod | node :}
+    mod body>name type ."  reexports:" cr
+    mod mod.reexports @ to node
+    begin node while
+        ."   " node imp.mod @ body>name type cr
+        node imp.next @ to node
+    repeat ;
+
+
 : module. ( mod - )
-    module-imports. ;
+    cr dup module-imports. cr module-reexports. ;
 
 \ ------------------------------------------------------------------------------
 \ Core words
@@ -301,6 +316,7 @@ redef : module ( - )
         0 to qualified-import?
         CurrSourceName -ext qualified-key-buf place
         qualified-key-buf count 2dup module-name>package current-package place
+        bl preparse bracket-name? if bl parse 2drop then
         ?module-exact
     else
         \ peek at next token; if [bracketed], use it; otherwise use filename
@@ -317,6 +333,12 @@ redef : module ( - )
 
 redef : global ( - )
     only forth definitions  0 to current-module ;
+
+: ^ ( - <name> )
+    bl parse >module-name find-module-qualified
+    dup 0= abort" Module not found."
+    dup to current-module
+    build-module-search-order ;
 
 redef : public ( - )
     current-module ?dup 0= abort" PUBLIC : No current module"
