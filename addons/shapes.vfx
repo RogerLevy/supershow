@@ -1,5 +1,8 @@
 module [shapes]
 import supershow
+import allegro5
+
+public
 
 ec-cell thickness
 0.5 thickness!
@@ -31,7 +34,7 @@ ec-cell thickness
 : pixel ( - )
     at@f rgba@fds al_draw_pixel ;
 
-: f>c  255e f* 0.5e f+ f>s ;
+|| : f>c  255e f* 0.5e f+ f>s ;
 
 : f>rgba8 ( f:r f:g f:b f:a - n )
     f>c
@@ -44,7 +47,7 @@ ec-cell thickness
     buf[ b x y al_get_pixel
     buf[ 4f@ f>rgba8 ;
 
-: 2sf!+ ( a f:x f:y - a' )
+|| : 2sf!+ ( a f:x f:y - a' )
     fswap sf!+ sf!+ ;
 
 ec-cell ppenu
@@ -59,17 +62,17 @@ ec-cell ppenv
     ppenu@ p>f sf!+  ppenv@ p>f sf!+
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
 
-: fvertex ( f:x f:y f:u f:v a - a' )
+|| : fvertex ( f:x f:y f:u f:v a - a' )
     {: f: x f: y f: u f: v :}
     x sf!+  y sf!+
     0e sf!+
     u sf!+  v sf!+
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
 
-: vdump ( a n - )
-    for
-        9 for sf@+ f. loop cr
-    loop ;
+\ : vdump ( a n - )
+\     for
+\         9 for sf@+ f. loop cr
+\     loop ;
 
 : texrectf ( bmp w h - )
     {: bmp iw ih | f: x f: y f: w f: h f: u f: v vtxs[ 256 ] :}
