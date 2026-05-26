@@ -188,11 +188,22 @@ ecs ecsp !     \ ecsp starts at the bottom
 : does-ec-getter  does> @ >ecfa @ ;
 : does-ec-setter  does> @ ecp@ + ! ;
 
+: ec-restore  r> r> ! ;
+
+: ec-save ( offset - )
+    r> swap ecp@ + dup >r @ >r ['] ec-restore >r >r ;
+
+: does-ec-save
+    does> @
+    state @ if  postpone literal  ['] ec-save compile,
+    else  ec-save  then ;
+
 : ec-cell ( <name> - ) ( - n ) ( n - )
-    \ Creates getter ( MYVAR@ ) and setter ( MYVAR! )
-    bl parse 2dup
+    \ Creates getter ( MYVAR@ ), setter ( MYVAR! ), saver ( MYVAR> )
+    bl parse 2dup 2dup
     f" %s@" screate s/ec , does-ec-getter
     f" %s!" screate s/ec , does-ec-setter
+    f" %s>" screate s/ec , does-ec-save  immediate
     cell +to s/ec ;
 
 : does-ec-fgetter  does> @ >ecfa sf@ ;
