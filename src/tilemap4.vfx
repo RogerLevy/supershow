@@ -1,0 +1,122 @@
+module [tilemap]
+import supershow
+import allegro5
+import array
+
+class: %tilemap
+    is-a %drawable
+    is-a %dimensional
+    prop ta :ref %array
+    prop ts :ref %tileset
+class;
+
+private
+
+\ Vertex decl: [x:s16 y:s16] @0 + [u:s16 v:s16] @4 = 8 bytes/vertex
+create vdecl-arr
+    ALLEGRO_PRIM_POSITION        , ALLEGRO_PRIM_SHORT_2 , 0 ,
+    ALLEGRO_PRIM_TEX_COORD_PIXEL , ALLEGRO_PRIM_SHORT_2 , 4 ,
+    ALLEGRO_PRIM_COLOR_ATTR ,      0 ,                    8 ,
+    0 , 0 , 0 ,
+
+24 constant s/vertex
+6  constant v/tile   \ TRIANGLE_LIST: 2 tris per quad
+
+0  value vbuf
+0  value prim-decl
+0  value cur-ts
+variable #drawn
+
+fast{
+\ Store int16 n at address a, return a+2
+: sw!+ ( a n - a' )  over w!  2 + ;
+
+\ Write one vertex — positions in tile units, UVs in texture pixels, color white
+: +vert ( a x y u v - a' )
+    {: a x y u v :}
+    a x sw!+ y sw!+ u sw!+ v sw!+  16 + ;
+
+\ Write 6 vertices for one tile quad (TRIANGLE_LIST, CCW)
+: +quad ( a x0 y0 x1 y1 u0 v0 u1 v1 - a' )
+    {: a x0 y0 x1 y1 u0 v0 u1 v1 :}
+    a  x0 y0 u0 v0 +vert    \ TL
+       x1 y0 u1 v0 +vert    \ TR
+       x1 y1 u1 v1 +vert    \ BR
+       x0 y0 u0 v0 +vert    \ TL
+       x1 y1 u1 v1 +vert    \ BR
+       x0 y1 u0 v1 +vert ;  \ BL
+
+: albmpxy  $164 + 2@ ;
+\ : albmpx  $164 + @ ;
+\ : albmpy  $168 + @ ;
+\ : albmpx  al_get_bitmap_x ;
+\ : albmpy  al_get_bitmap_y ;
+
+0 value the-id
+
+\ Write 6 vertices for one non-empty tile
+\ Upper byte of tile-rel: flip flags (bit 0 = H flip, bit 1 = V flip)
+: tile-verts ( a col row tile-rel - a' )
+    {: a col row tile-rel | albmp u0 v0 u1 v1 :}
+    the-id  tile-rel $FFFFFF and  +  id>albmp  to albmp
+    albmp albmpxy  to v0 to u0
+    u0 v0 cur-ts >tw 2@ 2+  to v1 to u1
+    tile-rel $01000000 and if  u1 u0 to u1 to u0  then   \ H flip
+    tile-rel $02000000 and if  v1 v0 to v1 to v0  then   \ V flip
+    a  col row  col 1+  row 1+  u0 v0  u1 v1  +quad ;
+
+public
+
+%tilemap :: draw
+    {: | cols rows src :}
+    w @ to cols   h @ to rows
+    ts @ to cur-ts
+    cur-ts >baseid @ to the-id
+    m{
+    at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
+    vbuf
+    rows 0 do
+        i cols * ta @ slot to src
+        cols 0 do
+            src @
+            dup  $FFFFFFFF =  if
+                drop
+            else
+                i j  rot  tile-verts
+            then
+            cell +to src
+        loop
+    loop
+    vbuf -  s/vertex /  #drawn !
+    #drawn @ if
+        vbuf  
+        prim-decl  
+        cur-ts -> bmp @ id>albmp
+        0  
+        #drawn @  
+        ALLEGRO_PRIM_TRIANGLE_LIST  al_draw_prim  drop
+    then
+    m} ;
+
+fast}
+
+\ Address of tile (col, row) in tilemap array — clamped to valid range
+: spot ( col row %tilemap - a )
+    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot } ;
+
+\ Pixel (fixed-point) coords → tile col, row
+: xy>cr ( x. y. %tilemap - col row )
+    >ts @ >tw 2@ 2/ 2>i ;
+
+\ Tile col, row to pixel (fixed)
+: cr>xy ( col row %tilemap - x. y. )
+    >ts @ >tw 2@ 2* ; 
+
+: init-tilemap-renderer ( - )
+    2 MB allocate throw  to vbuf
+    vbuf
+    2 MB s/vertex / 0 do
+        1e 1e 1e 1e dup 8 + 4f!
+        s/vertex +
+    loop drop
+    vdecl-arr  s/vertex  al_create_vertex_decl  to prim-decl ;
