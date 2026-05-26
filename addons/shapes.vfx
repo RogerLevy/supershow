@@ -1,10 +1,5 @@
-require %supershow%/supershow/actor.vfx
-require %supershow%/supershow/stage.vfx
-require %supershow%/supershow/mode.vfx
-
-\ Color and thickness are stored in each shape's execution context.
-\ So to set a shape's color or thickness:
-\ myshape { $ff00ffff rgba   5. thick }
+module [shapes]
+import supershow
 
 ec-cell thickness
 0.5 thickness!
@@ -59,7 +54,7 @@ ec-cell ppenv
     ppenv! ppenu! ;
 
 : vertex ( a - a' )
-    at@f 2sf!+ 
+    at@f 2sf!+
     0e sf!+
     ppenu@ p>f sf!+  ppenv@ p>f sf!+
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
@@ -72,69 +67,20 @@ ec-cell ppenv
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
 
 : vdump ( a n - )
-    for 
+    for
         9 for sf@+ f. loop cr
     loop ;
 
 : texrectf ( bmp w h - )
     {: bmp iw ih | f: x f: y f: w f: h f: u f: v vtxs[ 256 ] :}
     iw ih 2s>f to h to w
-    ppenu@ ppenv@ p>f to v p>f to u 
-    at@f to y to x 
+    ppenu@ ppenv@ p>f to v p>f to u
+    at@f to y to x
     vtxs[
         x y           u v fvertex
         x y h f+      u v h f+ fvertex
         x w f+ y h f+ u w f+ v h f+ fvertex
         x w f+ y      u w f+ v fvertex
-    drop 
-    vtxs[ 0 bmp id>albmp 0 4 ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim 
+    drop
+    vtxs[ 0 bmp id>albmp 0 4 ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim
     0= abort" al_draw_prim failure" ;
-
-\ \ c: %shape %drawable tr tg tb ta fil ;
-\ c: %shape %actor fil ;
-\ c: %circle %shape r ;
-\ c: %oval %shape rx ry ;
-\ c: %line %shape dx dy ;
-\ c: %rect %shape w h ;
-\ c: %pixel %shape ;
-
-\ \ : tinted  tr @ ppenr! tg @ ppeng! tb @ ppenb! ta @ ppena! ;
-
-\ %circle :: draw  at-me r @ fil @ if circf else circ then ;
-\ %oval :: draw  at-me rx 2@ fil @ if ovalf else oval then ;
-\ %line :: draw  at-me dx 2@ line ;
-\ %rect :: draw  at-me w 2@ fil @ if rectf else rect then ;
-\ %pixel :: draw  at-me pixel ;
-
-\ : *circle  %circle  *add { r ! this } ;
-\ : *circlef *circle { fil on this } ;    
-\ : *oval    %oval  *add { rx 2! this } ;
-\ : *ovalf   *oval { fil on this } ;
-\ : *line    %line  *add { dx 2! this } ;
-\ : *rect    %rect  *add { w 2! this } ;
-\ : *rectf   *rect { fil on this } ;
-\ : *pixel   %pixel  *add ;
-
-\ 0 0 at
-\ create test-shapes
-\ %actor make {
-\     create c1
-\     100 100 at 50. *circlef { 
-\         $00ff00ff rgba8 
-\         create r1
-\         -20 -30 at  64. 32. *rect {
-\             $0000ffff rgba8
-\             3. thick
-\         }
-\     }
-\     create c2
-\     50 50 at 20. *circle { $ff0000ff rgba8 }
-\ }
-
-\ : shapes
-\     work>
-\         step
-\     show> 
-\         test-shapes ndraw ;
-
-\ shapes
