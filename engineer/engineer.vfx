@@ -131,14 +131,16 @@ private
 : dev-init  init-xrefs init-paths ;
 : init-home-path  ?.. wd@ home$ place ;
 
-public
+forth-public
+
+synonym vfx-empty empty
 
 redef : empty ( - )
     rs
     init-engineer
     reset-engineer
-    only forth definitions
-    empty ; 
+    vfx-empty 
+    global ;
 
 : cartridge ( - )
     empty hold off
@@ -169,7 +171,7 @@ private
 : debug-entrypoint ( - )
     vfxforth-entrypoint init-vfx-console ;
 
-public
+forth-public
 
 : save-release ( - <path> )
     ['] release-entrypoint is EntryPoint
@@ -200,6 +202,8 @@ public
 \ =============================================================================
 \ Development tool commands
 \ =============================================================================
+
+forth-public
 
 include %idir%/tools.vfx
 import %idir%/ls.vfx
@@ -238,7 +242,7 @@ private
 ['] dev-entrypoint is EntryPoint
 ['] dev-cold is .cold
 
-public
+forth-public
 
 : save-dev ( - <path> )
     ['] dev-entrypoint is EntryPoint
@@ -255,5 +259,5 @@ public
 
 gild-nib
 ['] main >name hidename
-only forth definitions
+global
 freeze 

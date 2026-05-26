@@ -1347,20 +1347,21 @@ variable errsp   estack errsp !
 \ ==============================================================================
 
 class: %global class;  \ ECP = ROOTEC
-%global object global 
+%global object nullobj
 
 : reset-object-stack
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
-    global { global { global { global { global { global { global { global { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
+    nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
 ;
 reset-object-stack
-global as in-dict
+nullobj as 
+in-dict
 
 \ ==============================================================================
 \ Init/Reset
@@ -1374,7 +1375,7 @@ global as in-dict
     fresh-next-classifier# @ next-classifier# ! 
     fresh-/static @ to /static
     reset-object-stack
-    global this!  in-dict
+    nullobj this!  in-dict
     reset-ec-stack
     fresh/ec @ to s/ec
     0 to classifier 

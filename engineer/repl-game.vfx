@@ -35,7 +35,7 @@ create gds 2 mb allot
     frame-timer al_stop_timer 
     going off
     >vfx 
-    global as ;
+    nullobj as ;
 
 \ REPL-mode frame: like regular frame with proper spin-based pacing
 : repl-mode-frame ( - )

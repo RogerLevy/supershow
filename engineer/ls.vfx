@@ -32,7 +32,7 @@ private
     then
     r> drop ;
 
-public
+forth-public
 
 redef : ls            \ -- ; "[spec]"
 \ *G Display file information based on the supplied specification.
