@@ -371,7 +371,7 @@ aka se" s\"        \ " \ syntax highlight guard
   then
 ;
 
-: strin?  search nip nip ;    
+: strin? ( haystack len needle len - flag ) search nip nip ;    
 : .:  postpone (s") 0 parse $, postpone type postpone cr ; immediate
 
 : toggle dup @ 0= swap ! ;

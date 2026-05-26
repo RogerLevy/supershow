@@ -335,9 +335,28 @@ redef : global ( - )
     only forth definitions  0 to current-module ;
 
 : ^ ( - <name> )
-    bl parse >module-name find-module-qualified
-    dup 0= abort" Module not found."
-    dup to current-module
+    {: | name[ 256 ] path[ 256 ] mod :}
+    bl parse >module-name name[ place
+    name[ count bare-name? if
+        s" %idir%/" path[ place
+        name[ count path[ append
+        s" .vfx" path[ append
+        path[ count expanded fileexists? 0= if
+            name[ count path[ place
+        then
+    else
+        name[ count path[ place
+        path[ count s" .vfx" strin? 0= if s" .vfx" path[ append then
+    then
+    name[ count find-module-qualified to mod
+    mod 0= if
+        save-order current-module >r
+        path[ count expanded included
+        r> to current-module restore-order
+        name[ count find-module-qualified to mod
+        mod 0= if abort" ^ : file did not declare a module." then
+    then
+    mod dup to current-module
     build-module-search-order ;
 
 redef : public ( - )
