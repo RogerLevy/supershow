@@ -1,6 +1,6 @@
 module [engineer]
 
-public
+forth-public
 
 \ Try/Honing - Convenient code testing
 

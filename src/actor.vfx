@@ -171,13 +171,3 @@ redef : halt  beha off  0 0 vx 2! ;
     .status
     ." at: " x 2@ 2>i swap . . 
     ." ] " pop-attribute ;
-
-\ =============================================================================
-\ Backward Compatibility
-\ =============================================================================
-
-aka @hitbox hitbox
-aka actor %actor
-aka act&> act>
-aka -collisions simple-motion
-aka floating -collisions

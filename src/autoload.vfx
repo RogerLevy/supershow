@@ -1,10 +1,4 @@
-require %idir%/checks.vfx
-require %idir%/utilities.vfx
-
-\ We don't load these here on purpose, so a program can mix-and-match
-\ require %idir%/asset.vfx
-\ require %idir%/bitmap.vfx
-\ require %idir%/tilemap2.vfx
+public
 
 trait: %autoload
     :: on-startup ( - ) ;

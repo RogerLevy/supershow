@@ -5,18 +5,15 @@ class: %node
     s/node field-space
     is-a %dltree
     is-a %poolable
-    \ EC_MAX_SIZE nprop ec  template { ec clear-ec }
 class;
 
 \ Node pool
 
 MAX_NODES %node array nodes
+
 %node object free-nodes
+
 [: free-nodes push ;] nodes each
-
-\ 0 %node :construct ( - )
-\     ec ecp! ;
-
 %node >template { free-nodes pool ! }
 
 : recycle ( node - )
