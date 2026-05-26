@@ -28,7 +28,6 @@ include %idir%/window.vfx
 \ =============================================================================
 
 import %idir%/../allegro5/allegro5.vfx
-reexport [allegro5]
 
 include %idir%/go.vfx         \ Main Loop
 include %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)

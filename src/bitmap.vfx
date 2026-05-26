@@ -1,5 +1,6 @@
 module [supershow.bitmap]
 import core
+import allegro5
 public
 
 65536 ?constant #bitmaps

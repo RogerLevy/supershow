@@ -19,6 +19,7 @@ module [supershow.assets]
 module [supershow]
 	import engineer
 	reexport [engineer]
+	import allegro5
 	import core
 	reexport [core]	
 	import assets
