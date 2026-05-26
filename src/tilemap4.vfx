@@ -100,9 +100,11 @@ public
 
 fast}
 
-\ Address of tile (col, row) in tilemap array — clamped to valid range
-: spot ( col row %tilemap - a )
-    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot } ;
+: tile! ( n col row %tilemap - )
+    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot ! } ;
+
+: tile@ ( col row %tilemap - n )
+    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot @ } ;
 
 \ Pixel (fixed-point) coords → tile col, row
 : xy>cr ( x. y. %tilemap - col row )
