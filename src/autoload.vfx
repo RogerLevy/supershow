@@ -54,7 +54,7 @@ class: %bitmap
     aka bitmap: bitmap
 
     :: on-startup ( - )
-        ." Loading bitmap " this .name cr
+        this body> >name count f" Loading bitmap %s" .info
         _load-albmp ;
 class;
 [then]
@@ -74,7 +74,7 @@ class: %tileset
     aka tileset: tileset-from
 
     :: on-startup ( - )
-        ." Slicing tileset " this .name cr 
+        this body> >name count f" Slicing tileset %s" .info
         this update-tileset ;
 class;
 [then]
@@ -108,7 +108,7 @@ class: %sample
         } ;
 
     :: on-startup ( - )
-        ." Loading sample " this .name cr
+        this body> >name count f" Loading sample %s" .info
         _load-alsmp
         alsmp @ id @ set-sample ;
 
@@ -160,7 +160,7 @@ class: %font
         } ;
 
     :: on-startup ( - )
-        ." Loading font " this .name cr
+        this body> >name count f" Loading font %s" .info
         size @ if _load-ttf else _load-bitmap-font then ;
 
 class;
@@ -187,7 +187,7 @@ class: %shader
         } ;
 
     :: on-startup ( - )
-        ." Loading shader " this .name cr
+        this body> >name count f" Loading shader %s" .info
         _load ;
 
 class;
