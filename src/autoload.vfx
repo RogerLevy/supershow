@@ -164,3 +164,30 @@ class: %font
         size @ if _load-ttf else _load-bitmap-font then ;
 
 class;
+
+|| create _vs-default  s" %supershow%/src/glsl/default.vs" file,  0 c,
+
+class: %shader
+    %asset derive
+    is-a %autoload
+    prop handle :addr   \ ALLEGRO_SHADER*
+
+    : does-shader  does> -> handle @ shade ;
+
+    : _load ( - )
+        _vs-default  this @data >zpad  load-shader handle ! ;
+
+    : shader ( <fs-path> - ) ( - )
+        bl parse
+        2dup fexists? not abort" File not found"
+        2dup -path sfind nip if 2drop exit then
+        2dup -path %shader asset does-shader {
+            ( fp len ) embed
+            _load
+        } ;
+
+    :: on-startup ( - )
+        ." Loading shader " this .name cr
+        _load ;
+
+class;

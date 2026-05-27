@@ -8,6 +8,8 @@ icons1.png  16 16 tileset-from  icons1.ts
 
 16 ttf-font %idir%/dat/fonts/Habbo.ttf
 
+shader %idir%/dat/glsl/default.fs
+
 \ ---- Display ---------------------------------------------------------------
 
 : render
@@ -17,6 +19,10 @@ icons1.png  16 16 tileset-from  icons1.ts
     0 20 at   s" bitmap: icons1.png" print
     0 40 at   s" tileset: icons1.ts" print
     0 60 at   s" font: Habbo.ttf" print
+    0 80 at   s" shader: " print
+        ['] default.fs >body -> handle @ al_use_shader
+        64 0 +at if s" OK" else s" FAILED" then print
+        0 al_use_shader drop
     vga-8x8 fnt!
     0 100 at
     8 0 do  icons1.ts i tile put  16 0 +at  loop ;
