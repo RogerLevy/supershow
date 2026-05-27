@@ -9,7 +9,7 @@ sample %idir%/dat/smp/snd-03.ogg
 sample %idir%/dat/smp/snd-04.ogg
 sample %idir%/dat/smp/snd-05.ogg
 
-bgm softice  softice.ogg
+bgm softice  %idir%/dat/bgm/softice.ogg
 
 \ ---- Controls --------------------------------------------------------------
 
