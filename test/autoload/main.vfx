@@ -10,6 +10,8 @@ icons1.png  16 16 tileset-from  icons1.ts
 
 shader %idir%/dat/glsl/default.fs
 
+sample %idir%/dat/smp/snd-02.ogg
+
 \ ---- Display ---------------------------------------------------------------
 
 : render
@@ -23,8 +25,9 @@ shader %idir%/dat/glsl/default.fs
         ['] default.fs >body -> handle @ al_use_shader
         64 0 +at if s" OK" else s" FAILED" then print
         0 al_use_shader drop
+    0 100 at  s" sample: snd-02.ogg" print
     vga-8x8 fnt!
-    0 100 at
+    0 120 at
     8 0 do  icons1.ts i tile put  16 0 +at  loop ;
 
 : main

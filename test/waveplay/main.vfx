@@ -1,0 +1,39 @@
+module [waveplay-test]
+import %supershow%/src/supershow.vfx
+
+\ ---- Assets ----------------------------------------------------------------
+
+sample %idir%/dat/smp/snd-01.ogg
+sample %idir%/dat/smp/snd-02.ogg
+sample %idir%/dat/smp/snd-03.ogg
+sample %idir%/dat/smp/snd-04.ogg
+sample %idir%/dat/smp/snd-05.ogg
+
+bgm softice  softice.ogg
+
+\ ---- Controls --------------------------------------------------------------
+
+: think
+    <1> pressed? if  *snd-01* sound  then
+    <2> pressed? if  *snd-02* sound  then
+    <3> pressed? if  *snd-03* sound  then
+    <4> pressed? if  *snd-04* sound  then
+    <5> pressed? if  *snd-05* sound  then
+    <M> pressed? if  softice          then
+    <H> pressed? if  hush             then ;
+
+\ ---- Display ---------------------------------------------------------------
+
+: render
+    cls
+    vga-8x8 fnt!
+    0   0 at  s" Waveplay test" print
+    0  20 at  s" 1-5: play samples" print
+    0  30 at  s" M: stream BGM (softice.ogg)" print
+    0  40 at  s" H: hush" print ;
+
+: main
+    just
+    show> think render ;
+
+main
