@@ -33,7 +33,8 @@ Target_386_Windows [if]
         require %idir%/allegro-5.2.10.vfx \ Allegro 5 library bindings
 
     require %idir%/al-utils.vfx       \ Display, window, and input state management
-    require %idir%/keys.vfx           \ Keyboard key constants
+    import %idir%/keys.vfx            \ Keyboard key constants
+    reexport [allegro5.keys]
     require %idir%/each-file.vfx      \ Directory iteration utilities
     require %idir%/graphics.vfx       \ Drawing, color, transform, text
     require %idir%/vga13h.vfx         \ VGA palette and 8x8 font

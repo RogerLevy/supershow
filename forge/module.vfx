@@ -245,14 +245,18 @@ create qualified-key-buf 256 allot
 
 : find-or-load ( name path - mod )
     \ name: registry name (bare or dotted)  path: file path to load if needed
-    {: name path | mod :}
+    {: name path | mod loaded-mod :}
     name count find-module-qualified to mod
     mod 0= if
         save-order  current-module >r
         path count expanded included   \ file must call `module`
+        current-module to loaded-mod
         r> to current-module  restore-order
         name count find-module-qualified to mod
-        mod 0= if abort" Imported file did not declare a module." then
+        mod 0= if
+            loaded-mod ?dup 0= abort" Imported file did not declare a module."
+            to mod
+        then
     then
     mod ;
 
