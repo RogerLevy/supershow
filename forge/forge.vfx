@@ -10,10 +10,6 @@ optimising off  \ DO NOT REMOVE, it breaks continuations
 
 'd' dp-char !   \ double-precision int literal symbol
 
-\ =============================================================================
-\ VFXLand5 codebase-wide language extensions
-\ =============================================================================
-
 include %idir%/file-fix.vfx       \ Fix bug in VFX Forth INCLUDE 
 include %idir%/backtick.vfx       \ Ignore trailing backticks; like commas in C
 include %idir%/strlit.vfx
