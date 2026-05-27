@@ -152,7 +152,7 @@ defer voice? ( smp - f )
     {: lm :}
     \ strm ?dup if  al_destroy_audio_stream  0 to strm  then
     strm ?dup if  0 al_set_audio_stream_playing drop  then
-    expand >zpad 3 2048 al_load_audio_stream
+    >zpad 3 2048 al_load_audio_stream
         dup 0= if ." Unable to stream audio file." then
         ?dup -exit
         to strm
@@ -161,18 +161,18 @@ defer voice? ( smp - f )
     strm lm al_set_audio_stream_playmode drop
     strm almixer al_attach_audio_stream_to_mixer drop ;
 
-: stream-bgm ( fp len loopmode - )
-    >r 
-    2dup fexists? not if
-        s" bgm\" >asset-path f" %s%s"
-    then
-    r> stream-audiofile ;
+\ : stream-bgm ( fp len loopmode - )
+\     >r 
+\     2dup fexists? not if
+\         s" bgm\" >asset-path f" %s%s"
+\     then
+\     r> stream-audiofile ;
 
 : stream ( fp len - )
-    ALLEGRO_PLAYMODE_ONCE stream-bgm ;
+    ALLEGRO_PLAYMODE_ONCE stream-audiofile ;
 
 : streamL ( fp len - )
-    ALLEGRO_PLAYMODE_LOOP stream-bgm ;
+    ALLEGRO_PLAYMODE_LOOP stream-audiofile ;
 
 \ =============================================================================
 \ Control
@@ -206,7 +206,7 @@ defer voice? ( smp - f )
     strm al_get_audio_stream_position_secs ;
 
 : bgm ( - <name> <filename> ) ( - )
-    create bl parse $, does> count streamL ;
+    create bl parse expand $, does> count streamL ;
 
 : audioclip ( - <name> <filename> ) ( - )
-    create bl parse $, does> count stream ;
+    create bl parse expand $, does> count stream ;
