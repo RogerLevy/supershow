@@ -1,5 +1,7 @@
-module [tilemap]
-import supershow
+module
+import supershow.core
+import supershow.tileset
+import supershow.bitmap
 import allegro5
 import array
 

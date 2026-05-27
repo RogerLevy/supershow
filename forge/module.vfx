@@ -416,22 +416,29 @@ redef : forth-public ( - )
     \ parse source module name
     bl parse >module-name name[ place
 
-    \ load file with qualified naming (full srcfile path as key)
-    \ save/restore reentrancy state in case we're nested inside another import-as
-    qualified-import? to save-qi
-    qualified-key-buf count saved-key[ place
-    0 qualified-key-buf c!
-    -1 to qualified-import?
-    save-order  current-module >r
-        name[ count expanded included   \ module populates qualified-key-buf
-    r> to current-module  restore-order
-    qualified-key-buf count key[ place   \ copy into local before restoring
-    save-qi to qualified-import?
-    saved-key[ count qualified-key-buf place
+    \ Check if already loaded by predicting the qualified key
+    name[ count expanded normalize -ext key[ place
+    key[ count find-module-exact to mod
+
+    mod 0= if
+        \ load file with qualified naming (full srcfile path as key)
+        \ save/restore reentrancy state in case we're nested inside another import-as
+        qualified-import? to save-qi
+        qualified-key-buf count saved-key[ place
+        0 qualified-key-buf c!
+        -1 to qualified-import?
+        save-order  current-module >r
+            name[ count expanded included   \ module populates qualified-key-buf
+        r> to current-module  restore-order
+        qualified-key-buf count key[ place   \ copy into local before restoring
+        save-qi to qualified-import?
+        saved-key[ count qualified-key-buf place
+
+        key[ c@ 0= abort" Imported file did not declare a module."
+        key[ count find-module-exact to mod
+    then
 
     \ find and register the module
-    key[ c@ 0= abort" Imported file did not declare a module."
-    key[ count find-module-exact to mod
     mod check-import to mod
     mod do-import
 
@@ -449,10 +456,16 @@ redef : forth-public ( - )
     r> set-current ;
 
 : reexport ( - <[name]> )
-    {: | mod :}
+    {: | mod a u :}
     bl parse 2dup bracket-name? 0= abort" REEXPORT: expected [module-name]"
+    2dup to u to a
     >bare-name find-module-qualified to mod
-    mod 0= if abort" Module not found for reexport." then
+    mod 0= if
+        \ Fall back to searching current module's private wl (for import-as aliases)
+        a u current-module mod.priv-wl @ search-wordlist
+        dup 0= abort" Module not found for reexport."
+        drop >body to mod
+    then
     current-module mod module-accessible? not if abort" Can only reexport an accessible module." then
     current-module mod add-reexport ;
 
