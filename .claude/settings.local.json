@@ -49,7 +49,10 @@
       "Bash(git commit:*)",
       "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/treats/dat/gfx)",
       "Bash(cp /c/Users/roger/Dev/vfxland5-work/games/treats/dat/gfx/icons1.png /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/treats/dat/gfx/)",
-      "Bash(cp /c/Users/roger/Dev/vfxland5-work/games/treats/dat/gfx/icons2.png /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/treats/dat/gfx/)"
+      "Bash(cp /c/Users/roger/Dev/vfxland5-work/games/treats/dat/gfx/icons2.png /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/treats/dat/gfx/)",
+      "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/autoload/dat/smp)",
+      "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/waveplay/dat/smp)",
+      "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/waveplay/dat/bgm)"
     ],
     "deny": []
   }

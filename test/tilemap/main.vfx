@@ -40,7 +40,6 @@ public
 : draw-bg  0 0 at the-tilemap draw ;
 
 : main
-    s" module [tilemap-test]" evaluate
     init-tilemap-renderer
     show> 
         draw-bg
