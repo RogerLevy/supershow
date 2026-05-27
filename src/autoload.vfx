@@ -79,7 +79,7 @@ class: %tileset
 class;
 [then]
 
-[defined] waveplay>> [if]
+[defined] [waveplay] [if]
 class: %sample
     %asset derive
     is-a %autoload
@@ -109,8 +109,58 @@ class: %sample
 
     :: on-startup ( - )
         ." Loading sample " this .name cr
-        _load-alsmp 
+        _load-alsmp
         alsmp @ id @ set-sample ;
 
 class;
 [then]
+
+class: %font
+    %asset derive
+    is-a %autoload
+    prop alfont :addr         \ ALLEGRO_FONT*
+    prop size :int            \ TTF point size; 0 = bitmap font
+    16 nprop ident :cstring   \ filename hint (".ttf" or ".png")
+
+    : does-font  does> -> alfont @ fnt! ;
+
+    create char-range  0 ,  255 ,
+
+    : _load-ttf ( - )
+        this @data memfile@
+        ident count >zpad  size @  0  al_load_ttf_font_f  alfont ! ;
+        \ NOTE: memfile intentionally not closed — al_load_ttf_font_f holds reference
+
+    : _load-bitmap-font ( - )
+        this @data memfile@ dup
+            0 al_load_bitmap_f  swap -memfile
+        1` char-range`  al_grab_font_from_bitmap  alfont ! ;
+
+    : ttf-font ( size <path> - ) ( - )
+        {: sz :}
+        bl parse
+        2dup fexists? not abort" File not found"
+        2dup -path sfind nip if 2drop exit then
+        2dup -path %font asset does-font {
+            ( fp len ) embed
+            sz size !
+            s" .ttf" ident place
+            _load-ttf
+        } ;
+
+    : bitmap-font ( <path> - ) ( - )
+        bl parse
+        2dup fexists? not abort" File not found"
+        2dup -path sfind nip if 2drop exit then
+        2dup -path %font asset does-font {
+            ( fp len ) embed
+            0 size !
+            s" .png" ident place
+            _load-bitmap-font
+        } ;
+
+    :: on-startup ( - )
+        ." Loading font " this .name cr
+        size @ if _load-ttf else _load-bitmap-font then ;
+
+class;
