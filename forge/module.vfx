@@ -352,11 +352,12 @@ redef : global ( - )
     mod 0= if
         save-order current-module >r
         path[ count expanded included
+        current-module to mod
         r> to current-module restore-order
-        name[ count find-module-qualified to mod
         mod 0= if abort" ^ : file did not declare a module." then
     then
     mod dup to current-module
+    ." Current module: " current-module .name cr
     build-module-search-order ;
 
 redef : public ( - )
