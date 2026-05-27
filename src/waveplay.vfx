@@ -21,7 +21,7 @@ defer voice? ( smp - f )
 
 || : play-sample ( allegro-sample - )
     ?dup -exit
-    play-gain @ p>f 0e 1e  ALLEGRO_PLAYMODE_ONCE  ch  al_play_sample
+    play-gain @ p>f 0e 1e  ALLEGRO_PLAYMODE_ONCE  ch  al_play_sample drop
     1.0 play-gain ! ;
     
 || : stop-sample ( ALLEGRO_SAMPLE_ID* - )

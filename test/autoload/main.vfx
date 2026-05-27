@@ -12,6 +12,16 @@ shader %idir%/dat/glsl/default.fs
 
 sample %idir%/dat/smp/snd-02.ogg
 
+\ ---- Validation ------------------------------------------------------------
+
+2variable test-sid
+variable sample-ok
+
+: check-sample ( - )
+    ['] *snd-02* >body -> alsmp @
+    1e 0e 1e ALLEGRO_PLAYMODE_ONCE test-sid al_play_sample
+    sample-ok ! ;
+
 \ ---- Display ---------------------------------------------------------------
 
 : render
@@ -26,15 +36,14 @@ sample %idir%/dat/smp/snd-02.ogg
         64 0 +at if s" OK" else s" FAILED" then print
         0 al_use_shader drop
     0 100 at  s" sample: snd-02.ogg " print
-        ['] *snd-02* >body -> alsmp @
-        if s" OK" else s" FAILED" then print
+        sample-ok @ if s" OK" else s" FAILED" then print
     vga-8x8 fnt!
     0 120 at
     8 0 do  icons1.ts i tile put  16 0 +at  loop ;
 
 : main
     just
-    *snd-02*
+    check-sample
     show> render ;
 
 main

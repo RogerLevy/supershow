@@ -658,7 +658,7 @@ extern "C" void * al_open_memfile(void *mem, int size, int size2, void *mode);
 \ extern "C" al_peek_next_event( );
 extern "C" void al_perspective_transform( void * trans, float left, float top, float near, float right, float bottom, float far );
 \ extern "C" al_play_haptic_effect( );
-extern "C" void al_play_sample( void * sample, float gain, float pan, float speed,
+extern "C" bool al_play_sample( void * sample, float gain, float pan, float speed,
    int loop, void * ret_id );
 \ extern "C" al_play_sample_instance( );
 \ extern "C" al_popup_menu( );
