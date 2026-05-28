@@ -1,6 +1,6 @@
 module [tilemap-test]
 import %supershow%/src/supershow.vfx
-import-as %idir%/../../src/tilemap4.vfx [tilemap]
+import-as %supershow%/src/tilemap4.vfx [tilemap]
 
 bitmap %idir%/dat/gfx/greyzebes.png
 
