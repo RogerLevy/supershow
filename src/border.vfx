@@ -1,8 +1,6 @@
-\ =============================================================================
-\ TV
-\ =============================================================================
+private
 
-|| : z ( - n ) zoom @ ;
+: z ( - n ) zoom @ ;
 
 : refit ( - )  \ find biggest integer scaling that fits display
     monw monh 2s>f f/
@@ -28,21 +26,23 @@
     0 0 winw winh al_set_clipping_rectangle
     cls
 
-    tv-xy 2s>f`` tv-xy2 2s>f``
-        0.25e f>ds 0.25e f>ds 0.25e f>ds 1e f>ds```` al_draw_filled_rectangle
+    tv-xy 2s>f`` 
+    tv-xy2 2s>f``
+    0.25e f>ds 0.25e f>ds 0.25e f>ds 1e f>ds```` al_draw_filled_rectangle
 
-    6e f>ds >r
-    border-xy 2s>f`` fs-w 1 + fs-h 1 + border-xy 2+ 2s>f``
-        0e f>ds 0e f>ds 0e f>ds 1e f>ds````  r>` al_draw_rectangle
+    border-xy 2s>f`` 
+    fs-w 1 + fs-h 1 + border-xy 2+ 2s>f``
+    0e f>ds 0e f>ds 0e f>ds 1e f>ds````  
+    6e f>ds` al_draw_rectangle
     
     border-xy 2s>f`` z z 2s>f`` 0e` transform
     clip-screen ;
 
 : ?border
-    identity 
     fullscreen? user-zoom @ not and if
         refit border
     else
+        identity 
         user-zoom @ ?dup if zoom ! then
         0e 0e z s>f fdup 0e transform
     then ; 

@@ -1,3 +1,5 @@
+public
+
 class: %mode
     prop drw :xt
     prop beha :xt
@@ -5,13 +7,13 @@ class;
 
 %mode object default-mode 
 variable gamemode  default-mode gamemode !
-variable catchup
+|| variable catchup
 
 : process-work ( - )
     gamemode @ -> beha @ ?execute ;
 
 : process-show ( - )
-    gamemode @ -> drw @ ?execute ;
+    gamemode @ -> drw @ draw-tv ;
 
 : supershow ( - )
     gamemode @ >r default-mode gamemode ! 

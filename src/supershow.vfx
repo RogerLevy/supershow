@@ -23,7 +23,7 @@ module [supershow]
 	reexport [allegro5.keys]
 	import core
 	reexport [core]	
-	import assets
+	import assets 
 	reexport [assets]
 	import waveplay             \ Audio engine
 	reexport [waveplay]
@@ -40,9 +40,9 @@ module [supershow]
 	\ include tread                \ Tilemap data reading
 
 	\ ?
+	include border               \ TV border / ininclude 
 	include mode                 \ Game modes w/ separate logic and rendering
 	include tweak                \ Persistent variable control	
-	include border               \ TV border / ininclude 
 	\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
 	include autoload    
 	include runtime    
