@@ -1,3 +1,5 @@
+public
+
 fast{
 
 crucial test: CHECK-BITMAPS-OVERFLOW ( ALLEGRO_BITMAP - ALLEGRO_BITMAP res )

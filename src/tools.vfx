@@ -1,6 +1,7 @@
 \ =============================================================================
 \ Interactive tools
 \ =============================================================================
+public
 
 \ : [testing] ( - )
 \     \ Conditionally compile test code - active only in honing mode

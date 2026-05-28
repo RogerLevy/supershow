@@ -1,6 +1,4 @@
-require %idir%/checks.vfx
-require %idir%/utilities.vfx
-require %idir%/traits.vfx
+public
 
 class: %asset
     256 nprop srcpath$ :cstring

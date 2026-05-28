@@ -1,3 +1,5 @@
+public
+
 magic-id MAGIC_TWEAK TWK
 
 : tweak ( n - <name> )
@@ -12,7 +14,7 @@ magic-id MAGIC_TWEAK TWK
     then
     restore-order ;
 
-: (?.tweak) ( thread# nfa - f )
+|| : (?.tweak) ( thread# nfa - f )
     nip
     {: nfa :} 
     nfa name> >body cell+ @ MAGIC_TWEAK = if

@@ -5,6 +5,7 @@
 
 0 value current-module       \ currently active module (0 = top-level / [forth])
 create current-package 256 allot  \ package prefix of current module (counted string)
+0 value section-declared?   \ set by public/private/forth-public/module within an include
 
 save-order vocabulary moduleing
 
@@ -332,6 +333,7 @@ redef : module ( - )
         2dup module-name>package current-package place
         ?module
     then
+    -1 to section-declared?
     to current-module
     current-module build-module-search-order ;
 
@@ -365,16 +367,19 @@ redef : global ( - )
     build-module-search-order ;
 
 redef : public ( - )
+    -1 to section-declared?
     current-module ?dup 0= abort" PUBLIC : No current module"
     dup mod.pub-wl @ set-current
     dup mod.priv-wl @ +order        \ keep private in search order
     drop ;
 
 redef : private ( - )
+    -1 to section-declared?
     current-module ?dup 0= abort" PRIVATE : No current module"
     mod.priv-wl @ set-current ;
 
 redef : forth-public ( - )
+    -1 to section-declared?
     current-module ?dup 0= abort" FORTH-PUBLIC : No current module"
     {: mod :}
     only forth
@@ -512,13 +517,30 @@ create pkg-save-stack max-pkg-depth 256 * allot
 : pop-package   pkg-sp 1- to pkg-sp  pkg-save-stack pkg-sp 256 * + count  current-package place ;
 
 redef : include
-    current-module >r  push-package
+    {: | outer-mod saved-sd :}
+    current-module to outer-mod   section-declared? to saved-sd
+    push-package
+    outer-mod if 0 to section-declared? then
     save-order getPathSpec ?idir-path included restore-order
-    pop-package  r> to current-module ;
+    outer-mod if
+        section-declared? 0= abort" include: file must declare public, private, forth-public, or module"
+    then
+    saved-sd to section-declared?
+    pop-package  outer-mod to current-module ;
 redef : require
-    current-module >r  push-package
-    save-order getPathSpec ?idir-path required restore-order
-    pop-package  r> to current-module ;
+    getPathSpec ?idir-path
+    2dup expand normalize ['] SourceFiles voc>wid search-wordlist
+    if drop required exit then                      \ already loaded — skip
+    {: | outer-mod saved-sd :}
+    current-module to outer-mod   section-declared? to saved-sd
+    push-package
+    outer-mod if 0 to section-declared? then
+    save-order required restore-order
+    outer-mod if
+        section-declared? 0= abort" require: file must declare public, private, forth-public, or module"
+    then
+    saved-sd to section-declared?
+    pop-package  outer-mod to current-module ;
 redef : included
     current-module >r  push-package
     save-order included restore-order
