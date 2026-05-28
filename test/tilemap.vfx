@@ -2,7 +2,7 @@ module [tilemap-test]
 import %supershow%/src/supershow.vfx
 import-as %idir%/../../src/tilemap4.vfx [tilemap]
 
-bitmap %idir%/assets/gfx/greyzebes.png
+bitmap %idir%/dat/gfx/greyzebes.png
 
 greyzebes.png 16 16 tileset-from the-tileset
 
