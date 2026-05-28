@@ -212,6 +212,7 @@ forth-public
 \ Write to both console and file
 : log ( a c - )
     2dup type cr                    \ console first, before any f" reuse
+    update-timestamp
     timestamp +logbuf               \ buffer timestamp
     +logbuf                         \ buffer message (now safe in logbuf)
     crlf 2 +logbuf
