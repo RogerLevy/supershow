@@ -52,7 +52,12 @@
       "Bash(cp /c/Users/roger/Dev/vfxland5-work/games/treats/dat/gfx/icons2.png /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/treats/dat/gfx/)",
       "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/autoload/dat/smp)",
       "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/waveplay/dat/smp)",
-      "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/waveplay/dat/bgm)"
+      "Bash(mkdir -p /c/Users/roger/Dev/vfxland5-work/supershow-dev/supershow/test/waveplay/dat/bgm)",
+      "Bash(git mv:*)",
+      "Bash(mkdir -p test/dat/gfx test/dat/fonts test/dat/smp test/dat/bgm test/dat/glsl test/dat/maps)",
+      "Bash(rm -f test/treats/dat/gfx/icons1.png test/waveplay/dat/smp/snd-02.ogg)",
+      "Bash(git rm:*)",
+      "Bash(rm -rf test/autoload test/shapes test/tilemap test/treats test/waveplay)"
     ],
     "deny": []
   }
