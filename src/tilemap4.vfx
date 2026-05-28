@@ -67,38 +67,65 @@ fast{
     tile-rel $02000000 and if  v1 v0 to v1 to v0  then   \ V flip
     a  col row  col 1+  row 1+  u0 v0  u1 v1  +quad ;
 
-public
+: _flush-tiles ( ptr - )
+    vbuf - s/vertex / #drawn !
+    #drawn @ if
+        vbuf` prim-decl` cur-ts >bmp @ id>albmp` 
+        0` #drawn @` ALLEGRO_PRIM_TRIANGLE_LIST` al_draw_prim drop
+    then ;
 
-%tilemap :: draw
-    {: | cols rows src :}
-    w @ to cols   h @ to rows
-    ts @ to cur-ts
-    cur-ts >baseid @ to the-id
-    m{
-    at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
+: _draw-tiles ( cols rows - )
+    {: cols rows | src :}
     vbuf
     rows 0 do
         i cols * ta @ slot to src
         cols 0 do
             src @
-            dup  $FFFFFFFF =  if
-                drop
-            else
-                i j  rot  tile-verts
-            then
+            dup $FFFFFFFF = if drop else i j rot tile-verts then
             cell +to src
         loop
     loop
-    vbuf -  s/vertex /  #drawn !
-    #drawn @ if
-        vbuf  
-        prim-decl  
-        cur-ts -> bmp @ id>albmp
-        0  
-        #drawn @  
-        ALLEGRO_PRIM_TRIANGLE_LIST  al_draw_prim  drop
-    then
+    _flush-tiles ;
+
+: _draw-tiles-view ( sc0 sr0 sc1 sr1 - )
+    {: sc0 sr0 sc1 sr1 | src :}
+    vbuf
+    sr1 sr0 ?do
+        sc0 i w @ * + ta @ slot to src
+        sc1 sc0 ?do
+            src @
+            dup $FFFFFFFF = if drop else i j rot tile-verts then
+            cell +to src
+        loop
+    loop
+    _flush-tiles ;
+
+%tilemap :: draw
+    ts @ to cur-ts
+    cur-ts >baseid @ to the-id
+    m{
+    at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
+    w @ h @ _draw-tiles
     m} ;
+
+public
+
+%tilemap :: draw-view  \ ( sx. sy. w. h. - )
+    {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
+    ts  @ to cur-ts
+    cur-ts >baseid @ to the-id
+    cur-ts >tw @ to _tw   cur-ts >th @ to _th
+    sx >i _tw / 0 max to sc0
+    sy >i _th / 0 max to sr0
+    sx >i vpw >i + 1 - _tw / 1 + w @ min to sc1
+    sy >i vph >i + 1 - _th / 1 + h @ min to sr1
+    at@p  vpw  vph  clip{
+    m{
+    at@f  sy p>f f-  fswap  sx p>f f-  fswap
+    _tw s>f  _th s>f  0e  transform
+    sc0 sr0 sc1 sr1 _draw-tiles-view
+    m}
+    clip} ;
 
 fast}
 

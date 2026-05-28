@@ -1,7 +1,6 @@
 module [tilemap-test]
 import %supershow%/src/supershow.vfx
 import-as %idir%/../../src/tilemap4.vfx [tilemap]
-\ import-as %idir%/../../src/tilemap4-put.vfx [tilemap]
 
 bitmap %idir%/assets/gfx/greyzebes.png
 
@@ -35,16 +34,34 @@ the-tilemap {
     20 15 4 * w 2!
 }
 
+variable view-t
+
+: tri* ( t period max -- n )
+    {: t period max | phase half :}
+    t period mod to phase
+    period 2 / to half
+    phase half < if  phase max * half /
+    else  period phase - max * half /  then ;
+
 public
 
 : draw-bg  0 0 at the-tilemap draw ;
 
+: draw-view-demo
+    view-t @  dup
+        300 96 tri* >p            \ sx: diamond x-axis
+        swap  75 +  300 96 tri* >p   \ sy: t+75 = quarter period offset
+    60 40 at
+    200. 160. the-tilemap draw-view
+    1 view-t +! ;
+
 : main
     init-tilemap-renderer
-    show> 
+    show>
         draw-bg
+        draw-view-demo
         vga-8x8 fnt!
-        0 0 at s" Hello, world!" print 
+        \ 0 0 at s" Hello, world!" print
         16 16 at the-tileset 2 tile put ;
 
 main

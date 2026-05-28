@@ -26,6 +26,12 @@ trait;
 
 trait: %drawable
     :: draw ( - ) ;
+    :: draw-view ( sx. sy. w. h. - )
+        {: sx sy vpw vph :}
+        at@p  vpw  vph  clip{
+            sx sy 2negate +atp
+            draw
+        clip} ;
 trait;
 
 defer _ndraw  \ had to do the recursion this way because [: RECURSE ;] didn't work.

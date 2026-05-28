@@ -25,20 +25,20 @@ private
 \ ---- shapes -------------------------------------------------------------
 
 \ circ — pulsing radius and thickness
-: .circ
+: ~circ
     $ff6644ff rgba8
     60 70 at
     97 30 tri.   20. +              \ radius 20..50
     67 4  tri.   1.  +  thick  circ ;
 
 \ circf — pulsing radius
-: .circf
+: ~circf
     $4488ffff rgba8
     160 70 at
     113 25 tri.  15. +  circf ;    \ radius 15..40
 
 \ oval — rx and ry animated independently
-: .oval
+: ~oval
     $44ff88ff rgba8
     260 70 at
     83 30 tri.  15. +              \ rx 15..45
@@ -46,7 +46,7 @@ private
     1. thick  oval ;
 
 \ ovalf — filled, different periods than oval
-: .ovalf
+: ~ovalf
     $ffaa44ff rgba8
     60 170 at
     127 28 tri.  18. +              \ rx 18..46
@@ -54,7 +54,7 @@ private
     ovalf ;
 
 \ line — from pen to animated endpoint
-: .line
+: ~line
     $ffff44ff rgba8
     160 170 at
     89 120 tri  80 +  >p            \ endpoint x 80..200
@@ -62,7 +62,7 @@ private
     1. thick  line ;
 
 \ rect — w and h animated independently
-: .rect
+: ~rect
     $aa44ffff rgba8
     240 152 at
     79 40 tri.  10. +               \ w 10..50
@@ -70,7 +70,7 @@ private
     1. thick  rect ;
 
 \ rectf — centered, filled
-: .rectf
+: ~rectf
     {: | w h :}
     109 40 tri  10 +  to w
     73  28 tri  10 +  to h
@@ -79,7 +79,7 @@ private
     w >p  h >p  rectf ;
 
 \ pixel — drifts along independent triangular paths
-: .pixel
+: ~pixel
     $ffffffff rgba8
     170 151 100 tri +   83 60 tri  100 +   at
     pixel ;
@@ -89,10 +89,9 @@ public
 \ ---- main ---------------------------------------------------------------
 
 : demo
-    $000000ff rgba8  0 0 at  320. 240. rectf
-    .circ  .circf  .oval
-    .ovalf  .line  .rect  .rectf
-    .pixel
+    ~circ  ~circf  ~oval
+    ~ovalf  ~line  ~rect  ~rectf
+    ~pixel
     1 frame# +! ;
 
 : main
