@@ -16,6 +16,8 @@ Creates the module if it doesn't exist; otherwise re-enters it. Both cases set t
 
 **Filename fallback.** A bare `module` with no bracketed name uses the current source file's basename as the module name.
 
+**Qualified names in files.** A file may declare a module name whose basename differs from the filename — for example, `keys.vfx` declaring `module [allegro5.keys]`. In this case `import path/to/keys.vfx` will correctly find the declared module even though the name doesn't match the filename.
+
 ---
 
 ## Sections
@@ -46,7 +48,7 @@ import: [a] [b] [c] ;            \ batch syntax
 ```
 
 - Adds `name`'s public wordlist (and its reexports) to the current search order.
-- Idempotent: importing the same module twice has no effect.
+- Idempotent: importing the same module twice has no effect. `import-as` also skips the file load if the module is already registered.
 - Triggers load if the module hasn't been declared yet. The file must contain a `module` declaration or an error is thrown.
 - **Circular imports are detected** and abort with an error. The check is transitive: if A imports B and B imports C, then C cannot import A.
 
@@ -71,6 +73,10 @@ Makes an already-imported module's public wordlist visible to any module that im
 
 Only directly or transitively accessible modules can be reexported.
 
+Reexports are **transitive**: if A reexports B and B reexports C, then importers of A also see C's public words.
+
+Modules imported via `import-as` (which live as aliases in the private wordlist) can also be reexported using their bracketed local name.
+
 ---
 
 ## Accessing Module Words
@@ -89,6 +95,24 @@ The bracketed module name is an immediate word. When executed:
 ```
 
 Special form: interprets `word` in the Forth wordlist directly. Use to call a global word that would otherwise be shadowed.
+
+---
+
+## REPL Navigation: `^`
+
+```forth
+^ name
+^ path/to/file.vfx
+```
+
+Opens a module at the REPL: sets `current-module` to it and rebuilds the search order. Brackets are not required. If the module isn't loaded yet, the file is included first (the file must declare a `module`). `.vfx` extension is optional for bare names.
+
+`^` never creates a new module — it aborts if the file doesn't declare one.
+
+```forth
+^ tilemap          \ opens [tilemap] (loads %idir%/tilemap.vfx if needed)
+^ engine/foo.vfx   \ opens module declared in that file
+```
 
 ---
 
