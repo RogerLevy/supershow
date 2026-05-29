@@ -48,6 +48,8 @@ public
 : init-supershow ( - )
     ." Initializing Supershow..." cr
     hold off
+    user-zoom off
+    refit
     \ init-bitmaps
     \ init-tilesets
     \ init-samples

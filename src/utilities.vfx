@@ -3,8 +3,8 @@
 \ =============================================================================
 public
 
-320 ?constant gamew
-240 ?constant gameh
+320 value gamew
+240 value gameh
 
 : 4>p  2>p 2>r 2>p 2r> ;
 : 2?  2@ swap . . ;

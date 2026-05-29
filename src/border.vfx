@@ -3,14 +3,26 @@ private
 : z ( - n ) zoom @ ;
 
 : refit ( - )  \ find biggest integer scaling that fits display
-    monw monh 2s>f f/
-    appw apph 2s>f f/
-    f> if
-        monh apph /
+    fullscreen? if 
+        monw monh 2s>f f/
+        appw apph 2s>f f/
+        f> if
+            monh apph /
+        else
+            monw appw /
+        then
+        zoom ! 
     else
-        monw appw /
+        winw winh 2s>f f/
+        appw apph 2s>f f/
+        f> if
+            winh apph /
+        else
+            winw appw /
+        then
+        zoom !         
     then
-    zoom ! ;
+;
 
 : fs-w  appw z * ;
 : fs-h  apph z * ;
