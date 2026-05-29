@@ -2,6 +2,7 @@ public
 
 trait: %autoload
     :: on-startup ( - ) ;
+    :: on-turnkey-save ( - ) ;
 trait;
 
 create autoloads /list allot&erase 
@@ -10,6 +11,13 @@ create autoloads /list allot&erase
     autoloads list-count for
         list-next on-startup
     loop drop ;
+
+: save-autoloads ( - )
+    autoloads list-count for
+        list-next on-turnkey-save
+    loop drop ;
+
+' save-autoloads AtSave
 
 : >autoload-path  expand >abspath ;
 
@@ -191,3 +199,32 @@ class: %shader
         _load ;
 
 class;
+
+[defined] %tilemap [if]
+class: %tilemap
+    is-a %autoload
+
+    :: on-startup ( - )
+        w @ h @ * %int %array hmake  ta !
+        snapshot-cells @ if
+            data-snapshot @  ta @ >data @  snapshot-cells @ cells  move
+        then ;
+
+    :: on-turnkey-save ( - )
+        align here data-snapshot !
+        ta @ >data @  w @ h @ * dup snapshot-cells !
+        cells  dup allot  here over -  swap move ;
+
+class;
+
+: tilemap ( w h <name> )
+    {: def-w def-h :}
+    create
+    %tilemap dmake
+    {
+        def-w def-h * %int %array hmake ta !
+        def-w w !   def-h h !
+        this autoloads add-to
+    } ;
+
+[then]

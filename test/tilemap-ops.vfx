@@ -1,0 +1,172 @@
+module [tilemap-ops-test]
+import %supershow%/src/supershow.vfx
+import-as %supershow%/src/tilemap4.vfx [tilemap]
+
+bitmap %idir%/../allegro5/vga2_8x8_allegro5.png
+
+vga2_8x8_allegro5.png 9 9 tileset-from font-ts
+
+\ Source map: 8×8 of ASCII chars ABCDEFGH in alternating rows
+8 8 tilemap src-map
+
+\ Demo tilemaps
+6 6 tilemap demo-slice    \ slice-tilemap
+6 6 tilemap demo-clone    \ clone-tilemap
+6 6 tilemap demo-put      \ put-tilemap (transparent stamp)
+6 6 tilemap demo-paste    \ paste-tilemap (opaque stamp)
+4 4 tilemap stamp         \ stamp for put/paste
+6 6 tilemap demo-fillclr  \ fill-tilemap / clear-tilemap
+8 8 tilemap demo-shift    \ shift-tilemap (animated)
+4 4 tilemap demo-tile     \ tile! / tile@ (animated)
+8 4 tilemap demo-resize   \ resize-tilemap (8×8 → 8×4 → 8×8)
+
+create src-data
+%int array{
+65 , 66 , 67 , 68 , 69 , 70 , 71 , 72 ,   \ A B C D E F G H
+72 , 71 , 70 , 69 , 68 , 67 , 66 , 65 ,   \ H G F E D C B A
+73 , 74 , 75 , 76 , 77 , 78 , 79 , 80 ,   \ I J K L M N O P
+80 , 79 , 78 , 77 , 76 , 75 , 74 , 73 ,   \ P O N M L K J I
+81 , 82 , 83 , 84 , 85 , 86 , 87 , 88 ,   \ Q R S T U V W X
+88 , 87 , 86 , 85 , 84 , 83 , 82 , 81 ,   \ X W V U T S R Q
+89 , 90 , 65 , 66 , 67 , 68 , 69 , 70 ,   \ Y Z A B C D E F
+70 , 69 , 68 , 67 , 66 , 65 , 90 , 89 ,   \ F E D C B A Z Y
+array} drop
+
+create stamp-data
+%int array{
+$FFFFFFFF , '_' , $FFFFFFFF , '_' ,
+'_' , $FFFFFFFF , '_' , $FFFFFFFF ,
+$FFFFFFFF , '_' , $FFFFFFFF , '_' ,
+'_' , $FFFFFFFF , '_' , $FFFFFFFF ,
+array} drop
+
+variable t
+
+\ Draw a tilemap at pen position with a label above it
+: panel ( tilemap a n - )
+    {: tm a n :}
+    at@ 8 - at  a n print  at@ 8 + at
+    tm draw ;
+
+\ Panel x positions (pixels, 8px tile width, ~72px per panel)
+8 constant tw
+: panel-x  ( col - x )  80 * ;
+: panel-y  ( row - y )  88 * 12 + ;
+
+: ~row1  \ src, slice, clone, put, paste
+    0 panel-x  0 panel-y  at  src-map       s" src"    panel
+    1 panel-x  0 panel-y  at  demo-slice    s" slice"  panel
+    2 panel-x  0 panel-y  at  demo-clone    s" clone"  panel
+    3 panel-x  0 panel-y  at  demo-put      s" put"    panel
+    4 panel-x  0 panel-y  at  demo-paste    s" paste"  panel ;
+
+: ~row2  \ shift, tile!, resize, fillclr
+    0 panel-x  1 panel-y  at  demo-shift    s" shift"   panel
+    1 panel-x  1 panel-y  at  demo-tile     s" tile!"   panel
+    2 panel-x  1 panel-y  at  demo-resize   s" resize"  panel
+    3 panel-x  1 panel-y  at  demo-fillclr  s" fill/clr" panel ;
+
+: ~data-panel
+    0  2 panel-y  at
+    src-map tilemap>data
+    [: 
+        swap f" tdata w:%n h:%n " type 
+        8 for @+ . loop drop
+        str@ print 
+    ;] strout ;
+
+variable anim-tile
+variable fillclr-t
+variable resize-phase
+
+: update-anim
+    \ tile!/tile@ demo: cycle a tile through indices 0-127
+    t @  8 mod 0= if
+        anim-tile @  1 +  128 mod  dup anim-tile !
+        2 1  demo-tile  tile!
+    then
+    2 1 demo-tile tile@  anim-tile ! \ read it back to confirm
+
+    \ fill/clear: alternate every 60 frames
+    t @  60 mod 0= if
+        fillclr-t @  if
+            33 demo-fillclr fill-tilemap
+        else
+            demo-fillclr clear-tilemap
+        then
+        fillclr-t @ 0= fillclr-t !
+    then
+
+    \ shift: 1 step per 4 frames, direction cycles right/down/left/up each second
+    t @  4 mod 0= if
+        t @  240 mod  60 /  case
+            0 of   1  0 endof
+            1 of   0  1 endof
+            2 of  -1  0 endof
+            3 of   0 -1 endof
+        endcase  demo-shift shift-tilemap
+    then
+
+    1 t +! ;
+
+public
+
+: main
+    init-tilemap-renderer
+    vga-8x8 fnt!
+
+    \ Assign tileset to all tilemaps
+    font-ts
+    dup src-map    { ts ! }
+    dup demo-slice { ts ! }
+    dup demo-clone { ts ! }
+    dup demo-put   { ts ! }
+    dup demo-paste { ts ! }
+    dup stamp      { ts ! }
+    dup demo-fillclr { ts ! }
+    dup demo-shift { ts ! }
+    dup demo-tile  { ts ! }
+        demo-resize { ts ! }
+
+    \ Load source data
+    src-data >data @  64  8  src-map  set-tilemap
+
+    \ slice-tilemap: extract top-left 6×6 from src-map
+    src-map  1 1  6 6  demo-slice  slice-tilemap
+
+    \ clone-tilemap: duplicate the slice
+    demo-slice  demo-clone  clone-tilemap
+
+    \ put-tilemap: load stamp, put transparently onto clone copy
+    stamp-data >data @  16  4  stamp  set-tilemap
+    demo-clone  demo-put  clone-tilemap
+    stamp  1 1  demo-put  put-tilemap
+
+    \ paste-tilemap: paste opaquely onto clone copy
+    demo-clone  demo-paste  clone-tilemap
+    stamp  1 1  demo-paste  paste-tilemap
+
+    \ shift: start with source data
+    src-data >data @  64  8  demo-shift  set-tilemap
+
+    \ tile!/tile@: start filled with '.'
+    46  demo-tile  fill-tilemap
+    0 anim-tile !
+
+    \ fill/clear: start filled
+    33 demo-fillclr fill-tilemap
+    -1 fillclr-t !
+
+    \ resize: load src, resize to 8×4 (keeps top 4 rows), then back to 8×8
+    src-data >data @  64  8  demo-resize  set-tilemap
+    8 4 demo-resize resize-tilemap
+    
+    show>
+        1 user-zoom !
+        ~row1
+        ~row2
+        ~data-panel
+        update-anim 
+    ;
+
+main

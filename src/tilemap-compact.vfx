@@ -1,0 +1,15 @@
+module [supershow.tilemap-compact]
+import supershow.tilemap
+
+aka t!      tile!
+aka t@      tile@
+aka tresize resize-tilemap
+aka tset    set-tilemap
+aka tclear  clear-tilemap
+aka tfill   fill-tilemap
+aka tclone  clone-tilemap
+aka tput    put-tilemap
+aka tpaste  paste-tilemap
+aka tslice  slice-tilemap
+aka tshift  shift-tilemap
+aka tdata   tilemap>data

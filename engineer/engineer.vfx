@@ -160,6 +160,23 @@ redef : empty ( - )
     init-engineer ;
 
 \ =============================================================================
+\ Save chain (AtSave / WalkSaveChain)
+\ =============================================================================
+
+forth-public
+
+variable SaveChain
+  SaveChain off
+
+: AtSave ( xt - )
+    here SaveChain @ , swap , SaveChain ! ;
+
+: WalkSaveChain ( - )
+    SaveChain ExecChain ;
+
+redef : save  WalkSaveChain  save ;
+
+\ =============================================================================
 \ Turnkey creation
 \ =============================================================================
 

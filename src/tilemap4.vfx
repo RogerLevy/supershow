@@ -10,7 +10,12 @@ class: %tilemap
     is-a %dimensional
     prop ta :ref %array
     prop ts :ref %tileset
+    prop data-snapshot :addr
+    prop snapshot-cells :int
 class;
+
+%tilemap :destruct
+    ta @ destroy ;
 
 private
 
@@ -129,11 +134,114 @@ public
 
 fast}
 
+: resize-tilemap ( new-w new-h tilemap - )
+    {: new-w new-h tm | old-w old-h old-ta new-ta min-cols min-rows :}
+    new-w 0 <= new-h 0 <= or abort" resize-tilemap: w and h must be > 0"
+    tm >w @  to old-w
+    tm >h @  to old-h
+    tm >ta @ to old-ta
+    new-w old-w min  to min-cols
+    new-h old-h min  to min-rows
+    new-w new-h * %int %array hmake  to new-ta
+    min-rows 0 ?do
+        old-w i * old-ta slot
+        new-w i * new-ta slot
+        min-cols cells  move
+    loop
+    old-ta destroy
+    new-ta  tm >ta !
+    new-w   tm >w  !
+    new-h   tm >h  ! ;
+
+: set-tilemap ( src-addr len stride tilemap - )
+    {: src-a len stride tm :}
+    stride  len stride /  tm  resize-tilemap
+    src-a  tm >ta @ >data @  len cells  move ;
+
+: fill-tilemap ( n tilemap - )
+    {: n tm | d cnt :}
+    tm >ta @ >data @ to d
+    tm >ta @ >item-count @ to cnt
+    cnt 0 do  n  d i cells +  !  loop ;
+
+: clear-tilemap ( tilemap - )
+    $FFFFFFFF swap fill-tilemap ;
+
+: tilemap>data ( tilemap - addr w h )
+    { ta @ >data @  w @  h @ } ;
+
 : tile! ( n col row %tilemap - )
     { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot ! } ;
 
 : tile@ ( col row %tilemap - n )
     { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot @ } ;
+
+: clone-tilemap ( src dest - )
+    {: src dest :}
+    src >w @  src >h @  dest  resize-tilemap
+    src >ta @ >data @
+    dest >ta @ >data @
+    src >w @ src >h @ * cells  move ;
+
+: put-tilemap ( src dest-x dest-y dest - )
+    {: src dx dy dest | dw dh dc dr :}
+    dest >w @ to dw   dest >h @ to dh
+    src >h @ 0 do
+        i dy + to dr
+        dr 0 >= dr dh < and if
+            src >w @ 0 do
+                i dx + to dc
+                dc 0 >= dc dw < and if
+                    i j src tile@
+                    dup $FFFFFFFF <> if
+                        dc dr dest tile!
+                    else drop then
+                then
+            loop
+        then
+    loop ;
+
+: paste-tilemap ( src dest-x dest-y dest - )
+    {: src dx dy dest | dw dh dc dr :}
+    dest >w @ to dw   dest >h @ to dh
+    src >h @ 0 do
+        i dy + to dr
+        dr 0 >= dr dh < and if
+            src >w @ 0 do
+                i dx + to dc
+                dc 0 >= dc dw < and if
+                    i j src tile@
+                    dc dr dest tile!
+                then
+            loop
+        then
+    loop ;
+
+: slice-tilemap ( src x y w h dest - )
+    {: src sx sy sw sh dest :}
+    sw sh dest resize-tilemap
+    sh 0 do
+        sw 0 do
+            i sx +  j sy +  src tile@
+            i  j  dest tile!
+        loop
+    loop ;
+
+: shift-tilemap ( dx dy tilemap - )
+    {: dx dy tm | cols rows old-ta new-ta :}
+    tm >w @ to cols   tm >h @ to rows
+    tm >ta @ to old-ta
+    cols rows * %int %array hmake  to new-ta
+    rows 0 do
+        cols 0 do
+            i dx -  cols mod  cols +  cols mod
+            j dy -  rows mod  rows +  rows mod
+            cols * +  old-ta slot @
+            i  j cols * +  new-ta slot !
+        loop
+    loop
+    old-ta destroy
+    new-ta  tm >ta ! ;
 
 \ Pixel (fixed-point) coords → tile col, row
 : xy>cr ( x. y. %tilemap - col row )
