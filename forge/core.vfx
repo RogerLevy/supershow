@@ -575,3 +575,28 @@ create _buf 256 allot
 \ Iteration control
 variable enough-flag
 : enough  enough-flag on ;
+
+
+
+create fnd-buf 64 allot&erase
+variable fnd-xt
+
+: find-top ( a c - xt|0 )
+    fnd-buf place
+    fnd-buf count upper
+    0 fnd-xt !
+    [: nip 
+        dup nfa>ctrl c@ $08 and 0= if
+            dup count  fnd-buf count compare 0= if
+                name> fnd-xt !  false
+            else
+                drop true
+            then
+        else
+            drop true
+        then
+    ;] WalkAllWords
+    fnd-xt @ ;
+
+
+s" main" find-top >name hidename

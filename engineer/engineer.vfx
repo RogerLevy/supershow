@@ -96,7 +96,7 @@ private
 public
 
 : run-main ( - )
-    c" main" find if execute else drop then ;
+    s" main" find-top ?dup if execute then ;
 
 : init-engineer ( - )
     reset-format-buffers
@@ -218,16 +218,11 @@ forth-public
     save-exe cr ;
 
 \ =============================================================================
-\ Development tool commands
+\ Development tools
 \ =============================================================================
-
-forth-public
 
 include %idir%/tools.vfx
 import %idir%/ls.vfx
-
-\ public
-\ include %supershow%/lib/back.vfx           \ Backward compatibility shim
 
 \ =============================================================================
 \ Kickoff
@@ -276,6 +271,5 @@ forth-public
     save-exe cr ;
 
 gild-nib
-['] main >name hidename
 global
 freeze 
