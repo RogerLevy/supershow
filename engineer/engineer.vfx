@@ -253,7 +253,7 @@ private
     boot 
     backup remember 
     ." Starting engine..." cr
-    s" module [engineer]" evaluate 
+    \ s" ^ engineer" evaluate 
     repl-go 
     >vfx ;
 

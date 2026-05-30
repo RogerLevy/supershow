@@ -2,8 +2,8 @@
 set "PATH=%~dp0..\bin;%PATH%"
 if exist main.vfx (
     echo Loading project from %cd%
-    engineer.exe ldp . %*
+    engineer.exe ^^ main %*
 ) else (
     echo No main.vfx found, starting Engineer normally
-    engineer.exe %*
+    engineer.exe ^^ engineer %* 
 )
