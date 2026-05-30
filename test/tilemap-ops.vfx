@@ -62,7 +62,7 @@ variable t
 
 : ~row2  \ shift, tile!, resize, fillclr
     0 panel-x  1 panel-y  at  demo-shift    s" shift"   panel
-    1 panel-x  1 panel-y  at  demo-tile     s" tile!"   panel
+    1 panel-x  1 panel-y  at  demo-tile     s" tile@/!"   panel
     2 panel-x  1 panel-y  at  demo-resize   s" resize"  panel
     3 panel-x  1 panel-y  at  demo-fillclr  s" fill/clr" panel ;
 
@@ -160,9 +160,11 @@ public
     \ resize: load src, resize to 8×4 (keeps top 4 rows), then back to 8×8
     src-data >data @  64  8  demo-resize  set-tilemap
     8 4 demo-resize resize-tilemap
+
+    1 user-zoom !
+    tv off
     
     show>
-        1 user-zoom !
         ~row1
         ~row2
         ~data-panel

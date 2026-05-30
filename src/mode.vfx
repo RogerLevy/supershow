@@ -1,12 +1,25 @@
 public
 
+variable gamemode
+
 class: %mode
     prop drw :xt
     prop beha :xt
+    prop _zoom :int
+    prop _tv :int
 class;
 
-%mode object default-mode 
-variable gamemode  default-mode gamemode !
+0 %mode :construct ( - )
+    0 _zoom !
+    -1 _tv !
+    gamemode @ ?dup if
+        dup >_zoom @  _zoom !
+            >_tv @    _tv !
+    then ;
+
+%mode object default-mode
+default-mode gamemode !
+
 || variable catchup
 
 : process-work ( - )
@@ -16,18 +29,18 @@ variable gamemode  default-mode gamemode !
     gamemode @ -> drw @ draw-tv ;
 
 : supershow ( - )
-    gamemode @ >r default-mode gamemode ! 
+    gamemode @ >r default-mode gamemode !
     [:
-        catchup @ if 
-            catchup off  
-            process-work update-delta process-input 
+        catchup @ if
+            catchup off
+            process-work update-delta process-input
         then
-        [: process-work process-show ;] time-xt n>f 
+        [: process-work process-show ;] time-xt n>f
         1e tps f/ 1000000e f* f>= if \ frame took more than a system tick
             1 catchup ! \ process the game logic an extra time after presenting
-        then 
+        then
     ;] catch
-    r> gamemode ! 
+    r> gamemode !
     throw ;
 
 \ If called in the same function, call in this order: show> then work>
@@ -38,3 +51,6 @@ variable gamemode  default-mode gamemode !
 
 redef : show> ( <code;> - )
     r> gamemode @ -> drw ! show> supershow ;
+
+:noname ( - addr )  gamemode @ >_zoom ; is user-zoom
+:noname ( - addr )  gamemode @ >_tv  ; is tv

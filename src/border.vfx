@@ -1,4 +1,16 @@
+public
+
+defer tv
+defer user-zoom
+
 private
+
+\ Standalone defaults for tv and user-zoom — overridden by mode.vfx when it gets loaded
+variable __tv        __tv on
+variable __user-zoom
+
+' __tv        is tv
+' __user-zoom is user-zoom
 
 : z ( - n ) zoom @ ;
 
@@ -51,12 +63,13 @@ private
     clip-screen ;
 
 : ?border
-    fullscreen? user-zoom @ not and if
-        refit border
+    fullscreen? tv @ and if
+        user-zoom @ ?dup if zoom ! else refit then
+        border
     else
-        identity 
+        identity
         user-zoom @ ?dup if zoom ! then
         0e 0e z s>f fdup 0e transform
-    then ; 
+    then ;
 
 : draw-tv ( xt - ) ?border ?execute ;

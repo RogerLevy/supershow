@@ -6,7 +6,7 @@ bitmap %idir%/dat/gfx/greyzebes.png
 
 greyzebes.png 16 16 tileset-from the-tileset
 
-20 15 tilemap the-tilemap
+ 20 15 tilemap the-tilemap
 
 create the-array
 %int array{
@@ -41,12 +41,12 @@ public
 : draw-bg  0 0 at the-tilemap draw ;
 
 : draw-view-demo
-    view-t @  dup
-        300 96 tri* >p            \ sx: diamond x-axis
-        swap  75 +  300 96 tri* >p   \ sy: t+75 = quarter period offset
     60 40 at
-    200. 160. the-tilemap draw-view
-    1 view-t +! ;
+    view-t @ 300 96 tri* >p`               \ sx: diamond x-axis
+    view-t @ 75 +  300 96 tri* >p`         \ sy: t+75 = quarter period offset
+    200.` 160.`
+    the-tilemap draw-view
+    2 view-t +! ;
 
 : main
     init-tilemap-renderer

@@ -35,7 +35,6 @@ wordlist constant honing-wl
 0e fvalue sdelta \ in seconds
 create zcommand 256 allot 
 variable backup
-variable user-zoom
 
 \ =============================================================================
 \ Add protection from unintentional redefinitions (use REDEF) 

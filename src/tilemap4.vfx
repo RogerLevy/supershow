@@ -132,8 +132,6 @@ public
     m}
     clip} ;
 
-fast}
-
 : resize-tilemap ( new-w new-h tilemap - )
     {: new-w new-h tm | old-w old-h old-ta new-ta min-cols min-rows :}
     new-w 0 <= new-h 0 <= or abort" resize-tilemap: w and h must be > 0"
@@ -259,3 +257,5 @@ fast}
         s/vertex +
     loop drop
     vdecl-arr  s/vertex  al_create_vertex_decl  to prim-decl ;
+
+fast}
