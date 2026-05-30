@@ -49,7 +49,6 @@ public
     2 view-t +! ;
 
 : main
-    init-tilemap-renderer
     the-tilemap { the-tileset ts ! }
     the-array >data @  300  20  the-tilemap  set-tilemap
     show>
@@ -59,3 +58,5 @@ public
         16 16 at the-tileset 2 tile put ;
 
 main
+
+forth-public aka main main

@@ -50,9 +50,7 @@ public
     hold off
     user-zoom off
     refit
-    \ init-bitmaps
-    \ init-tilesets
-    \ init-samples
+    init-tilemap-renderer
     init-autoloads
     \ init-crt
     debug @ if
