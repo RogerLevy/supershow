@@ -4,12 +4,11 @@
 
 public
 
-ec-cell stg
-\ ec-cell nextpri
-
 class: %stage
     %node derive
 class;
+
+defer stg@ ( - stage )
 
 \ =============================================================================
 \ Actor Access Words
@@ -117,17 +116,18 @@ continuation: who> ( - actor|0 ) ( - f )
     ." JUST : Clearing all actors!" cr
     clear-stage gamew 2 / gameh 2 / at  ;
 
+: transfer ( actor stage - )
+    push ;
+
 : stage-init ( actor - )
-    stg@ swap { stg!   this stg@ push   -1 rnd id !   en on   this init-actor } ;
+    { this stg@ push   -1 rnd id !   en on   this init-actor } ;
 
 : one ( class - actor )
     >r free-nodes pop r> over construct dup stage-init ;
     
-\ : stage ( <name> - ) ( - )
-\     %stage object ; \ does> stg! ;
-
 \ Default stage
-%stage object actors  actors stg!
+%stage object actors
+' actors is stg@
 
 \ =============================================================================
 \ Script Classes
