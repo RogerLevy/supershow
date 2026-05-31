@@ -50,6 +50,7 @@ public
     hold off
     user-zoom off
     refit
+    actors stg!
     init-tilemap-renderer
     init-autoloads
     \ init-crt
