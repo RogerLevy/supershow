@@ -19,25 +19,31 @@ if "%1"=="--help" (
 
 @echo on
 set "PATH=%~dp0..\bin;%PATH%"
+set "relpath=%1"
+set "relpath=%relpath:/=\%"
 
-mkdir ..\rel\%1
-mkdir ..\rel\%1-debug
-del ..\rel\%1\*.* /s /q
-del ..\rel\%1-debug\*.* /s /q
-xcopy dat ..\rel\%1\dat /i /s /q /y /e
-xcopy dat ..\rel\%1-debug\dat /i /s /q /y /e
-copy %~dp0\..\bin\*.dll ..\rel\%1
-copy %~dp0\..\bin\*.dll ..\rel\%1-debug
+mkdir ..\rel\%relpath%
+mkdir ..\rel\%relpath%-debug
+del ..\rel\%relpath%\*.* /s /q
+del ..\rel\%relpath%-debug\*.* /s /q
+xcopy dat ..\rel\%relpath%\dat /i /s /q /y /e
+xcopy dat ..\rel\%relpath%-debug\dat /i /s /q /y /e
+copy %~dp0\..\bin\*.dll ..\rel\%relpath%
+copy %~dp0\..\bin\*.dll ..\rel\%relpath%-debug
 (
 echo [trace]
 echo level=none
-) > ..\rel\%1\allegro5.cfg
+) > ..\rel\%relpath%\allegro5.cfg
 
-SET saveString=%2 save-release ..\rel\%1\%1 save-debug ..\rel\%1-debug\%1-debug bye
-SET configString=debug off validations off safety off 
+SET saveString=%2 save-release ..\rel\%relpath%\%~n1 save-debug ..\rel\%relpath%-debug\%~n1-debug
+SET configString=debug off validations off safety off
 
-if exist main.vfx (
-    engineer.exe %configString% ldp . %saveString%
+if exist %1.vfx (
+    engineer.exe %configString% include %1.vfx %saveString%
+) else if exist %1\main.vfx (
+    engineer.exe %configString% ldp %1 %saveString%
+) else if exist main.vfx (
+    engineer.exe %configString% ^^ main %saveString%
 ) else (
-    engineer.exe %configString% %saveString%
+    engineer.exe %configString% ^^ engineer %saveString%
 )
