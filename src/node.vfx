@@ -1,7 +1,7 @@
 public
 
 512 ?constant s/node
-1024 ?constant MAX_NODES
+16384 ?constant MAX_NODES
 
 class: %node
     s/node field-space

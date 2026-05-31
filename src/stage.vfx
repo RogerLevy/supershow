@@ -16,7 +16,9 @@ defer stg@ ( - stage )
 
 public
 
-: actor[] ( n - %actor ) stg@ el@ ;
+\ this is not used by the engine; it's mainly here for
+\ derefencing actor id's for interactive debugging purposes.
+: actor ( n - %actor ) stg@ el@ ;
 
 || 0 value xt
 continuation: actives> ( - ) ( - )
@@ -28,7 +30,7 @@ continuation: actives> ( - ) ( - )
 \ Actor Errors
 \ =============================================================================
 
-: restore-sp ( a - )
+|| : restore-sp ( a - )
     \ Restore SP. If debug mode is on, report stack imbalances.
     debug @ if
         \ Compare SP to previous SP.
@@ -44,8 +46,8 @@ continuation: actives> ( - ) ( - )
     then
     sp! ;
 
-: ?actorerr  
-    catch ?dup -exit 
+|| : ?actorerr
+    catch ?dup -exit
     dup err_bailed = if drop exit else this bench throw then ;
 
 \ =============================================================================
@@ -119,12 +121,15 @@ continuation: who> ( - actor|0 ) ( - f )
 : transfer ( actor stage - )
     push ;
 
-: stage-init ( actor - )
-    { this stg@ push   -1 rnd id !   en on   this init-actor } ;
+: stage-init ( actor stage - )
+    udup push  { -1 rnd id !   en on   this init-actor } ;
+
+: one-in ( class stage - actor )
+    >r >r free-nodes pop r> over construct dup r> stage-init ;
 
 : one ( class - actor )
-    >r free-nodes pop r> over construct dup stage-init ;
-    
+    stg@ one-in ;
+
 \ Default stage
 %stage object actors
 ' actors is stg@
@@ -133,19 +138,19 @@ continuation: who> ( - actor|0 ) ( - f )
 \ Script Classes
 \ =============================================================================
 
-: filebase@ ( - a len ) 
+|| : filebase@ ( - a len )
     CurrSourceName -path -ext >lowercase ;
 
-: >classbase ( class - a len )
+|| : >classbase ( class - a len )
     body>name >pad count >lowercase ?-% ;
 
-: (actor-definition) ( class - )
+|| : (actor-definition) ( class - )
     >classbase filebase@ s= if private then ;
 
 %actor :derive ( source-class derived-class - )
     nip (actor-definition) ;
 
-: hide-if-autoclass ( class - )
+|| : hide-if-autoclass ( class - )
     \ Hide autoclass to fix LOCATE
     \ otherwise it would take us to the call to load-autoclasses
     \ even if it's been defined in a script
@@ -159,13 +164,13 @@ continuation: who> ( - actor|0 ) ( - f )
     \       This will prevent any dangling references to autoclasses.
     dup hide-if-autoclass
     (actor-definition) ;
-    
-: find-class ( a len - class | %actor )
+
+|| : find-class ( a len - class | %actor )
     ?-% f" %%%s"
     sfind if execute else drop %actor then ;
 
 || 0 value c
-: init-by-class ( class - )
+|| : init-by-class ( class - )
     to c
     actives> this c is? if this resurrect then ;
 
