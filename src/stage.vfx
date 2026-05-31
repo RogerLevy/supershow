@@ -186,31 +186,31 @@ continuation: who> ( - actor|0 ) ( - f )
 : .stage ( - )
     [: .summary cr ;] stg@ each ;
 
-|| cstring update-name$
-: update ( - [<class>] )
-    \ Live update actor class
-    \ Activates honing mode with custom command (see HONE-CLASS)
-    \ If not class is given, updates the current object's class
-    {: | class0 :}
-    bl parse
-    dup if
-        sfind not if
-            drop pad count f" _%s" sfind not
-            abort" Class not found!"
-        then
-        execute to class0
-        pad count update-name$ place
-    else
-        2drop
-        this valid-object? not abort" ME is not a valid object - nothing to update!"
-        cla @ to class0
-        class0 body>name update-name$ place
-    then
+\ || cstring update-name$
+\ : update ( - [<class>] )
+\     \ Live update actor class
+\     \ Activates honing mode with custom command (see HONE-CLASS)
+\     \ If not class is given, updates the current object's class
+\     {: | class0 :}
+\     bl parse
+\     dup if
+\         sfind not if
+\             drop pad count f" _%s" sfind not
+\             abort" Class not found!"
+\         then
+\         execute to class0
+\         pad count update-name$ place
+\     else
+\         2drop
+\         this valid-object? not abort" ME is not a valid object - nothing to update!"
+\         cla @ to class0
+\         class0 body>name update-name$ place
+\     then
     
-    update-name$ count f" %s.vfx" fexists? if
-        update-name$ count f" ?hone %s.vfx" >hone
-    else
-        update-name$ count f" ?hone scripts\%s.vfx" >hone
-    then
-    this { class0 init-by-class }
-    update-name$ count f" module [%s]" evaluate ;
+\     update-name$ count f" %s.vfx" fexists? if
+\         update-name$ count f" ?hone %s.vfx" >hone
+\     else
+\         update-name$ count f" ?hone scripts\%s.vfx" >hone
+\     then
+\     this { class0 init-by-class }
+\     update-name$ count f" module [%s]" evaluate ;

@@ -145,7 +145,11 @@ redef : empty ( - )
 
 : cartridge ( - )
     empty hold off
-    s" main.vfx" fileExist? if s" main.vfx" included then 
+    project-file$ count dup if
+        f" ^ %s" evaluate
+    else
+        2drop
+    then
     repl-go ;
 
 : frigid ( - )

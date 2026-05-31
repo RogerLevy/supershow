@@ -2,124 +2,121 @@ module [engineer]
 
 forth-public
 
-\ Try/Honing - Convenient code testing
+\ =============================================================================
+\ File loading and hot-reload
+\ =============================================================================
+\ ld <name|path>     Load file (no honing; redef errors if already loaded)
+\ rld [<name|path>]  Reload file with honing (no arg = repeat last target)
+\ ldp <project>      Load project (empty + cartridge)
+\ rldp               Reload current project
+\
+\ Resolution follows IMPORT rules:
+\   [name]   -> module registry lookup (srcfile)
+\   barename -> %idir%/name.vfx if exists, else name.vfx relative to cwd
+\   path     -> as-is (appends .vfx if missing)
+\ =============================================================================
 
-: ?hone ( - <path> )
+private
+
+: resolve-target ( a u - )
+    \ Resolve name or path into ld-action$ (always stores full expanded path)
+    \ Strip brackets if present
+    2dup over c@ '[' = >r + 1- c@ ']' = r> and if
+        1 /string 1-
+    then
+    {: | name[ 256 ] :}
+    name[ place
+    \ Module registry lookup
+    name[ count resolve-module ?dup if
+        module-srcfile ld-action$ place exit
+    then
+    \ Bare name: try %idir%/name.vfx
+    name[ count bare-module-name? if
+        s" %idir%/" ld-action$ place
+        name[ count ld-action$ append
+        s" .vfx" ld-action$ append
+        ld-action$ count expanded normalize 2dup fileexists? if
+            ld-action$ place exit
+        then
+        2drop
+    then
+    \ Path as-is, append .vfx if needed
+    name[ count ld-action$ place
+    ld-action$ count s" .vfx" strin? 0= if s" .vfx" ld-action$ append then
+    ld-action$ count expanded normalize ld-action$ place ;
+
+: do-include ( - )
     honing @ if honing-wl +order then
-    bl parse ['] included catch
-    honing @ if honing-wl -order then 
+    ld-action$ count ['] included catch
+    honing @ if honing-wl -order then
     throw ;
 
-: >ld ( a len - )
-    dup 0= if 2drop exit then
-    2dup ld-action$ place
-    evaluate ;
-
-: >hone ( a len - )
-    only forth definitions   honing on   >ld ;
-
-: ld-again ( - )
-    ld-action$ count >ld ;
-
-|| : ?notfound ( fp len - )
-    {: fp len :} 
-    fp len fexists? not if
-        fp len f" File not found: %s" -1 -rot .abort
-    then ;
-
-: ld ( - <namespec> )
-    \ Usage: 
-    \ - ld projectname
-    \ - ld filename (no extension)
-    \ - ld <path>/filename (no extension)
-
-    bl parse {: fn len :}
-
-    \ Load last file again?
-    len 0= if
-        ld-again exit
-    then
-
-    \ Project?
-    fn len home$ count f" %s/%s/main.vfx" fexists? 
-    fn len f" %s/main.vfx" fexists? or if
-        fn len f" ldp %s" evaluate
-        exit
-    then
-
-    \ Normal
-    fn len f" %s.vfx" >abspath to len to fn
-
-    fn len ?notfound 
-
-    project$ count fn len instring not 
-    project$ count nip 0= or if
-        fn len fpath $cwd
-    then
-
-    fn len f" ?hone %s" >hone ;
-    
-: hone! ( a len - ) 
-    dup 0= abort" Tried to set load action to null string."
-    ld-action$ place
-    honing on ;
-    
 save-order
 honing-wl +order definitions
 : require include ;
 : required included ;
 restore-order
 
-: rld ( - )
-    project$ count $cwd
-    honing off
-    cartridge
-    repl-game-active @ if >display >vfx then ;
+forth-public
 
-\ : ?reload ( - )
-\     honing @ 0<> reload-shift? not and if
-\         ld-again
-\     else
-\         rld
-\     then ;
+: ld ( - <namespec> )
+    bl parse dup 0= abort" Usage: ld <name|path>"
+    resolve-target do-include ;
+
+: rld ( - [<namespec>] )
+    bl parse dup if resolve-target else 2drop then
+    honing on do-include honing off ;
+
+: hone! ( a len - )
+    dup 0= abort" Tried to set load action to null string."
+    ld-action$ place honing on ;
 
 : watch ( - <code> )
     context @ watch-context !
     0 parse 2dup f" :noname %s ;" evaluate watch-xt !
     watch$ place ;
 
-: ldp ( - <name> )
+: ldp ( - <namespec> )
     {: | name[ 256 ] path[ 256 ] :}
-    bl parse name[ place
-    name[ c@ 0=
-    name[ count s" ." s= or if 
-        wd@ '\' ending name[ place 
-        s" ." >abspath path[ place
+    bl parse dup 0= abort" Usage: ldp <name|path>"
+    name[ place
+    \ Directory with main.vfx?
+    name[ count f" %s/main.vfx" fexists? if
+        name[ count >abspath project$ place
+        s" main.vfx" project-file$ place
     else
-        name[ count f" %s\main.vfx" fexists? if
-            name[ count path[ place
+        \ Try home/name/main.vfx
+        name[ count home$ count f" %s/%s/main.vfx" fexists? if
+            name[ count home$ count f" %s/%s" >abspath project$ place
+            s" main.vfx" project-file$ place
         else
-            name[ count 
-            home$ count f" %s\%s" >lowercase path[ place
-        then 
+            \ Direct file: path is directory, filename is target
+            name[ count f" %s.vfx" fexists? if
+                name[ count f" %s.vfx" fpath dup if
+                    >abspath project$ place
+                else
+                    2drop s" ." >abspath project$ place
+                then
+                name[ count f" %s.vfx" -path project-file$ place
+            else
+                name[ count f" '%s' not found!" type cr exit
+            then
+        then
     then
-    path[ count f" %s\main.vfx" fexists? not if
-        name[ count f" '%s' doesn't exist or is not a project!" type cr
-        exit 
-    then
-    name[ count >uppercase f" Loading %s..." type cr
-    path[ count >abspath project$ place
     project$ count $cwd
     500 ms
     restore-window-pos >vfx
-    cartridge
-;
+    cartridge ;
+
+: rldp ( - )
+    project$ count nip 0= abort" No project loaded."
+    project$ count $cwd
+    cartridge ;
 
 : +project ( - <name> )
     home$ count $cwd
     bl preparse f" spunk\project.bat %s" cr 2dup type shellcmd
     200 ms
-    ldp
-;
+    ldp ;
 
-: fp  ['] process-tick time? ;
+: .perf  ['] process-tick time? ;

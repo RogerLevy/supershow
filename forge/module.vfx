@@ -20,8 +20,8 @@ cell field mod.pub-wl        \ public wordlist handle
 cell field mod.priv-wl       \ private wordlist handle
 cell field mod.imports       \ linked list head of imports (0 = none)
 cell field mod.reexports     \ linked list head of reexports (0 = none)
-cell field mod.srcfile       \ zstring pointer to source file name (for collision detection)
-constant /module
+0 field mod.srcfile          \ inline zstring (source file name, last field)
+drop
 
 0
 cell field imp.mod            \ pointer to imported module struct
@@ -191,7 +191,7 @@ create qname-buf 256 allot
     r> ,                    \ mod.priv-wl
     0 ,                     \ mod.imports
     0 ,                     \ mod.reexports
-    CurrSourceName drop ,   \ mod.srcfile
+    CurrSourceName drop zcount 1+ dup allot here over - swap move  \ mod.srcfile (inline zstring)
     immediate
     does-module
     restore-order ;
@@ -284,6 +284,14 @@ create qualified-key-buf 256 allot
 \ ==============================================================================
 
 only forth definitions also moduleing
+
+\ ------------------------------------------------------------------------------
+\ Public helpers (accessible from module code via forth-wordlist)
+\ ------------------------------------------------------------------------------
+
+: module-srcfile ( mod - a u )  mod.srcfile zcount ;
+synonym resolve-module find-module-qualified
+synonym bare-module-name? bare-name?
 
 \ ------------------------------------------------------------------------------
 \ Diagnostics

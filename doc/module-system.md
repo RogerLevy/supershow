@@ -149,6 +149,17 @@ Imports are added in declaration order; later imports shadow earlier ones (list 
 
 ---
 
+## Interactive Access: `^`
+
+```forth
+^ [name]          \ scope into an already-loaded module
+^ path/file.vfx   \ load file if not yet loaded, then scope into its module
+```
+
+Designed for REPL debugging. Sets `current-module` and builds the module's search order so you can call its private words interactively. If the module isn't loaded yet, includes the file first (once only — won't reload).
+
+---
+
 ## Diagnostics
 
 ```forth

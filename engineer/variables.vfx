@@ -24,6 +24,7 @@ variable need-pump
 variable esc-quits   esc-quits on 
 variable honing
 cstring ld-action$
+cstring project-file$
 wordlist constant honing-wl
 0 value alt?
 0 value ctrl?
