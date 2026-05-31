@@ -20,20 +20,20 @@ create actor-buf  MAX_NODES cells allot
 
 fast{
 || 0 value sxt
-continuation: sorted-actors> ( - ) ( - )
+continuation: sorted-actors> ( xt - ) ( - )
     sxt >r to sxt
     0 to actor-buf#
     [: me actor-buf actor-buf# cells + !  1 +to actor-buf# ;] each-active
-    actor-buf actor-buf# [: >prio @ ;] rsort
+    actor-buf actor-buf# rot rsort
     actor-buf actor-buf# cells bounds ?do  i @ { sxt execute }  cell +loop
     r> to sxt ;
 fast}
 
 : backsprites ( - )
-    ec> batch> sorted-actors> prio @ ?exit this draw ?pillory ;
+    ec> batch> [: >prio @ ;] sorted-actors> prio @ ?exit this draw ?pillory ;
 
 : sprites ( - )
-    ec> batch> sorted-actors> prio @ -exit this draw ?pillory ;
+    ec> batch> [: >prio @ ;] sorted-actors> prio @ -exit this draw ?pillory ;
 
 \ =============================================================================
 \ Frame animation

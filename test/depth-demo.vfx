@@ -1,0 +1,125 @@
+module
+import %supershow%/src/supershow.vfx
+
+\ =============================================================================
+\ Spritesheets
+\ =============================================================================
+
+bitmap %idir%/dat/gfx/2200man.png
+bitmap %idir%/dat/gfx/alfador.png
+bitmap %idir%/dat/gfx/fairgirl.png
+
+2200man.png  21 36 tileset-from  man.ts
+alfador.png  18 20 tileset-from  cat.ts
+fairgirl.png 21 28 tileset-from  girl.ts
+
+\ =============================================================================
+\ Animations
+\ =============================================================================
+
+man.ts  animation man-down   1 4 range,
+man.ts  animation man-up     8 11 range,
+man.ts  animation man-left   5 frame, 6 frame, 5 frame, 7 frame,
+
+cat.ts  animation cat-down   1 frame, 2 frame, 3 frame, 4 frame,
+cat.ts  animation cat-up     10 frame, 11 frame, 12 frame, 13 frame,
+cat.ts  animation cat-left   6 frame, 7 frame, 8 frame, 7 frame,
+
+girl.ts animation girl-down  0 frame, 1 frame, 0 frame, 2 frame,
+girl.ts animation girl-up    5 frame, 6 frame, 5 frame, 7 frame,
+girl.ts animation girl-left  3 frame, 4 frame, 3 frame, 4 frame,
+
+\ =============================================================================
+\ NPC class
+\ =============================================================================
+
+0 constant DIR_DOWN
+1 constant DIR_UP
+2 constant DIR_LEFT
+3 constant DIR_RIGHT
+
+class: %npc  %actor derive
+    prop dir :int
+    prop anm-down :addr
+    prop anm-up   :addr
+    prop anm-left :addr
+class;
+
+: face ( dir - )
+    dir !
+    dir @ case
+        DIR_DOWN  of anm-down @ 1.0 10 / cycle  0 a.flp ! endof
+        DIR_UP    of anm-up   @ 1.0 10 / cycle  0 a.flp ! endof
+        DIR_LEFT  of anm-left @ 1.0 10 / cycle  0 a.flp ! endof
+        DIR_RIGHT of anm-left @ 1.0 10 / cycle  0 h| a.flp ! endof
+    endcase ;
+
+\ =============================================================================
+\ Walking logic
+\ =============================================================================
+
+: walk-velocity ( - )
+    dir @ case
+        DIR_DOWN  of  0.      0.5  endof
+        DIR_UP    of  0.     -0.5  endof
+        DIR_LEFT  of -0.5    0.    endof
+        DIR_RIGHT of  0.5    0.    endof
+    endcase
+    vx 2! ;
+
+: boundary? ( - f )
+    x @ >i 0 gamew within? not
+    y @ >i 0 gameh within? not or ;
+
+: rnd-dir ( - dir )  4 rnd ;
+
+: about-face ( - )
+    dir @ 1 xor face  walk-velocity ;
+
+%npc :: init ( - )
+    act>
+        boundary? if about-face walk-velocity then
+        60 rnd 0= if rnd-dir face walk-velocity then ;
+
+\ =============================================================================
+\ Spawn helpers
+\ =============================================================================
+
+: man-npc ( - )
+    man-down anm-down !  man-up anm-up !  man-left anm-left ! ;
+
+: cat-npc ( - )
+    cat-down anm-down !  cat-up anm-up !  cat-left anm-left ! ;
+
+: girl-npc ( - )
+    girl-down anm-down !  girl-up anm-up !  girl-left anm-left ! ;
+
+create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
+: rnd-npc ( - )  3 rnd cells npc-types + @ execute ;
+
+: sprinkle ( n - )
+    for
+        gamew rnd gameh rnd at
+        %npc one { rnd-npc  rnd-dir face  walk-velocity }
+    loop ;
+
+\ =============================================================================
+\ Main
+\ =============================================================================
+
+public
+
+fast{
+: render  batch> [: >y @ >i ;] sorted-actors> this draw  ?pillory ;
+fast}
+
+: think   step animate ;
+
+: main
+    just
+    100 sprinkle 
+    show> render
+    work> think 
+;
+
+main

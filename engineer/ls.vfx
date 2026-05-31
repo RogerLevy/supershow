@@ -50,4 +50,5 @@ redef : ls            \ -- ; "[spec]"
   ['] (files) ExecPerDirEnt
 ;
 
-redef : dir -1 abort" DIR undefined!" ;
+\ redef : dir -1 abort" DIR undefined!" ;
+s" dir" find-top >name hidename
