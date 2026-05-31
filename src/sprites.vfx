@@ -15,11 +15,25 @@ class;
         $ff5555ff rgba8 s" !" print
     then ;
 
+create actor-buf  MAX_NODES cells allot
+|| 0 value actor-buf#
+
+fast{
+|| 0 value sxt
+continuation: sorted-actors> ( - ) ( - )
+    sxt >r to sxt
+    0 to actor-buf#
+    [: me actor-buf actor-buf# cells + !  1 +to actor-buf# ;] each-active
+    actor-buf actor-buf# [: >prio @ ;] rsort
+    actor-buf actor-buf# cells bounds ?do  i @ { sxt execute }  cell +loop
+    r> to sxt ;
+fast}
+
 : backsprites ( - )
-    ec> batch> actives> prio @ ?exit this draw ?pillory ;
+    ec> batch> sorted-actors> prio @ ?exit this draw ?pillory ;
 
 : sprites ( - )
-    ec> batch> actives> prio @ -exit this draw ?pillory ;
+    ec> batch> sorted-actors> prio @ -exit this draw ?pillory ;
 
 \ =============================================================================
 \ Frame animation

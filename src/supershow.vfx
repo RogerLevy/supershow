@@ -31,10 +31,11 @@ module [supershow]
 	reexport [shader]
 
 	\ Actor system
+	import %idir%/../lib/rsort.vfx
 	include actor
 	include stage                \ Actor/sprite system
-	include timer 
-	include sprites   
+	include timer
+	include sprites
 	include udlr                 \ Movement utilities
 	\ include tmcol                \ Tilemap collision detection
 	\ include tread                \ Tilemap data reading
