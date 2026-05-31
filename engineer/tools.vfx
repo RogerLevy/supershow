@@ -10,10 +10,13 @@ forth-public
 \ ldp <project>      Load project (empty + cartridge)
 \ rldp               Reload current project
 \
-\ Resolution follows IMPORT rules:
+\ Resolution (ld/rld) follows IMPORT rules:
 \   [name]   -> module registry lookup (srcfile)
 \   barename -> %idir%/name.vfx if exists, else name.vfx relative to cwd
 \   path     -> as-is (appends .vfx if missing)
+\ Resolution (ldp):
+\   name/    -> name/main.vfx (directory project)
+\   name     -> home/name/main.vfx, or name.vfx (direct file)
 \ =============================================================================
 
 private
