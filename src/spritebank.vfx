@@ -136,16 +136,17 @@ public
     to active-bank
     active-bank >vbuf @  active-bank >vptr ! ;
 
+redef : albmpwh  9 cells + 2@ ;
+: albmpxy  $164 + 2@ ;
+
 : bput ( bmpid - )
     {: bmpid | lyr albmp bx by bw bh x0 y0 x1 y1 u0 v0 u1 v1 :}
     active-bank 0= if  bmpid put exit  then
     bmpid $FFFF and  active-bank >layer-map @ slot @  to lyr
     lyr -1 = if  bmpid put exit  then
     bmpid id>albmp  to albmp
-    albmp albmpw  to bw
-    albmp albmph  to bh
-    albmp al_get_bitmap_x  to bx
-    albmp al_get_bitmap_y  to by
+    albmp albmpwh  to bh to bw
+    albmp albmpxy  to by to bx
     bx  to u0   bx bw +  to u1
     by  to v0   by bh +  to v1
     bmpid $1000000 and if  u0 u1  to u0  to u1  then  \ h-flip
@@ -164,10 +165,11 @@ public
 
 : bcput ( bmpid - )
     {: bmpid | bw bh :}
-    bmpid bmpwh  to bh  to bw
-    bw 2 / negate  bh 2 / negate  +at
+    bmpid id>albmp albmpwh  to bh  to bw
+    at@p
+    bw bh 2 2 2/ 2negate  +at
     bmpid bput
-    bw 2 /  bh 2 /  +at ;
+    atp ;
 
 : flush-bank ( - )
     {: | #v :}
