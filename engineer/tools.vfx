@@ -68,6 +68,7 @@ forth-public
 
 : rld ( - [<namespec>] )
     bl parse dup if resolve-target else 2drop then
+    ld-action$ c@ 0= abort" No file loaded."
     honing on do-include honing off ;
 
 : hone! ( a len - )
