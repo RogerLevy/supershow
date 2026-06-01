@@ -142,7 +142,7 @@ fast}
     just
     
     init-npc-bank
-    100 sprinkle
+    2000 sprinkle
     show> render
     work> think
 ;

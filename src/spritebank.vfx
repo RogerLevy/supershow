@@ -46,6 +46,8 @@ private
 create _sb-vs  s" %supershow%/src/glsl/spritebank.vs" file,  0 c,
 create _sb-fs  s" %supershow%/src/glsl/spritebank.fs" file,  0 c,
 
+fast{ optimising on
+
 \ Write one vertex at _vp; x y u v layer are integer pixel coords
 : +sbvtx ( x y u v layer - )
     _vp 8 +  w!          \ layer
@@ -181,3 +183,5 @@ public
     0 shade
     GL_TEXTURE0  glActiveTexture
     0 to active-bank ;
+
+optimising off fast}
