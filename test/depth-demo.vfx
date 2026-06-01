@@ -8,6 +8,7 @@ import %supershow%/src/supershow.vfx
 bitmap %idir%/dat/gfx/2200man.png
 bitmap %idir%/dat/gfx/alfador.png
 bitmap %idir%/dat/gfx/fairgirl.png
+bitmap %idir%/dat/gfx/lyle.png
 
 2200man.png  21 36 tileset-from  man.ts
 alfador.png  18 20 tileset-from  cat.ts
@@ -105,6 +106,15 @@ create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
     loop ;
 
 \ =============================================================================
+\ Unoptimized test sprite (not in bank — tests flush-on-fallback)
+\ =============================================================================
+
+class: %marker  %actor derive  class;
+
+%marker :: draw ( - )
+    x 2@ 2>i at  lyle.png bcput ;
+
+\ =============================================================================
 \ Spritebank
 \ =============================================================================
 
@@ -126,15 +136,14 @@ create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
 
 public
 
+fast{
 || : draw-npcs ( - )
     [: >y @ >i ;] sorted-actors> this draw  ?pillory ;
 
-fast{
 : render
     $808080ff rgba8 screen
     npc-bank bank>
-    draw-npcs
-    flush-bank ;
+    draw-npcs ;
 fast}
 
 : think   step animate ;
@@ -143,6 +152,7 @@ fast}
     just
     
     init-npc-bank
+    gamew 2 / gameh 2 / at  %marker one drop
     2000 sprinkle
     show> render
     work> think
