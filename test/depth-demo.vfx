@@ -74,7 +74,8 @@ class;
 : rnd-dir ( - dir )  4 rnd ;
 
 : about-face ( - )
-    dir @ 1 xor face  walk-velocity ;
+    dir @ 1 xor face  walk-velocity  
+    x 2@ 0 0 gamew gameh 2>p 1. 1. 2- 2clamp x 2! ;
 
 %npc :: init ( - )
     act>
