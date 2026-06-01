@@ -138,14 +138,18 @@ redef : empty ( - )
     vfx-empty
     global ;
 
+also moduleing
 : cartridge ( - )
     empty hold off
-    project-file$ count dup if
-        f" ^ %s" evaluate
-    else
-        2drop
+    project-file$ c@ if
+        project-file$ count project$ count f" %s/%s" 2dup last-file$ place included
+        current-module ?dup if
+            dup ." Current module: " .name cr
+            build-module-search-order
+        then
     then
     repl-go ;
+previous
 
 : frigid ( - )
     \ Initialize runtime environment 

@@ -22,7 +22,7 @@ forth-public
 private
 
 : resolve-target ( a u - )
-    \ Resolve name or path into ld-action$ (always stores full expanded path)
+    \ Resolve name or path into last-file$ (always stores full expanded path)
     \ Strip brackets if present
     2dup over c@ '[' = >r + 1- c@ ']' = r> and if
         1 /string 1-
@@ -31,26 +31,26 @@ private
     name[ place
     \ Module registry lookup
     name[ count resolve-module ?dup if
-        module-srcfile ld-action$ place exit
+        module-srcfile last-file$ place exit
     then
     \ Bare name: try %idir%/name.vfx
     name[ count bare-module-name? if
-        s" %idir%/" ld-action$ place
-        name[ count ld-action$ append
-        s" .vfx" ld-action$ append
-        ld-action$ count expanded normalize 2dup fileexists? if
-            ld-action$ place exit
+        s" %idir%/" last-file$ place
+        name[ count last-file$ append
+        s" .vfx" last-file$ append
+        last-file$ count expanded normalize 2dup fileexists? if
+            last-file$ place exit
         then
         2drop
     then
     \ Path as-is, append .vfx if needed
-    name[ count ld-action$ place
-    ld-action$ count s" .vfx" strin? 0= if s" .vfx" ld-action$ append then
-    ld-action$ count expanded normalize ld-action$ place ;
+    name[ count last-file$ place
+    last-file$ count s" .vfx" strin? 0= if s" .vfx" last-file$ append then
+    last-file$ count expanded normalize last-file$ place ;
 
 : do-include ( - )
     honing @ if honing-wl +order then
-    ld-action$ count ['] included catch
+    last-file$ count ['] included catch
     honing @ if honing-wl -order then
     throw ;
 
@@ -68,12 +68,12 @@ forth-public
 
 : rld ( - [<namespec>] )
     bl parse dup if resolve-target else 2drop then
-    ld-action$ c@ 0= abort" No file loaded."
+    last-file$ c@ 0= abort" No file loaded."
     honing on do-include honing off ;
 
 : hone! ( a len - )
     dup 0= abort" Tried to set load action to null string."
-    ld-action$ place honing on ;
+    last-file$ place honing on ;
 
 : watch ( - <code> )
     context @ watch-context !

@@ -23,7 +23,7 @@ variable watch-context
 variable need-pump
 variable esc-quits   esc-quits on 
 variable honing
-cstring ld-action$
+cstring last-file$
 cstring project-file$
 wordlist constant honing-wl
 0 value alt?
