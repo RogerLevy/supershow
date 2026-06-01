@@ -1,0 +1,164 @@
+module
+import supershow.core
+import supershow.bitmap
+import allegro5
+import supershow.shader
+import array \ exposes SLOT
+
+public
+
+36 constant s/sbv       \ bytes per vertex
+6  constant v/sbsprite  \ vertices per sprite quad (TRIANGLE_LIST)
+
+\ Vertex declaration: [x:f y:f] @0 + [u:f v:f layer:f] @8 + [color:4f] @20 = 36 bytes
+create _sb-vdecl
+    ALLEGRO_PRIM_POSITION   , ALLEGRO_PRIM_FLOAT_2 , 0  ,
+    ALLEGRO_PRIM_USER_ATTR  , ALLEGRO_PRIM_FLOAT_3 , 8  ,
+    ALLEGRO_PRIM_COLOR_ATTR , 0                    , 20 ,
+    0 , 0 , 0 ,
+
+4096 constant max-sb-sprites   \ max sprites per flush
+
+class: %spritebank
+    prop layer-size  :int    \ pixel size of each layer (square, power-of-2)
+    prop max-layers  :int    \ number of layers in the texture array
+    prop used-layers :int    \ how many layers have been registered
+    prop gl-tex      :int    \ raw OpenGL texture array handle
+    prop vbuf        :addr   \ CPU vertex buffer
+    prop vptr        :addr   \ current write cursor (reset each frame)
+    prop prim-decl   :addr   \ Allegro vertex declaration handle
+    prop layer-map   :ref %array   \ bmpid → layer# (-1 = not registered)
+class;
+
+|| variable _gen-tex-tmp   \ scratch cell for glGenTextures / glDeleteTextures
+
+%spritebank :destruct
+    gl-tex @ if  gl-tex @  _gen-tex-tmp !  1 _gen-tex-tmp  glDeleteTextures  then
+    vbuf @ if  vbuf @ free drop  then
+    layer-map @ destroy ;
+
+private
+
+|| 0 value _sb-shader
+
+create _sb-vs  s" %supershow%/src/glsl/spritebank.vs" file,  0 c,
+create _sb-fs  s" %supershow%/src/glsl/spritebank.fs" file,  0 c,
+
+0e fvalue _uf    \ u fraction for current sprite (bw / layer-size)
+0e fvalue _vf    \ v fraction for current sprite (bh / layer-size)
+0e fvalue _lyr   \ layer index as float for current sprite
+
+\ Write one vertex to addr; pops F: u v (u deeper, v TOS); returns next addr
+: +sbvtx ( a x y F: u v - a' )
+    {: a x y :}
+    a       x s>f sf!
+    a 4 +   y s>f sf!
+    a 12 +  sf!         \ v (TOS of float stack)
+    a 8 +   sf!         \ u
+    _lyr    a 16 + sf!  \ layer from fvalue
+    a s/sbv + ;
+
+public
+
+: init-spritebank ( - )
+    init-gl-extensions
+    _sb-vs  _sb-fs  load-shader  to _sb-shader ;
+
+: make-spritebank ( layer-size max-layers - bank )
+    {: lsz maxl | bank :}
+    %spritebank hmake  to bank
+    lsz   bank >layer-size !
+    maxl  bank >max-layers !
+    \ Layer map: one cell per bitmap slot, initialized -1 (not registered)
+    #bitmaps %int %array hmake  bank >layer-map !
+    bank >layer-map @ >data @  #bitmaps cells  255  fill
+    \ GL texture array
+    1  _gen-tex-tmp  glGenTextures
+    _gen-tex-tmp @  bank >gl-tex !
+    GL_TEXTURE_2D_ARRAY  _gen-tex-tmp @  glBindTexture
+    GL_TEXTURE_2D_ARRAY  0  GL_RGBA8  lsz lsz  maxl  0
+        GL_RGBA  GL_UNSIGNED_BYTE  0  glTexImage3D
+    GL_TEXTURE_2D_ARRAY  GL_TEXTURE_MIN_FILTER  GL_LINEAR  glTexParameteri
+    GL_TEXTURE_2D_ARRAY  GL_TEXTURE_MAG_FILTER  GL_LINEAR  glTexParameteri
+    GL_TEXTURE_2D_ARRAY  GL_TEXTURE_WRAP_S  GL_CLAMP_TO_EDGE  glTexParameteri
+    GL_TEXTURE_2D_ARRAY  GL_TEXTURE_WRAP_T  GL_CLAMP_TO_EDGE  glTexParameteri
+    \ CPU vertex buffer; pre-fill color (offset 20-35 per vertex) to white
+    max-sb-sprites v/sbsprite * s/sbv *  allocate throw  bank >vbuf !
+    bank >vbuf @  bank >vptr !
+    max-sb-sprites v/sbsprite * 0 do
+        1e  bank >vbuf @  i s/sbv * +  20 +  sf!
+        1e  bank >vbuf @  i s/sbv * +  24 +  sf!
+        1e  bank >vbuf @  i s/sbv * +  28 +  sf!
+        1e  bank >vbuf @  i s/sbv * +  32 +  sf!
+    loop
+    \ Allegro vertex declaration
+    _sb-vdecl  s/sbv  al_create_vertex_decl  bank >prim-decl !
+    bank ;
+
+: add-to-bank ( bmpid bank - layer# )
+    {: bmpid bank | albmp lyr lock :}
+    bank >used-layers @  dup bank >max-layers @ >= abort" spritebank full"  to lyr
+    lyr  bmpid  bank >layer-map @ slot !
+    bmpid id>albmp  to albmp
+    albmp albmpw  bank >layer-size @  > abort" bitmap too wide for spritebank"
+    albmp albmph  bank >layer-size @  > abort" bitmap too tall for spritebank"
+    albmp  ALLEGRO_PIXEL_FORMAT_RGBA_8888  ALLEGRO_LOCK_READONLY  al_lock_bitmap  to lock
+    lock 0= abort" al_lock_bitmap failed"
+    GL_UNPACK_ROW_LENGTH  lock 8 + @  4 /  glPixelStorei
+    GL_TEXTURE_2D_ARRAY  bank >gl-tex @  glBindTexture
+    GL_TEXTURE_2D_ARRAY  0  0 0 lyr  albmp albmpw  albmp albmph  1
+        GL_RGBA  GL_UNSIGNED_BYTE  lock @  glTexSubImage3D
+    0  GL_UNPACK_ROW_LENGTH  glPixelStorei
+    albmp al_unlock_bitmap
+    lyr 1+  bank >used-layers !
+    lyr ;
+
+0 value active-bank
+
+: bank> ( bank - )
+    to active-bank
+    active-bank >vbuf @  active-bank >vptr ! ;
+
+: bput ( bmpid - )
+    {: bmpid | lyr bw bh x0 y0 x1 y1 :}
+    active-bank 0= if  bmpid put exit  then
+    bmpid  active-bank >layer-map @ slot @  to lyr
+    lyr -1 = if  bmpid put exit  then
+    lyr s>f  to _lyr
+    bmpid bmpwh  to bh  to bw
+    at@p 2>i  to y0  to x0
+    x0 bw +  to x1
+    y0 bh +  to y1
+    active-bank >layer-size @  s>f
+    bw s>f  fover  f/  to _uf
+    bh s>f  fswap  f/  to _vf
+    active-bank >vptr @
+    x0 y0  0e   0e   +sbvtx   \ TL
+    x1 y0  _uf  0e   +sbvtx   \ TR
+    x1 y1  _uf  _vf  +sbvtx   \ BR
+    x0 y0  0e   0e   +sbvtx   \ TL
+    x1 y1  _uf  _vf  +sbvtx   \ BR
+    x0 y1  0e   _vf  +sbvtx   \ BL
+    active-bank >vptr ! ;
+
+: bcput ( bmpid - )
+    {: bmpid | bw bh :}
+    bmpid bmpwh  to bh  to bw
+    bw 2 / negate  bh 2 / negate  +at
+    bmpid bput
+    bw 2 /  bh 2 /  +at ;
+
+: flush-bank ( - )
+    {: | #v :}
+    active-bank 0= if exit then
+    active-bank >vptr @  active-bank >vbuf @  -  s/sbv /  to #v
+    #v 0= if  0 to active-bank  exit  then
+    GL_TEXTURE0 1 +  glActiveTexture
+    GL_TEXTURE_2D_ARRAY  active-bank >gl-tex @  glBindTexture
+    _sb-shader  shade
+    1  z" tex_array"  int!
+    active-bank >vbuf @  active-bank >prim-decl @  0  0  #v
+        ALLEGRO_PRIM_TRIANGLE_LIST  al_draw_prim  drop
+    0 shade
+    GL_TEXTURE0  glActiveTexture
+    0 to active-bank ;

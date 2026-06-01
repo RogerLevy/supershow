@@ -1,4 +1,4 @@
-module [autoload-test]
+module
 import %supershow%/src/supershow.vfx
 import allegro5
 
@@ -9,7 +9,7 @@ icons1.png  16 16 tileset-from  icons1.ts
 
 16 ttf-font %idir%/dat/fonts/Habbo.ttf
 
-shader %idir%/dat/glsl/default.fs
+shader default.s %supershow%/src/glsl/default.vs %idir%/dat/glsl/default.fs
 
 sample %idir%/dat/smp/snd-02.ogg
 
@@ -32,8 +32,8 @@ variable sample-ok
     0 20 at   s" bitmap: icons1.png" print
     0 40 at   s" tileset: icons1.ts" print
     0 60 at   s" font: Habbo.ttf" print
-    0 80 at   s" shader: default.fs " print
-        ['] default.fs >body -> handle @ al_use_shader
+    0 80 at   s" shader: default.s " print
+        ['] default.s >body -> handle @ al_use_shader
         128 0 +at 
         if s" OK" else s" FAILED" then print
         0 al_use_shader drop

@@ -173,8 +173,6 @@ class: %font
 
 class;
 
-|| create _vs-default  s" %supershow%/src/glsl/default.vs" file,  0 c,
-
 class: %shader
     %asset derive
     is-a %autoload
@@ -183,14 +181,20 @@ class: %shader
     : does-shader  does> -> handle @ shade ;
 
     : _load ( - )
-        _vs-default  this @data >zpad  load-shader handle ! ;
+        \ Body: [vs-bytes + 0c][fs-bytes + 0c]
+        this @data drop
+        dup zcount nip 1 + over +
+        load-shader handle ! ;
 
-    : shader ( <fs-path> - ) ( - )
-        bl parse
-        2dup fexists? not abort" File not found"
-        2dup -path sfind nip if 2drop exit then
-        2dup -path %shader asset does-shader {
-            ( fp len ) embed
+    : shader ( <name> <vs-path> <fs-path> - ) ( - )
+        bl parse  bl parse  bl parse
+        {: nm-a nm-n vs-a vs-n fs-a fs-n :}
+        vs-a vs-n fexists? not abort" VS file not found"
+        fs-a fs-n fexists? not abort" FS file not found"
+        nm-a nm-n sfind nip if exit then
+        nm-a nm-n %shader asset does-shader {
+            vs-a vs-n file,  0 c,
+            fs-a fs-n file,  0 c,
             _load
         } ;
 

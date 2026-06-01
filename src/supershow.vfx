@@ -27,8 +27,10 @@ module [supershow]
 	reexport [assets]
 	import waveplay             \ Audio engine
 	reexport [waveplay]
-	import shader               \ Shaders 
+	import shader               \ Shaders
 	reexport [shader]
+	import-as %idir%/spritebank.vfx spritebank   \ Batched sprite renderer
+	reexport [spritebank]
 
 	\ Actor system
 	import %idir%/../lib/rsort.vfx

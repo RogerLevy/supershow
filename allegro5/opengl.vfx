@@ -1,0 +1,80 @@
+\ OpenGL bindings (opengl32.dll, stdcall on Windows)
+public
+
+extern stdcall void glDepthRange( double nearVal, double farVal );
+extern stdcall void glEnable( int cap );
+extern stdcall void glDisable( int cap );
+extern stdcall void glClear( int mask );
+extern stdcall void glStencilFunc( int func, int ref, int mask );
+extern stdcall void glStencilOp( int sfail, int dpfail, int dppass );
+extern stdcall void glStencilMask( int mask );
+extern stdcall void * glGetString( int name );
+extern stdcall int glGetError( );
+extern stdcall int glIsEnabled( int cap );
+extern stdcall void glGetIntegerv( int pname, void * params );
+extern stdcall void glViewport( int x, int y, int w, int h );
+extern stdcall void glTexParameteri( int target, int pname, int param );
+extern stdcall void glTexParameterf( int target, int pname, float param );
+extern stdcall void glBindTexture( int target, int texture );
+extern stdcall void glGenTextures( int n, void* textures );
+extern stdcall void glDeleteTextures( int n, void* textures );
+extern stdcall void glPixelStorei( int pname, int param );
+
+\ OpenGL 1.2+ functions not exported from opengl32.dll — loaded at runtime
+0 value _pfn-glActiveTexture
+0 value _pfn-glTexImage3D
+0 value _pfn-glTexSubImage3D
+
+: glActiveTexture ( texture - )
+    _pfn-glActiveTexture  1  NXCALL drop ;
+
+: glTexImage3D ( target level internalformat width height depth border format type data - )
+    _pfn-glTexImage3D  10  NXCALL drop ;
+
+: glTexSubImage3D ( target level xoffset yoffset zoffset width height depth format type data - )
+    _pfn-glTexSubImage3D  11  NXCALL drop ;
+
+: init-gl-extensions ( - )
+    z" glActiveTexture"   al_get_opengl_proc_address  to _pfn-glActiveTexture
+    z" glTexImage3D"      al_get_opengl_proc_address  to _pfn-glTexImage3D
+    z" glTexSubImage3D"   al_get_opengl_proc_address  to _pfn-glTexSubImage3D ;
+
+\ Miscellaneous
+$0BA2 constant GL_VIEWPORT
+$1F02 constant GL_VERSION
+
+\ Texture targets
+$0DE1 constant GL_TEXTURE_2D
+$8C1A constant GL_TEXTURE_2D_ARRAY
+
+\ Internal / pixel formats
+$8058 constant GL_RGBA8
+$1908 constant GL_RGBA
+$1401 constant GL_UNSIGNED_BYTE
+
+\ Texture parameters
+$2800 constant GL_TEXTURE_MAG_FILTER
+$2801 constant GL_TEXTURE_MIN_FILTER
+$2802 constant GL_TEXTURE_WRAP_S
+$2803 constant GL_TEXTURE_WRAP_T
+$2600 constant GL_NEAREST
+$2601 constant GL_LINEAR
+$812F constant GL_CLAMP_TO_EDGE
+$84FE constant GL_TEXTURE_MAX_ANISOTROPY
+
+\ Texture units
+$84C0 constant GL_TEXTURE0
+
+\ Pixel store
+$0CF2 constant GL_UNPACK_ROW_LENGTH
+
+\ Stencil
+$0B90 constant GL_STENCIL_TEST
+$0400 constant GL_STENCIL_BUFFER_BIT
+$0207 constant GL_ALWAYS
+$0202 constant GL_EQUAL
+$1E00 constant GL_KEEP
+$1E01 constant GL_REPLACE
+
+\ Allegro lock constants used with al_lock_bitmap
+1  constant ALLEGRO_LOCK_READONLY

@@ -31,6 +31,7 @@ Target_386_Windows [if]
     module [allegro5]
         public
         require %idir%/allegro-5.2.10.vfx \ Allegro 5 library bindings
+        require %idir%/opengl.vfx          \ GL texture array extensions
 
     require %idir%/al-utils.vfx       \ Display, window, and input state management
     import %idir%/keys.vfx            \ Keyboard key constants

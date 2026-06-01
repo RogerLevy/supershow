@@ -5,40 +5,6 @@ public
 
 $05020A01 constant ALLEGRO_VERSION
 
-\ OpenGL functions (from opengl32.dll, StdCall convention)
-extern stdcall void glDepthRange( double nearVal, double farVal );
-extern stdcall void glEnable( int cap );
-extern stdcall void glDisable( int cap );
-extern stdcall void glClear( int mask );
-extern stdcall void glStencilFunc( int func, int ref, int mask );
-extern stdcall void glStencilOp( int sfail, int dpfail, int dppass );
-extern stdcall void glStencilMask( int mask );
-extern stdcall void * glGetString( int name );
-extern stdcall int glGetError( );
-extern stdcall int glIsEnabled( int cap );
-extern stdcall void glGetIntegerv( int pname, void * params );
-extern stdcall void glViewport( int x, int y, int w, int h );
-extern stdcall void glTexParameteri( int target, int pname, int param );
-extern stdcall void glTexParameterf( int target, int pname, float param );
-extern stdcall void glBindTexture( int target, int texture );
-
-$0BA2 constant GL_VIEWPORT
-$1F02 constant GL_VERSION
-$0DE1 constant GL_TEXTURE_2D
-$2800 constant GL_TEXTURE_MAG_FILTER
-$2801 constant GL_TEXTURE_MIN_FILTER
-$2600 constant GL_NEAREST
-$2601 constant GL_LINEAR
-$84FE constant GL_TEXTURE_MAX_ANISOTROPY
-
-\ OpenGL constants
-$0B90 constant GL_STENCIL_TEST
-$0400 constant GL_STENCIL_BUFFER_BIT
-$0207 constant GL_ALWAYS
-$0202 constant GL_EQUAL
-$1E00 constant GL_KEEP
-$1E01 constant GL_REPLACE
-
 \ extern "C" al_acknowledge_drawing_halt( );
 \ extern "C" al_acknowledge_drawing_resume( );
 extern "C" void al_acknowledge_resize( void * display );

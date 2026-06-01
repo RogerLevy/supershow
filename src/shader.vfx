@@ -39,4 +39,7 @@ public
 
 : vec4! ( f:n f:n f:n f:n z$ - )
     v4 4f!  4 v4 1 al_set_shader_float_vector ?err ;
+
+: int! ( n z$ - )
+    swap al_set_shader_int ?err ;
  
