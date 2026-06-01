@@ -57,7 +57,8 @@
       "Bash(mkdir -p test/dat/gfx test/dat/fonts test/dat/smp test/dat/bgm test/dat/glsl test/dat/maps)",
       "Bash(rm -f test/treats/dat/gfx/icons1.png test/waveplay/dat/smp/snd-02.ogg)",
       "Bash(git rm:*)",
-      "Bash(rm -rf test/autoload test/shapes test/tilemap test/treats test/waveplay)"
+      "Bash(rm -rf test/autoload test/shapes test/tilemap test/treats test/waveplay)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
