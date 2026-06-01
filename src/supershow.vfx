@@ -39,6 +39,7 @@ module [supershow]
 	include timer
 	include sprites
 	include udlr                 \ Movement utilities
+	include cgrid                \ Broad-phase AABB collision grid
 	\ include tmcol                \ Tilemap collision detection
 	\ include tread                \ Tilemap data reading
 

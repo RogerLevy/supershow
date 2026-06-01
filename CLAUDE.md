@@ -50,7 +50,7 @@ This is a custom system developed by the user specifically for their game develo
 - **Protocols**: Late-bound method dispatch declared and implemented with `::`
 - **Properties**: Dynamic field allocation via `prop`, always public
 - **Statics**: Class-level storage via `static`, always public  
-- **Fields**: Direct offset allocation via `field` (context-dependent scope, not for classes, only classic structs)
+- **Fields**: Direct offset allocation via `field` (for structs, not classes). NIBS redefines `field` so that field access uses `this +` (same as properties), for consistency. This means all field access requires either `->` with an explicit target (`addr -> fieldname`) or an active `this` scope (`{ fieldname ... }`). Bare `addr fieldname` will NOT work — it ignores `addr` and uses `this` instead.
 - **Context**: `me` points to current object, scoped with `{` ... `}` and `as>`
 - **Property access**: Use `-> propertyname` syntax for objects on stack, `propertyname` for scoped objects
 - **Inheritance**: `derive` copies class structure, `is-a` adds trait identity

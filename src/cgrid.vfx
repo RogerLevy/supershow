@@ -1,0 +1,157 @@
+\ Collision Grid - Broad-phase AABB collision detection
+\ Spatial hash grid for efficient collision checks of large numbers of
+\ axis-aligned bounding boxes.
+
+\ =============================================================================
+\ Structs
+\ =============================================================================
+
+public
+
+0
+|| cell field cb.x1   cell field cb.y1
+|| cell field cb.x2   cell field cb.y2
+|| cell field cb.s1   cell field cb.s2
+|| cell field cb.s3   cell field cb.s4
+constant /cbox
+
+0
+|| cell field cg.cols   cell field cg.rows
+|| cell field cg.sectors
+|| cell field cg.links
+|| cell field cg.ilink
+constant /cgrid
+
+\ =============================================================================
+\ Internal state
+\ =============================================================================
+
+private
+
+8 constant #sector-shift
+256 constant sect-w
+256 constant sect-h
+
+create seen-sectors 4 cells allot
+0 value #seen
+
+defer collide ( flag cbox1 cbox2 - keepgoing? )
+
+0 value the-cgrid
+
+\ =============================================================================
+\ Helpers
+\ =============================================================================
+
+: cbox-xyxy@ ( cbox - x1 y1 x2 y2 )
+    dup -> cb.x1 2@ rot -> cb.x2 2@ ;
+
+: sector ( x y - addr )
+    #sector-shift >> the-cgrid -> cg.cols @ *
+    swap #sector-shift >> + cells the-cgrid -> cg.sectors @ + ;
+
+: seen? ( sector - flag )
+    #seen 0 ?do
+        dup seen-sectors i cells + @ = if drop true unloop exit then
+    loop drop false ;
+
+: ?corner ( x y - 0 | sector )
+    sector
+    dup seen? if drop 0 exit then
+    dup seen-sectors #seen cells + !
+    1 +to #seen ;
+
+: link ( box sector - )
+    >r
+    the-cgrid -> cg.ilink @ cell+ !        \ 1. store box in link[1]
+    r@ @ the-cgrid -> cg.ilink @ !         \ 2. store old sector head in link[0]
+    the-cgrid -> cg.ilink @ r> !           \ 3. update sector head to this link
+    2 cells the-cgrid -> cg.ilink +! ;     \ 4. advance link pointer
+
+: box>box? ( box1 box2 - box1 box2 flag )
+    2dup = if false exit then
+    2dup >r cbox-xyxy@ r> cbox-xyxy@ overlap? ;
+
+: check-sector ( cbox1 sector - flag )
+    swap true locals| flag cbox1 |
+    begin @ dup flag and while
+        >r cbox1 r@ cell+ @ box>box? if
+            flag -rot collide to flag
+        else
+            2drop
+        then
+        r>
+    repeat
+    drop flag ;
+
+: ?check-sector ( cbox1 sector|0 - flag )
+    dup if check-sector else 2drop true then ;
+
+: >#sectors ( w h - cols rows )
+    swap sect-w 1 - + sect-w /
+    swap sect-h 1 - + sect-h / ;
+
+\ =============================================================================
+\ Public API
+\ =============================================================================
+
+public
+
+: cbox! ( x y w h cbox - )
+    >r 2over 2+ 1 1 2- r@ -> cb.x2 2! r> -> cb.x1 2! ;
+
+: cbox@ ( cbox - x y w h )
+    dup >r -> cb.x1 2@ r> -> cb.x2 2@ 2over 2- 1 1 2+ ;
+
+: reset-cgrid ( cgrid - )
+    to the-cgrid
+    the-cgrid -> cg.sectors @
+    the-cgrid -> cg.cols @ the-cgrid -> cg.rows @ * cells erase
+    the-cgrid -> cg.links @ the-cgrid -> cg.ilink ! ;
+
+: add-cbox ( cbox cgrid - )
+    to the-cgrid
+    0 to #seen
+    >r
+    r@ -> cb.x1 2@                        ?corner ?dup if dup r@ -> cb.s1 ! r@ swap link else r@ -> cb.s1 off then
+    r@ -> cb.x2 @ r@ -> cb.y1 @           ?corner ?dup if dup r@ -> cb.s2 ! r@ swap link else r@ -> cb.s2 off then
+    r@ -> cb.x1 @ r@ -> cb.y2 @           ?corner ?dup if dup r@ -> cb.s4 ! r@ swap link else r@ -> cb.s4 off then
+    r@ -> cb.x2 2@                        ?corner ?dup if dup r@ -> cb.s3 ! r@ swap link else r@ -> cb.s3 off then
+    r> drop ;
+
+: check-cgrid ( cbox xt cgrid - )
+    to the-cgrid is collide
+    locals| cbox |
+    cbox dup -> cb.s1 @ ?check-sector -exit
+    cbox dup -> cb.s2 @ ?check-sector -exit
+    cbox dup -> cb.s3 @ ?check-sector -exit
+    cbox dup -> cb.s4 @ ?check-sector drop ;
+
+: check-cbox ( cbox xt cgrid - )
+    to the-cgrid is collide
+    locals| cbox |
+    0 to #seen
+    cbox dup -> cb.x1 2@                          ?corner ?check-sector -exit
+    cbox dup -> cb.x2 @ cbox -> cb.y1 @           ?corner ?check-sector -exit
+    cbox dup -> cb.x1 @ cbox -> cb.y2 @           ?corner ?check-sector -exit
+    cbox dup -> cb.x2 2@                          ?corner ?check-sector drop ;
+
+: cgrid ( maxboxes width height - <name> )
+    create here to the-cgrid /cgrid allot
+    >#sectors
+    2dup the-cgrid -> cg.rows ! the-cgrid -> cg.cols !
+    here the-cgrid -> cg.sectors ! * cells allot
+    here the-cgrid -> cg.links ! 4 * 2 cells * allot ;
+
+: cgrid-size ( cgrid - w h )
+    to the-cgrid
+    the-cgrid -> cg.cols @ sect-w *
+    the-cgrid -> cg.rows @ sect-h * ;
+
+\ =============================================================================
+\ Actor integration
+\ =============================================================================
+
+class: %actor
+    /cbox nprop ahb
+class;

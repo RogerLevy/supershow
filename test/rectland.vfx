@@ -1,0 +1,168 @@
+\ Rectland - AABB collision grid demo
+\ Player-controlled box slides against a field of randomized static boxes.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+\ =============================================================================
+\ Constants
+\ =============================================================================
+
+1000 constant #boxes
+4000 constant world-w
+4000 constant world-h
+16 constant pw   16 constant ph
+2. constant speed
+
+\ =============================================================================
+\ Collision grid and box storage
+\ =============================================================================
+
+#boxes world-w world-h cgrid the-grid
+
+create boxes #boxes /cbox * allot
+
+\ =============================================================================
+\ Player state
+\ =============================================================================
+
+0 value px   0 value py    \ fixed-point position
+0 value pvx  0 value pvy   \ fixed-point velocity
+create player-cbox /cbox allot
+
+: update-player-cbox
+    px >i py >i pw ph player-cbox cbox! ;
+
+\ =============================================================================
+\ Camera
+\ =============================================================================
+
+0 value cam-x   0 value cam-y
+
+: update-cam
+    px >i gamew 2 / - 0 max world-w gamew - min to cam-x
+    py >i gameh 2 / - 0 max world-h gameh - min to cam-y ;
+
+\ =============================================================================
+\ Initialization
+\ =============================================================================
+
+: init-boxes
+    {: | box :}
+    the-grid reset-cgrid
+    #boxes 0 do
+        boxes i /cbox * + to box
+        world-w 256 - rnd
+        world-h 256 - rnd
+        248 rnd 8 +
+        248 rnd 8 +
+        box cbox!
+        box the-grid add-cbox
+    loop ;
+
+: init-player
+    world-w 2 / >p to px
+    world-h 2 / >p to py
+    0 to pvx  0 to pvy
+    update-player-cbox ;
+
+\ =============================================================================
+\ Collision response (axis-separated sliding)
+\ =============================================================================
+
+: slide-x ( flag cbox1 cbox2 - keepgoing? )
+    nip nip cbox@ {: ox oy ow oh :}
+    pvx 0> if
+        ox pw - >p to px
+    else
+        ox ow + >p to px
+    then
+    0 to pvx
+    update-player-cbox true ;
+
+: slide-y ( flag cbox1 cbox2 - keepgoing? )
+    nip nip cbox@ {: ox oy ow oh :}
+    pvy 0> if
+        oy ph - >p to py
+    else
+        oy oh + >p to py
+    then
+    0 to pvy
+    update-player-cbox true ;
+
+\ =============================================================================
+\ Input and physics
+\ =============================================================================
+
+: read-input
+    0 to pvx  0 to pvy
+    <left>  held? if speed negate to pvx then
+    <right> held? if speed         to pvx then
+    <up>    held? if speed negate to pvy then
+    <down>  held? if speed         to pvy then ;
+
+: clamp-player
+    px >i 0 max world-w pw - min >p to px
+    py >i 0 max world-h ph - min >p to py
+    update-player-cbox ;
+
+: player-move
+    pvx if
+        pvx px + to px
+        update-player-cbox
+        player-cbox ['] slide-x the-grid check-cbox
+    then
+    pvy if
+        pvy py + to py
+        update-player-cbox
+        player-cbox ['] slide-y the-grid check-cbox
+    then
+    clamp-player ;
+
+\ =============================================================================
+\ Drawing
+\ =============================================================================
+
+: draw-cbox ( cbox - )
+    cbox@ {: bx by bw bh :}
+    bx cam-x -  by cam-y -  at
+    bw >p bh >p rectf ;
+
+: on-screen? ( cbox - flag )
+    cbox@ {: bx by bw bh :}
+    bx bw + cam-x <=       if false exit then
+    by bh + cam-y <=       if false exit then
+    bx cam-x - gamew >=    if false exit then
+    by cam-y - gameh >=    if false exit then
+    true ;
+
+: render
+    $181818ff rgba8 screen
+    $446688ff rgba8
+    #boxes 0 do
+        boxes i /cbox * +
+        dup on-screen? if draw-cbox else drop then
+    loop
+    $ffaa44ff rgba8
+    player-cbox draw-cbox ;
+
+\ =============================================================================
+\ Main
+\ =============================================================================
+
+: think
+    read-input
+    player-move
+    update-cam ;
+
+public
+
+: main
+    init-player
+    init-boxes
+    update-cam
+    work> think
+    show> render ;
+
+main
