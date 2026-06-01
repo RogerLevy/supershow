@@ -9,7 +9,7 @@ import %supershow%/addons/shapes.vfx
 \ Constants
 \ =============================================================================
 
-1000 constant #boxes
+2500 constant #boxes
 4096 constant world-w
 4096 constant world-h
 16 constant pw   16 constant ph
@@ -53,10 +53,10 @@ create player-cbox /cbox allot
     the-grid reset-cgrid
     #boxes 0 do
         boxes i /cbox * + to box
-        world-w 200 - rnd
-        world-h 200 - rnd
-        192 rnd 8 +
-        192 rnd 8 +
+        world-w 108 - rnd
+        world-h 108 - rnd
+        100 rnd 8 +
+        100 rnd 8 +
         box cbox!
         box the-grid add-cbox
     loop ;

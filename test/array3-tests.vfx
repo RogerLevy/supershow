@@ -221,7 +221,7 @@ cr ." --- Testing array{ ... array} construction ---" cr
 
 cr ." --- Testing .EACH (print all elements) ---" cr
 
-." Integer array contents: " test-ints .each cr
+." Integer array contents: " test-ints .items cr
 
 5 %int array demo-ints
 10 0 demo-ints el!
@@ -229,7 +229,7 @@ cr ." --- Testing .EACH (print all elements) ---" cr
 30 2 demo-ints el!
 40 3 demo-ints el!
 50 4 demo-ints el!
-." Demo array (should be 10 20 30 40 50): " demo-ints .each cr
+." Demo array (should be 10 20 30 40 50): " demo-ints .items cr
 
 5 %char array demo-chars
 char H 0 demo-chars el!
@@ -237,7 +237,7 @@ char e 1 demo-chars el!
 char l 2 demo-chars el!
 char l 3 demo-chars el!
 char o 4 demo-chars el!
-." Character array (should spell 'Hello'): " demo-chars .each cr
+." Character array (should spell 'Hello'): " demo-chars .items cr
 
 \ ==============================================================================
 \ Summary
