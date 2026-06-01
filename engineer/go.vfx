@@ -36,7 +36,7 @@ redef : ticks  ( n - ms )
 
 : w/f ( - )
     \ Display mode switching for release builds
-    fullscreen? if windowed else save-window-pos fullscreen then
+    fullscreen? if windowed else save-session fullscreen then
     winmode  
     update-delta update-delta ;
 

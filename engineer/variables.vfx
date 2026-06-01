@@ -64,3 +64,11 @@ private
     then ;
 
 ' vfxland-redefhook2 is redefhook  
+
+
+\ Macros
+also substitutions
+    aka supershow$ supershow
+    aka home$ home
+    aka project$ project
+previous

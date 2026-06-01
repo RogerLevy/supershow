@@ -109,7 +109,7 @@ forth-public
     then
     project$ count $cwd
     500 ms
-    restore-window-pos >vfx
+    >vfx
     cartridge ;
 
 : rldp ( - )

@@ -117,12 +117,6 @@ public
 \ VARIABLE isolation
 \ REDEF : MODULE  isolation @ if empty then require ;
 
-also substitutions
-    aka supershow$ supershow
-    aka home$ home
-    aka project$ project
-previous
-
 private
 
 : ?..  wd@ '\' ending s" bin" s= if s" .." $cwd then ;
@@ -137,10 +131,11 @@ forth-public
 synonym vfx-empty empty
 
 redef : empty ( - )
+    project-file$ c@ if save-session then
     rs
     init-engineer
     reset-engineer
-    vfx-empty 
+    vfx-empty
     global ;
 
 : cartridge ( - )

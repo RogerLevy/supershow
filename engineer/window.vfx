@@ -1,5 +1,5 @@
 \ =============================================================================
-\ Window position save/restore
+\ Session save/restore
 \ =============================================================================
 
 module [engineer]
@@ -12,21 +12,30 @@ variable winy
 
 public
 
-: save-window-pos
+: save-session
     fullscreen? ?exit
     display winx winy al_get_window_position
     [:
-        .sintvar winx 
-        .sintvar winy 
-        str@ session-ini-path fwrite 
+        .sintvar winx
+        .sintvar winy
+        s\" s\" " type  ld-action$ count type  s\" \" ld-action$ place" type  cr
+        s\" s\" " type  project-file$ count type  s\" \" project-file$ place" type  cr
+        s\" s\" " type  project$ count type  s\" \" project$ place" type  cr \ "
+        str@ session-ini-path fwrite
     ;] strout ;
 
-: restore-window-pos
-    fullscreen? ?exit
+also moduleing 
+: restore-session
+    save-order
+    [ current-module ] literal build-module-search-order
     session-ini-path CfgIncluded
-    display winx @ winy @ 25 max al_set_window_position ;
+    restore-order
+    fullscreen? not if
+        display winx @ winy @ 25 max al_set_window_position 
+    then ;
+previous
 
-['] save-window-pos AtExit
+['] save-session AtExit
 
 \ =============================================================================
 \ Window management
@@ -48,7 +57,7 @@ public
 : >vfx  vfx-hwnd SetForegroundWindow drop ;
 : fullscreen  ." FULLSCREEN" cr  -1 to fullscreen? ;
 : windowed  ." WINDOWED" cr  0 to fullscreen? ;
-: *display  create-display  restore-window-pos ;
+: *display  create-display  restore-session ;
 
 : winmode ( - )
     2 zoom ! 
