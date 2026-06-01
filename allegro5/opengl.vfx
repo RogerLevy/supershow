@@ -28,10 +28,10 @@ extern stdcall void glPixelStorei( int pname, int param );
 : glActiveTexture ( texture - )
     _pfn-glActiveTexture  1  NXCALL drop ;
 
-: glTexImage3D ( target level internalformat width height depth border format type data - )
+: glTexImage3D ( data type format border depth height width internalformat level target - )
     _pfn-glTexImage3D  10  NXCALL drop ;
 
-: glTexSubImage3D ( target level xoffset yoffset zoffset width height depth format type data - )
+: glTexSubImage3D ( data type format depth height width zoffset yoffset xoffset level target - )
     _pfn-glTexSubImage3D  11  NXCALL drop ;
 
 : init-gl-extensions ( - )
@@ -50,6 +50,7 @@ $8C1A constant GL_TEXTURE_2D_ARRAY
 \ Internal / pixel formats
 $8058 constant GL_RGBA8
 $1908 constant GL_RGBA
+$80E1 constant GL_BGRA
 $1401 constant GL_UNSIGNED_BYTE
 
 \ Texture parameters
@@ -78,3 +79,7 @@ $1E01 constant GL_REPLACE
 
 \ Allegro lock constants used with al_lock_bitmap
 1  constant ALLEGRO_LOCK_READONLY
+
+
+$813c constant GL_TEXTURE_BASE_LEVEL
+$813d constant GL_TEXTURE_MAX_LEVEL

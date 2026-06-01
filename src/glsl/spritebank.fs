@@ -1,3 +1,4 @@
+#extension GL_EXT_texture_array : enable
 uniform sampler2DArray tex_array;
 varying vec4 varying_color;
 varying vec3 v_uvlayer;

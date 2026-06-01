@@ -109,18 +109,12 @@ create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
 
 0 value npc-bank
 
-: register-ts ( %tileset bank - )
-    {: ts bank :}
-    ts -> #tiles @ 0 do
-        i ts -> baseid @ +  bank add-to-bank drop
-    loop ;
-
 : init-npc-bank ( - )
     init-spritebank
-    64 64 make-spritebank to npc-bank
-    man.ts npc-bank register-ts
-    cat.ts npc-bank register-ts
-    girl.ts npc-bank register-ts ;
+    256 3 make-spritebank to npc-bank
+    man.ts  npc-bank add-tileset-to-bank
+    cat.ts  npc-bank add-tileset-to-bank
+    girl.ts npc-bank add-tileset-to-bank ;
 
 %npc :: draw ( - )
     bmp @ -exit  x 2@ 2>i at  bmp @ bcput ;
@@ -131,10 +125,14 @@ create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
 
 public
 
+|| : draw-npcs ( - )
+    [: >y @ >i ;] sorted-actors> this draw  ?pillory ;
+
 fast{
 : render
+    $808080ff rgba8 screen
     npc-bank bank>
-    [: >y @ >i ;] sorted-actors> this draw  ?pillory
+    draw-npcs
     flush-bank ;
 fast}
 
@@ -142,8 +140,9 @@ fast}
 
 : main
     just
+    
     init-npc-bank
-    1000 sprinkle
+    100 sprinkle
     show> render
     work> think
 ;
