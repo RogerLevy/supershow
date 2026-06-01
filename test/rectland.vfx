@@ -10,8 +10,8 @@ import %supershow%/addons/shapes.vfx
 \ =============================================================================
 
 1000 constant #boxes
-4000 constant world-w
-4000 constant world-h
+4096 constant world-w
+4096 constant world-h
 16 constant pw   16 constant ph
 2. constant speed
 
@@ -53,10 +53,10 @@ create player-cbox /cbox allot
     the-grid reset-cgrid
     #boxes 0 do
         boxes i /cbox * + to box
-        world-w 256 - rnd
-        world-h 256 - rnd
-        248 rnd 8 +
-        248 rnd 8 +
+        world-w 200 - rnd
+        world-h 200 - rnd
+        192 rnd 8 +
+        192 rnd 8 +
         box cbox!
         box the-grid add-cbox
     loop ;
@@ -102,23 +102,20 @@ create player-cbox /cbox allot
     <up>    held? if speed negate to pvy then
     <down>  held? if speed         to pvy then ;
 
-: clamp-player
-    px >i 0 max world-w pw - min >p to px
-    py >i 0 max world-h ph - min >p to py
-    update-player-cbox ;
+: clamp-x  px >i 0 max world-w pw - min >p to px ;
+: clamp-y  py >i 0 max world-h ph - min >p to py ;
 
 : player-move
     pvx if
-        pvx px + to px
+        pvx px + to px  clamp-x
         update-player-cbox
         player-cbox ['] slide-x the-grid check-cbox
     then
     pvy if
-        pvy py + to py
+        pvy py + to py  clamp-y
         update-player-cbox
         player-cbox ['] slide-y the-grid check-cbox
-    then
-    clamp-player ;
+    then ;
 
 \ =============================================================================
 \ Drawing
@@ -157,6 +154,15 @@ create player-cbox /cbox allot
     update-cam ;
 
 public
+
+: warp ( x y - )
+    >p to py  >p to px
+    update-player-cbox update-cam ;
+
+: warp-tl  10 10 warp ;
+: warp-tr  world-w 30 - 10 warp ;
+: warp-bl  10 world-h 30 - warp ;
+: warp-br  world-w 30 - world-h 30 - warp ;
 
 : main
     init-player

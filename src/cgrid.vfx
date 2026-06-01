@@ -91,6 +91,15 @@ defer collide ( flag cbox1 cbox2 - keepgoing? )
     swap sect-w 1 - + sect-w /
     swap sect-h 1 - + sect-h / ;
 
+: grid-w  the-cgrid -> cg.cols @ sect-w * ;
+: grid-h  the-cgrid -> cg.rows @ sect-h * ;
+
+: ?cbox-in-bounds ( cbox - )
+    dup -> cb.x1 @ 0< over -> cb.y1 @ 0< or
+    over -> cb.x2 @ grid-w >= or
+    swap -> cb.y2 @ grid-h >= or
+    abort" cbox out of cgrid bounds" ;
+
 \ =============================================================================
 \ Public API
 \ =============================================================================
@@ -111,6 +120,7 @@ public
 
 : add-cbox ( cbox cgrid - )
     to the-cgrid
+    dup ?cbox-in-bounds
     0 to #seen
     >r
     r@ -> cb.x1 2@                        ?corner ?dup if dup r@ -> cb.s1 ! r@ swap link else r@ -> cb.s1 off then
@@ -130,6 +140,7 @@ public
 : check-cbox ( cbox xt cgrid - )
     to the-cgrid is collide
     locals| cbox |
+    cbox ?cbox-in-bounds
     0 to #seen
     cbox dup -> cb.x1 2@                          ?corner ?check-sector -exit
     cbox dup -> cb.x2 @ cbox -> cb.y1 @           ?corner ?check-sector -exit
