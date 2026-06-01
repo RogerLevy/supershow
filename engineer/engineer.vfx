@@ -142,7 +142,7 @@ also moduleing
 : cartridge ( - )
     empty hold off
     project-file$ c@ if
-        project-file$ count project$ count f" %s/%s" 2dup last-file$ place included
+        project-file$ count project$ count f" %s/%s" 2dup last-file$ place old-included
         current-module ?dup if
             dup ." Current module: " .name cr
             build-module-search-order

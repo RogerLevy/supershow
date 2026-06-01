@@ -9,6 +9,10 @@ create current-package 256 allot  \ package prefix of current module (counted st
 
 save-order vocabulary moduleing
 
+only forth definitions
+
+aka old-included included
+
 only forth also moduleing definitions
 
 \ ------------------------------------------------------------------------------
@@ -549,6 +553,7 @@ redef : require
     then
     saved-sd to section-declared?
     pop-package  outer-mod to current-module ;
+
 redef : included
     current-module >r  push-package
     save-order included restore-order
