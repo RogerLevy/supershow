@@ -35,6 +35,19 @@ include %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)
 include %idir%/trampoline.vfx
 
 \ =============================================================================
+\ Exception State Recovery
+\ =============================================================================
+
+private
+
+: save-state    save-nibs  save-module-state + ;
+: restore-state  restore-module-state  restore-nibs ;
+
+public
+
+['] save-state ['] restore-state extends-catch
+
+\ =============================================================================
 \ Reset System Classifiers
 \ =============================================================================
 

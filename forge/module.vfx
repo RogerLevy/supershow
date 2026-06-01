@@ -554,4 +554,16 @@ redef : included
     save-order included restore-order
     pop-package  r> to current-module ;
 
+only forth definitions
+
+: save-module-state ( - n )
+    save-order
+    current-module >ep
+    1 ;
+
+: restore-module-state ( n - n' )
+    ep> to current-module
+    restore-order
+    1- ;
+
 restore-order
