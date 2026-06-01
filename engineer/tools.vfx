@@ -122,4 +122,5 @@ forth-public
     200 ms
     ldp ;
 
-: .perf  ['] process-tick time? ;
+\ "pre-heating" gets a more reliable result
+: .perf  process-tick ['] process-tick time? ;
