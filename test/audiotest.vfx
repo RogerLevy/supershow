@@ -1,4 +1,4 @@
-module [waveplay-test]
+module
 import %supershow%/src/supershow.vfx
 
 \ ---- Assets ----------------------------------------------------------------

@@ -32,8 +32,8 @@ only forth definitions
 module [b]
     import [a]
     import [a]    \ <-- doesn't import twice [OK]
-    \ import %idir%/nomodule-file.vfx \ <-- threw error "didn't declare module" [OK]
-    import %idir%/module-file.vfx
+    \ import %idir%/misc/nomodule-file.vfx \ <-- threw error "didn't declare module" [OK]
+    import %idir%/misc/module-file.vfx
     \ word1     \ <-- this wasn't found [OK]
     word2
 

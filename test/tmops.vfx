@@ -1,4 +1,4 @@
-module [tilemap-ops-test]
+module
 import %supershow%/src/supershow.vfx
 import-as %supershow%/src/tilemap4.vfx [tilemap]
 

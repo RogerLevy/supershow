@@ -1,4 +1,4 @@
-\ Rectland - AABB collision grid demo
+\ Boxland - AABB collision grid demo
 \ Player-controlled box slides against a field of randomized static boxes.
 
 module
