@@ -2,7 +2,7 @@
 \ Key constants
 \ ------------------------------------------------------------------------------
 
-module [allegro5.keys]
+module [allegro5.utils]
 public
 
 1 constant <A>  

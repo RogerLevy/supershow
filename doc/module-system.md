@@ -16,7 +16,7 @@ Creates the module if it doesn't exist; otherwise re-enters it. Both cases set t
 
 **Filename fallback.** A bare `module` with no bracketed name uses the current source file's basename as the module name.
 
-**Qualified names in files.** A file may declare a module name whose basename differs from the filename — for example, `keys.vfx` declaring `module [allegro5.keys]`. In this case `import path/to/keys.vfx` will correctly find the declared module even though the name doesn't match the filename.
+**Qualified names in files.** A file may declare a module name whose basename differs from the filename — for example, `al-utils.vfx` declaring `module [allegro5.utils]`. In this case `import path/to/al-utils.vfx` will correctly find the declared module even though the name doesn't match the filename.
 
 ---
 

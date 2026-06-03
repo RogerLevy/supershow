@@ -1,7 +1,6 @@
 module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
-import %supershow%/lib/mouse.vfx
 
 private
 

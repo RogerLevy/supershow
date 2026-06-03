@@ -1,8 +1,9 @@
 \ ------------------------------------------------------------------------------
 \ Allegro Utilities
 \ ------------------------------------------------------------------------------
-module [allegro5]
-forth-public
+module [allegro5.utils]
+import allegro5
+public
 
 variable zoom  2 zoom !
 320 value appw
@@ -58,7 +59,7 @@ create mi /ALLEGRO_MONITOR_INFO allot&erase
 
 \ ------------------------------------------------------------------------------
 
-forth-public
+public
 
 : reset-keyboard  ( -- )
     kbs0 @ if \ check for display pointer

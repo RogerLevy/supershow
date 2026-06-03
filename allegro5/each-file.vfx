@@ -1,4 +1,5 @@
-module [allegro5]
+module [allegro5.utils]
+import allegro5
 public
 
 : each-file ( path:a n xt - ) ( path n - )

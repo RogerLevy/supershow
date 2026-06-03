@@ -1,5 +1,6 @@
-module [allegro5]
-forth-public
+module [allegro5.utils]
+import allegro5
+public
 
 ec-cell pal
 

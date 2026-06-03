@@ -21,15 +21,16 @@ only forth definitions
 
 include %idir%/checks.vfx
 include %idir%/variables.vfx \ System variables
-include %idir%/window.vfx
 
 \ =============================================================================
 \ Game services
 \ =============================================================================
 
 import %idir%/../allegro5/allegro5.vfx
-reexport [allegro5.keys]
+import allegro5.utils
+reexport [allegro5.utils]
 
+include %idir%/window.vfx     \ Window/display (depends on allegro5)
 include %idir%/go.vfx         \ Main Loop
 include %idir%/repl-game.vfx  \ REPL-Game Integration (IDE-responsive game loop)
 include %idir%/trampoline.vfx

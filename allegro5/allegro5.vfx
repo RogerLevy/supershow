@@ -34,8 +34,7 @@ Target_386_Windows [if]
         require %idir%/opengl.vfx          \ GL texture array extensions
 
     require %idir%/al-utils.vfx       \ Display, window, and input state management
-    import %idir%/keys.vfx            \ Keyboard key constants
-    reexport [allegro5.keys]
+    require %idir%/keys.vfx           \ Keyboard key constants
     require %idir%/each-file.vfx      \ Directory iteration utilities
     require %idir%/graphics.vfx       \ Drawing, color, transform, text
     require %idir%/vga13h.vfx         \ VGA palette and 8x8 font
