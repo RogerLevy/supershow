@@ -17,7 +17,7 @@ cell field pg.n         \ vertex count
 0    field pg.verts     \ fixed-point x y pairs start here
 constant /poly-header
 
-: pg.vert ( poly i -- addr )  2 cells * swap -> pg.verts + ;
+: pg.vert ( poly i -- addr )  2 cells * swap /poly-header + + ;
 
 \ =============================================================================
 \ Helpers
@@ -192,13 +192,24 @@ constant /poly-header
     false ;
 
 \ =============================================================================
-\ Oval-Poly (approximate: use average radius as circle)
+\ Oval-Poly
+\ Scale y-axis by orx/ory to turn oval into circle, then seg-circ? each edge.
 \ =============================================================================
 
 : oval-poly? ( ox oy orx ory poly -- flag )
-    {: ox oy orx ory poly :}
+    {: ox oy orx ory poly | ex1 ey1 ex2 ey2 :}
     orx 0= ory 0= or if false exit then
-    ox oy  orx ory + 2 /  poly  circ-poly? ;
+    ox oy poly pt-poly? if true exit then
+    poly -> pg.n @ 0 ?do
+        poly i pg.vert 2@ to ey1 to ex1
+        poly i 1 + poly -> pg.n @ mod pg.vert 2@ to ey2 to ex2
+        ex1  ey1 orx p* ory p/
+        ex2  ey2 orx p* ory p/
+        ox   oy  orx p* ory p/  orx
+        seg-circ?
+        if true unloop exit then
+    loop
+    false ;
 
 \ =============================================================================
 \ Line-Line (segment intersection)
@@ -343,3 +354,11 @@ constant /poly-header
     pa pb sat-edges? if false exit then
     pb pa sat-edges? if false exit then
     true ;
+
+\ =============================================================================
+\ Pt-Line (point within 1px of segment)
+\ =============================================================================
+
+: pt-line? ( px py lx1 ly1 lx2 ly2 -- flag )
+    {: px py lx1 ly1 lx2 ly2 :}
+    lx1 ly1 lx2 ly2  px py 1.  line-circ? ;

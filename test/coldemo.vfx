@@ -5,7 +5,7 @@ import %supershow%/lib/mouse.vfx
 
 private
 
-\ Current cursor shape type (1=rect 2=circ 3=oval 4=line 5=poly)
+\ Current cursor shape type (0=pt 1=rect 2=circ 3=oval 4=line 5=poly)
 variable ctype   1 ctype !
 
 \ Mouse position in integer pixels, updated each frame
@@ -54,6 +54,7 @@ create spoly   3 ,
 \ ============================================================
 
 : hit-s1? ( - flag )
+    ctype @ 0 = if  ccx ccy 40. 40. 120. 90.              pt-rect?    exit then
     ctype @ 1 = if  crx1 cry1 crx2 cry2   40. 40. 120. 90.  rect-rect?  exit then
     ctype @ 2 = if  40. 40. 120. 90.   ccx ccy 20.         rect-circ?  exit then
     ctype @ 3 = if  40. 40. 120. 90.   ccx ccy 32. 14.   rect-oval?  exit then
@@ -62,6 +63,7 @@ create spoly   3 ,
     false ;
 
 : hit-s2? ( - flag )
+    ctype @ 0 = if  ccx ccy 185. 65. 30.                  pt-circ?    exit then
     ctype @ 1 = if  crx1 cry1 crx2 cry2   185. 65. 30.  rect-circ?  exit then
     ctype @ 2 = if  ccx ccy 20.          185. 65. 30.  circ-circ?  exit then
     ctype @ 3 = if  false  exit then
@@ -70,6 +72,7 @@ create spoly   3 ,
     false ;
 
 : hit-s3? ( - flag )
+    ctype @ 0 = if  ccx ccy 270. 65. 38. 18.              pt-oval?    exit then
     ctype @ 1 = if  crx1 cry1 crx2 cry2   270. 65. 38. 18.  rect-oval?  exit then
     ctype @ 2 = if  false  exit then
     ctype @ 3 = if  ccx ccy 32. 14.   270. 65. 38. 18.  oval-oval?  exit then
@@ -78,6 +81,7 @@ create spoly   3 ,
     false ;
 
 : hit-s4? ( - flag )
+    ctype @ 0 = if  ccx ccy 40. 140. 130. 200.            pt-line?    exit then
     ctype @ 1 = if  40. 140. 130. 200.  crx1 cry1 crx2 cry2  line-rect?  exit then
     ctype @ 2 = if  40. 140. 130. 200.  ccx ccy 20.         line-circ?  exit then
     ctype @ 3 = if  40. 140. 130. 200.  ccx ccy 32. 14.   line-oval?  exit then
@@ -86,6 +90,7 @@ create spoly   3 ,
     false ;
 
 : hit-s5? ( - flag )
+    ctype @ 0 = if  ccx ccy spoly                          pt-poly?    exit then
     ctype @ 1 = if  crx1 cry1 crx2 cry2   spoly  rect-poly?  exit then
     ctype @ 2 = if  ccx ccy 20.          spoly  circ-poly?  exit then
     ctype @ 3 = if  ccx ccy 32. 14.   spoly  oval-poly?  exit then
@@ -130,6 +135,8 @@ create spoly   3 ,
 
 : ~cursor ( - )
     cursor-col
+    ctype @ 0 = if  mx @ 5 - my @ at  mx @ 5 + >p my @ >p line
+                    mx @ my @ 5 - at  mx @ >p my @ 5 + >p line  exit then
     ctype @ 1 = if  mx @ 28 - my @ 18 - at  56. 36. rect  exit then
     ctype @ 2 = if  mx @ my @ at  20. circ  exit then
     ctype @ 3 = if  mx @ my @ at  32. 14. oval  exit then
@@ -142,12 +149,34 @@ create spoly   3 ,
 \ ============================================================
 
 : handle-keys ( - )
+    <0> pressed? if 0 ctype ! exit then
     <1> pressed? if 1 ctype ! exit then
     <2> pressed? if 2 ctype ! exit then
     <3> pressed? if 3 ctype ! exit then
     <4> pressed? if 4 ctype ! exit then
     <5> pressed? if 5 ctype ! exit then
     ;
+
+\ ============================================================
+\ Labels
+\ ============================================================
+
+: print+ ( addr len - )
+    2dup print  nip 8 * 0 +at ;
+
+: ~label ( n addr len - )
+    {: n addr len :}
+    n ctype @ = if $ffffffff rgba8 else $4488ccff rgba8 then
+    addr len print+ ;
+
+: ~labels ( - )
+    2 2 at
+    0 s" 0:pt "   ~label
+    1 s" 1:rect " ~label
+    2 s" 2:circ " ~label
+    3 s" 3:oval " ~label
+    4 s" 4:line " ~label
+    5 s" 5:poly" ~label ;
 
 \ ============================================================
 \ Main
@@ -160,9 +189,11 @@ public
     get-mouse  mouse  my !  mx !
     update-acpoly
     ~s1 ~s2 ~s3 ~s4 ~s5
-    ~cursor ;
+    ~cursor
+    ~labels ;
 
 : main
+    vga-8x8 fnt!
     show>  demo ;
 
 main
