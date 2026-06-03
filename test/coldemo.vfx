@@ -38,9 +38,9 @@ create cpoly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
 \ ============================================================
 
 create spoly   3 ,
-    195 >p ,  140 >p ,
-    265 >p ,  200 >p ,
-    168 >p ,  200 >p ,
+    195. ,  140. ,
+    265. ,  200. ,
+    168. ,  200. ,
 
 \ ============================================================
 \ Intersection checks: cursor vs each static shape
@@ -48,41 +48,41 @@ create spoly   3 ,
 \ ============================================================
 
 : hit-s1? ( - flag )
-    ctype @ 1 = if  crx1 cry1 crx2 cry2   40 >p 40 >p 120 >p 90 >p  rect-rect?  exit then
-    ctype @ 2 = if  40 >p 40 >p 120 >p 90 >p   ccx ccy 20 >p         rect-circ?  exit then
-    ctype @ 3 = if  40 >p 40 >p 120 >p 90 >p   ccx ccy 32 >p 14 >p   rect-oval?  exit then
-    ctype @ 4 = if  clx1 cly1 clx2 cly2         40 >p 40 >p 120 >p 90 >p  line-rect?  exit then
-    ctype @ 5 = if  40 >p 40 >p 120 >p 90 >p   cpoly                 rect-poly?  exit then
+    ctype @ 1 = if  crx1 cry1 crx2 cry2   40. 40. 120. 90.  rect-rect?  exit then
+    ctype @ 2 = if  40. 40. 120. 90.   ccx ccy 20.         rect-circ?  exit then
+    ctype @ 3 = if  40. 40. 120. 90.   ccx ccy 32. 14.   rect-oval?  exit then
+    ctype @ 4 = if  clx1 cly1 clx2 cly2         40. 40. 120. 90.  line-rect?  exit then
+    ctype @ 5 = if  40. 40. 120. 90.   cpoly                 rect-poly?  exit then
     false ;
 
 : hit-s2? ( - flag )
-    ctype @ 1 = if  crx1 cry1 crx2 cry2   185 >p 65 >p 30 >p  rect-circ?  exit then
-    ctype @ 2 = if  ccx ccy 20 >p          185 >p 65 >p 30 >p  circ-circ?  exit then
+    ctype @ 1 = if  crx1 cry1 crx2 cry2   185. 65. 30.  rect-circ?  exit then
+    ctype @ 2 = if  ccx ccy 20.          185. 65. 30.  circ-circ?  exit then
     ctype @ 3 = if  false  exit then
-    ctype @ 4 = if  clx1 cly1 clx2 cly2   185 >p 65 >p 30 >p   line-circ?  exit then
-    ctype @ 5 = if  185 >p 65 >p 30 >p    cpoly                 circ-poly?  exit then
+    ctype @ 4 = if  clx1 cly1 clx2 cly2   185. 65. 30.   line-circ?  exit then
+    ctype @ 5 = if  185. 65. 30.    cpoly                 circ-poly?  exit then
     false ;
 
 : hit-s3? ( - flag )
-    ctype @ 1 = if  crx1 cry1 crx2 cry2   270 >p 65 >p 38 >p 18 >p  rect-oval?  exit then
+    ctype @ 1 = if  crx1 cry1 crx2 cry2   270. 65. 38. 18.  rect-oval?  exit then
     ctype @ 2 = if  false  exit then
-    ctype @ 3 = if  ccx ccy 32 >p 14 >p   270 >p 65 >p 38 >p 18 >p  oval-oval?  exit then
-    ctype @ 4 = if  clx1 cly1 clx2 cly2   270 >p 65 >p 38 >p 18 >p  line-oval?  exit then
-    ctype @ 5 = if  270 >p 65 >p 38 >p 18 >p  cpoly                  oval-poly?  exit then
+    ctype @ 3 = if  ccx ccy 32. 14.   270. 65. 38. 18.  oval-oval?  exit then
+    ctype @ 4 = if  clx1 cly1 clx2 cly2   270. 65. 38. 18.  line-oval?  exit then
+    ctype @ 5 = if  270. 65. 38. 18.  cpoly                  oval-poly?  exit then
     false ;
 
 : hit-s4? ( - flag )
-    ctype @ 1 = if  40 >p 140 >p 130 >p 200 >p  crx1 cry1 crx2 cry2  line-rect?  exit then
-    ctype @ 2 = if  40 >p 140 >p 130 >p 200 >p  ccx ccy 20 >p         line-circ?  exit then
-    ctype @ 3 = if  40 >p 140 >p 130 >p 200 >p  ccx ccy 32 >p 14 >p   line-oval?  exit then
-    ctype @ 4 = if  40 >p 140 >p 130 >p 200 >p  clx1 cly1 clx2 cly2   line-line?  exit then
-    ctype @ 5 = if  40 >p 140 >p 130 >p 200 >p  cpoly                  line-poly?  exit then
+    ctype @ 1 = if  40. 140. 130. 200.  crx1 cry1 crx2 cry2  line-rect?  exit then
+    ctype @ 2 = if  40. 140. 130. 200.  ccx ccy 20.         line-circ?  exit then
+    ctype @ 3 = if  40. 140. 130. 200.  ccx ccy 32. 14.   line-oval?  exit then
+    ctype @ 4 = if  40. 140. 130. 200.  clx1 cly1 clx2 cly2   line-line?  exit then
+    ctype @ 5 = if  40. 140. 130. 200.  cpoly                  line-poly?  exit then
     false ;
 
 : hit-s5? ( - flag )
     ctype @ 1 = if  crx1 cry1 crx2 cry2   spoly  rect-poly?  exit then
-    ctype @ 2 = if  ccx ccy 20 >p          spoly  circ-poly?  exit then
-    ctype @ 3 = if  ccx ccy 32 >p 14 >p   spoly  oval-poly?  exit then
+    ctype @ 2 = if  ccx ccy 20.          spoly  circ-poly?  exit then
+    ctype @ 3 = if  ccx ccy 32. 14.   spoly  oval-poly?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   spoly  line-poly?  exit then
     ctype @ 5 = if  cpoly  spoly           poly-poly?  exit then
     false ;
@@ -100,19 +100,19 @@ create spoly   3 ,
 
 : ~s1 ( - )
     hit-s1? if hit-col else normal-col then
-    40 40 at  80 >p 50 >p rect ;
+    40 40 at  80. 50. rect ;
 
 : ~s2 ( - )
     hit-s2? if hit-col else normal-col then
-    185 65 at  30 >p circ ;
+    185 65 at  30. circ ;
 
 : ~s3 ( - )
     hit-s3? if hit-col else normal-col then
-    270 65 at  38 >p 18 >p oval ;
+    270 65 at  38. 18. oval ;
 
 : ~s4 ( - )
     hit-s4? if hit-col else normal-col then
-    40 140 at  130 >p 200 >p line ;
+    40 140 at  130. 200. line ;
 
 : ~s5 ( - )
     hit-s5? if hit-col else normal-col then
@@ -124,9 +124,9 @@ create spoly   3 ,
 
 : ~cursor ( - )
     cursor-col
-    ctype @ 1 = if  mx @ 28 - my @ 18 - at  56 >p 36 >p rect  exit then
-    ctype @ 2 = if  mx @ my @ at  20 >p circ  exit then
-    ctype @ 3 = if  mx @ my @ at  32 >p 14 >p oval  exit then
+    ctype @ 1 = if  mx @ 28 - my @ 18 - at  56. 36. rect  exit then
+    ctype @ 2 = if  mx @ my @ at  20. circ  exit then
+    ctype @ 3 = if  mx @ my @ at  32. 14. oval  exit then
     ctype @ 4 = if  mx @ 28 - my @ 8 - at  mx @ 28 + >p my @ 8 + >p line  exit then
     ctype @ 5 = if  cpoly poly  exit then
     ;
