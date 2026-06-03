@@ -195,10 +195,10 @@ aka #children #items
     again ;
 
 || variable indent
-%dltree :: .items ( array - )
+%dltree :: .each ( array - )
     item-count @ for
         cr indent @ spaces i this el?
         4 indent +!
-        i this el@ .items
+        i this el@ .each
         -4 indent +!
     loop ;
