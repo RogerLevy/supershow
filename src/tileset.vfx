@@ -2,6 +2,7 @@ module [supershow.tileset]
 import core
 import array
 import bitmap
+import allegro5
 public
 
 ec-cell pile

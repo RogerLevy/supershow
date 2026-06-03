@@ -1,5 +1,6 @@
 module [supershow.core]
 	import engineer
+	import allegro5
 	reexport [allegro5.utils]
 	public
 	include checks               \ Validations
