@@ -78,7 +78,7 @@ class;
     dir @ 1 xor face  walk-velocity  
     x 2@ 0 0 gamew gameh 2>p 1. 1. 2- 2clamp x 2! ;
 
-%npc :: init ( - )
+%npc :: start ( - )
     act>
         boundary? if about-face walk-velocity then
         60 rnd 0= if rnd-dir face walk-velocity then ;

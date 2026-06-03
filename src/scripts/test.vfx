@@ -2,6 +2,6 @@ class: TEST
     %actor derive
 class;
 
-TEST :: init ( - )
+TEST :: start ( - )
     act> ;
 

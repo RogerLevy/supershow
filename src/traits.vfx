@@ -4,7 +4,7 @@ public
 require %idir%/checks.vfx
 
 trait: %object
-    :: init ( - ) ;
+    :: start ( - ) ;
 trait;
 
 trait: %loadable

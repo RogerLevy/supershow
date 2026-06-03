@@ -33,7 +33,7 @@ class;
 : el@ ( class - %actor )
     this >r alloc-element {
         this r> dlpush
-        1element this init
+        1element this start
         this
     } ;
 
@@ -111,7 +111,7 @@ continuation: draw> ( - ) ( - )
     bl preparse f" scripts\%s.vfx" >ld
     bl word find not if drop exit then
     >body to c
-    root announce> this c is? -exit this init ;
+    root announce> this c is? -exit this start ;
 
 \ Management
 || : (gone) en off ;

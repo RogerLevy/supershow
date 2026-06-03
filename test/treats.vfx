@@ -15,7 +15,7 @@ class: %treat  %actor derive  class;
 : rndtile ( ts - bmpid )  dup -> #tiles @ rnd tile ;
 : in? ( - f )  x 2@ 2>i  0 gameh within? >r  0 gamew within? r> and ;
 
-%treat :: init
+%treat :: start
     ?ts rndtile bmp !
     act>
         in? not if me unload exit then
@@ -25,7 +25,7 @@ class: %treat  %actor derive  class;
 
 class: %spewer  %actor derive  class;
 
-%spewer :: init
+%spewer :: start
     act>
         gamew rnd  gameh rnd  at
         %treat one as>
