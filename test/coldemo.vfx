@@ -5,7 +5,7 @@ import %supershow%/lib/mouse.vfx
 
 private
 
-\ Current cursor shape type (1=rect 2=circ 3=oval 4=line) \ 5=poly
+\ Current cursor shape type (1=rect 2=circ 3=oval 4=line 5=poly)
 variable ctype   1 ctype !
 
 \ Mouse position in integer pixels, updated each frame
@@ -20,13 +20,13 @@ variable mx   variable my
 : clx1  mx @ 28 - >p ;    : cly1  my @  8 - >p ;
 : clx2  mx @ 28 + >p ;    : cly2  my @  8 + >p ;
 
-\ \ Cursor polygon: small triangle centered on mouse, rebuilt each frame
-\ create cpoly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
-\
-\ : update-cpoly ( - )
-\     mx @ >p       my @ 18 - >p   cpoly 0 pg.vert 2!
-\     mx @ 18 + >p  my @ 12 + >p  cpoly 1 pg.vert 2!
-\     mx @ 18 - >p  my @ 12 + >p  cpoly 2 pg.vert 2! ;
+\ Cursor polygon: small triangle centered on mouse, rebuilt each frame
+create cpoly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
+
+: update-cpoly ( - )
+    mx @ >p       my @ 18 - >p   cpoly 0 pg.vert 2!
+    mx @ 18 + >p  my @ 12 + >p  cpoly 1 pg.vert 2!
+    mx @ 18 - >p  my @ 12 + >p  cpoly 2 pg.vert 2! ;
 
 \ ============================================================
 \ Static shape data (inline)
@@ -37,10 +37,10 @@ variable mx   variable my
 \ S5: poly   triangle (195,140)-(265,200)-(168,200)
 \ ============================================================
 
-\ create spoly   3 ,
-\     195 >p ,  140 >p ,
-\     265 >p ,  200 >p ,
-\     168 >p ,  200 >p ,
+create spoly   3 ,
+    195 >p ,  140 >p ,
+    265 >p ,  200 >p ,
+    168 >p ,  200 >p ,
 
 \ ============================================================
 \ Intersection checks: cursor vs each static shape
@@ -52,7 +52,7 @@ variable mx   variable my
     ctype @ 2 = if  40 >p 40 >p 120 >p 90 >p   ccx ccy 20 >p         rect-circ?  exit then
     ctype @ 3 = if  40 >p 40 >p 120 >p 90 >p   ccx ccy 32 >p 14 >p   rect-oval?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2         40 >p 40 >p 120 >p 90 >p  line-rect?  exit then
-\    ctype @ 5 = if  40 >p 40 >p 120 >p 90 >p   cpoly                 rect-poly?  exit then
+    ctype @ 5 = if  40 >p 40 >p 120 >p 90 >p   cpoly                 rect-poly?  exit then
     false ;
 
 : hit-s2? ( - flag )
@@ -60,7 +60,7 @@ variable mx   variable my
     ctype @ 2 = if  ccx ccy 20 >p          185 >p 65 >p 30 >p  circ-circ?  exit then
     ctype @ 3 = if  false  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   185 >p 65 >p 30 >p   line-circ?  exit then
-\    ctype @ 5 = if  185 >p 65 >p 30 >p    cpoly                 circ-poly?  exit then
+    ctype @ 5 = if  185 >p 65 >p 30 >p    cpoly                 circ-poly?  exit then
     false ;
 
 : hit-s3? ( - flag )
@@ -68,7 +68,7 @@ variable mx   variable my
     ctype @ 2 = if  false  exit then
     ctype @ 3 = if  ccx ccy 32 >p 14 >p   270 >p 65 >p 38 >p 18 >p  oval-oval?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   270 >p 65 >p 38 >p 18 >p  line-oval?  exit then
-\    ctype @ 5 = if  270 >p 65 >p 38 >p 18 >p  cpoly                  oval-poly?  exit then
+    ctype @ 5 = if  270 >p 65 >p 38 >p 18 >p  cpoly                  oval-poly?  exit then
     false ;
 
 : hit-s4? ( - flag )
@@ -76,16 +76,16 @@ variable mx   variable my
     ctype @ 2 = if  40 >p 140 >p 130 >p 200 >p  ccx ccy 20 >p         line-circ?  exit then
     ctype @ 3 = if  40 >p 140 >p 130 >p 200 >p  ccx ccy 32 >p 14 >p   line-oval?  exit then
     ctype @ 4 = if  40 >p 140 >p 130 >p 200 >p  clx1 cly1 clx2 cly2   line-line?  exit then
-\    ctype @ 5 = if  40 >p 140 >p 130 >p 200 >p  cpoly                  line-poly?  exit then
+    ctype @ 5 = if  40 >p 140 >p 130 >p 200 >p  cpoly                  line-poly?  exit then
     false ;
 
-\ : hit-s5? ( - flag )
-\     ctype @ 1 = if  crx1 cry1 crx2 cry2   spoly  rect-poly?  exit then
-\     ctype @ 2 = if  ccx ccy 20 >p          spoly  circ-poly?  exit then
-\     ctype @ 3 = if  ccx ccy 32 >p 14 >p   spoly  oval-poly?  exit then
-\     ctype @ 4 = if  clx1 cly1 clx2 cly2   spoly  line-poly?  exit then
-\     ctype @ 5 = if  cpoly  spoly           poly-poly?  exit then
-\     false ;
+: hit-s5? ( - flag )
+    ctype @ 1 = if  crx1 cry1 crx2 cry2   spoly  rect-poly?  exit then
+    ctype @ 2 = if  ccx ccy 20 >p          spoly  circ-poly?  exit then
+    ctype @ 3 = if  ccx ccy 32 >p 14 >p   spoly  oval-poly?  exit then
+    ctype @ 4 = if  clx1 cly1 clx2 cly2   spoly  line-poly?  exit then
+    ctype @ 5 = if  cpoly  spoly           poly-poly?  exit then
+    false ;
 
 \ ============================================================
 \ Colors
@@ -114,9 +114,9 @@ variable mx   variable my
     hit-s4? if hit-col else normal-col then
     40 140 at  130 >p 200 >p line ;
 
-\ : ~s5 ( - )
-\     hit-s5? if hit-col else normal-col then
-\     spoly poly ;
+: ~s5 ( - )
+    hit-s5? if hit-col else normal-col then
+    spoly poly ;
 
 \ ============================================================
 \ Draw cursor shape
@@ -128,7 +128,7 @@ variable mx   variable my
     ctype @ 2 = if  mx @ my @ at  20 >p circ  exit then
     ctype @ 3 = if  mx @ my @ at  32 >p 14 >p oval  exit then
     ctype @ 4 = if  mx @ 28 - my @ 8 - at  mx @ 28 + >p my @ 8 + >p line  exit then
-\    ctype @ 5 = if  cpoly poly  exit then
+    ctype @ 5 = if  cpoly poly  exit then
     ;
 
 \ ============================================================
@@ -140,7 +140,7 @@ variable mx   variable my
     <2> pressed? if 2 ctype ! exit then
     <3> pressed? if 3 ctype ! exit then
     <4> pressed? if 4 ctype ! exit then
-\    <5> pressed? if 5 ctype ! exit then
+    <5> pressed? if 5 ctype ! exit then
     ;
 
 \ ============================================================
@@ -152,8 +152,8 @@ public
 : demo ( - )
     handle-keys
     get-mouse  mouse  my !  mx !
-\    update-cpoly
-    ~s1 ~s2 ~s3 ~s4 \ ~s5
+    update-cpoly
+    ~s1 ~s2 ~s3 ~s4 ~s5
     ~cursor ;
 
 : main

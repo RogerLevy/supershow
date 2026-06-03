@@ -17,7 +17,7 @@ cell field pg.n         \ vertex count
 0    field pg.verts     \ fixed-point x y pairs start here
 constant /poly-header
 
-: pg.vert ( poly i -- addr )  2 cells * swap pg.verts + ;
+: pg.vert ( poly i -- addr )  2 cells * swap -> pg.verts + ;
 
 \ =============================================================================
 \ Helpers
@@ -58,9 +58,9 @@ constant /poly-header
 : pt-poly? ( px py poly -- flag )
     {: px py poly | inside :}
     false to inside
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@
-        poly i 1 + poly pg.n @ mod pg.vert 2@
+        poly i 1 + poly -> pg.n @ mod pg.vert 2@
         px py ray-cross? if inside not to inside then
     loop
     inside ;
@@ -130,7 +130,7 @@ constant /poly-header
     \ Project polygon onto x and y axes, check AABB overlap with rect
     $7fffffff to pxmin  $80000000 to pxmax
     $7fffffff to pymin  $80000000 to pymax
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@ to vy to vx
         vx pxmin min to pxmin   vx pxmax max to pxmax
         vy pymin min to pymin   vy pymax max to pymax
@@ -138,9 +138,9 @@ constant /poly-header
     pxmin rx2 >  pxmax rx1 <  or if false exit then
     pymin ry2 >  pymax ry1 <  or if false exit then
     \ Test polygon edge normals
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@ to y1 to x1
-        poly i 1 + poly pg.n @ mod pg.vert 2@ to y2 to x2
+        poly i 1 + poly -> pg.n @ mod pg.vert 2@ to y2 to x2
         y2 y1 - to nx   x1 x2 - to ny
         rx1 nx p*  ry1 ny p*  + to d1
         rx1 nx p*  ry2 ny p*  + to d2
@@ -149,7 +149,7 @@ constant /poly-header
         d1 d2 min d3 min d4 min to rmin
         d1 d2 max d3 max d4 max to rmax
         $7fffffff to pmin  $80000000 to pmax
-        poly pg.n @ 0 ?do
+        poly -> pg.n @ 0 ?do
             poly i pg.vert 2@ to vy to vx
             vx nx p*  vy ny p*  + to d
             d pmin min to pmin
@@ -183,9 +183,9 @@ constant /poly-header
 : circ-poly? ( cx cy cr poly -- flag )
     {: cx cy cr poly :}
     cx cy poly pt-poly? if true exit then
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@
-        poly i 1 + poly pg.n @ mod pg.vert 2@
+        poly i 1 + poly -> pg.n @ mod pg.vert 2@
         cx cy cr  seg-circ?
         if true unloop exit then
     loop
@@ -301,9 +301,9 @@ constant /poly-header
 : line-poly? ( lx1 ly1 lx2 ly2 poly -- flag )
     {: lx1 ly1 lx2 ly2 poly :}
     lx1 ly1 poly pt-poly? if true exit then
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@
-        poly i 1 + poly pg.n @ mod pg.vert 2@
+        poly i 1 + poly -> pg.n @ mod pg.vert 2@
         lx1 ly1 lx2 ly2
         line-line?
         if true unloop exit then
@@ -317,7 +317,7 @@ constant /poly-header
 || : project-poly ( poly nx ny -- pmin pmax )
     {: poly nx ny | pmin pmax vx vy d :}
     $7fffffff to pmin  $80000000 to pmax
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@ to vy to vx
         vx nx p*  vy ny p*  + to d
         d pmin min to pmin
@@ -327,9 +327,9 @@ constant /poly-header
 
 || : sat-edges? ( pa pb -- separated? )
     {: pa pb | x1 y1 x2 y2 nx ny amin amax bmin bmax :}
-    pa pg.n @ 0 ?do
+    pa -> pg.n @ 0 ?do
         pa i pg.vert 2@ to y1 to x1
-        pa i 1 + pa pg.n @ mod pg.vert 2@ to y2 to x2
+        pa i 1 + pa -> pg.n @ mod pg.vert 2@ to y2 to x2
         y2 y1 - to nx   x1 x2 - to ny
         pa nx ny project-poly to amax to amin
         pb nx ny project-poly to bmax to bmin

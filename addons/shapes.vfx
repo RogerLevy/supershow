@@ -62,20 +62,20 @@ ec-cell ppenv
 : poly ( poly -- )
     {: poly | vtxs[ 1152 ] :}
     vtxs[
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@  >i swap >i swap  at vertex
     loop
     drop
-    vtxs[ 0 0 0 poly pg.n @ ALLEGRO_PRIM_LINE_LOOP al_draw_prim drop ;
+    vtxs[ 0 0 0 poly -> pg.n @ ALLEGRO_PRIM_LINE_LOOP al_draw_prim drop ;
 
 : polyf ( poly -- )
     {: poly | vtxs[ 1152 ] :}
     vtxs[
-    poly pg.n @ 0 ?do
+    poly -> pg.n @ 0 ?do
         poly i pg.vert 2@  >i swap >i swap  at vertex
     loop
     drop
-    vtxs[ 0 0 0 poly pg.n @ ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim drop ;
+    vtxs[ 0 0 0 poly -> pg.n @ ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim drop ;
 
 : pixel ( - )
     at@f rgba@fds al_draw_pixel ;
