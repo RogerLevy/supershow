@@ -116,7 +116,7 @@ create spoly   3 ,
 
 : ~s5 ( - )
     hit-s5? if hit-col else normal-col then
-    spoly poly ;
+    0 0 at  spoly poly ;
 
 \ ============================================================
 \ Draw cursor shape
@@ -128,7 +128,7 @@ create spoly   3 ,
     ctype @ 2 = if  mx @ my @ at  20. circ  exit then
     ctype @ 3 = if  mx @ my @ at  32. 14. oval  exit then
     ctype @ 4 = if  mx @ 28 - my @ 8 - at  mx @ 28 + >p my @ 8 + >p line  exit then
-    ctype @ 5 = if  cpoly poly  exit then
+    ctype @ 5 = if  0 0 at  cpoly poly  exit then
     ;
 
 \ ============================================================

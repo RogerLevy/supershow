@@ -60,19 +60,21 @@ ec-cell ppenv
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
 
 : poly ( poly -- )
-    {: poly | vtxs[ 1152 ] :}
+    {: poly | vtxs[ 1152 ] px py :}
+    at@ to py to px
     vtxs[
     poly -> pg.n @ 0 ?do
-        poly i pg.vert 2@  >i swap >i swap  at vertex
+        poly i pg.vert 2@  >i swap >i swap  swap px + swap py +  at vertex
     loop
     drop
     vtxs[ 0 0 0 poly -> pg.n @ ALLEGRO_PRIM_LINE_LOOP al_draw_prim drop ;
 
 : polyf ( poly -- )
-    {: poly | vtxs[ 1152 ] :}
+    {: poly | vtxs[ 1152 ] px py :}
+    at@ to py to px
     vtxs[
     poly -> pg.n @ 0 ?do
-        poly i pg.vert 2@  >i swap >i swap  at vertex
+        poly i pg.vert 2@  >i swap >i swap  swap px + swap py +  at vertex
     loop
     drop
     vtxs[ 0 0 0 poly -> pg.n @ ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim drop ;
