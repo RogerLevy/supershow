@@ -116,7 +116,7 @@ forth-public
 : .json ( cjson - )
     serialize-cjson udup type cjson-free ;
 
-\ Builder API (prefixed aliases for use without also cjson2>>)
+\ Builder API (prefixed aliases for use without also cjson>>)
 aka cjson-new-object  new-object
 aka cjson-new-array   new-array
 aka cjson-new-string  new-string

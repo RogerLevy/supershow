@@ -1,4 +1,4 @@
-REQUIRE %supershow%/cjson/cjson2.vfx
+REQUIRE %supershow%/cjson/cjson.vfx
 REQUIRE %supershow%/supershow/traits.vfx
 
 0 value hovered

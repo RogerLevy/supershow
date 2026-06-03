@@ -1,6 +1,6 @@
 module
 import %supershow%/src/supershow.vfx
-import-as %supershow%/src/tilemap4.vfx [tilemap]
+import-as %supershow%/src/tilemap.vfx [tilemap]
 
 bitmap %idir%/../allegro5/vga2_8x8_allegro5.png
 

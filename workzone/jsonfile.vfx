@@ -1,6 +1,6 @@
 REQUIRE %supershow%/supershow/traits.vfx
 REQUIRE %supershow%/supershow/autoload.vfx
-REQUIRE %supershow%/cjson/cjson2.vfx
+REQUIRE %supershow%/cjson/cjson.vfx
 
 public
 

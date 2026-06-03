@@ -25,7 +25,7 @@ include %idir%/format.vfx         \ Printf-style string formatting
 include %idir%/logging.vfx        \ Printf-style string formatting
 include %idir%/../lib/fstools.vfx    \ Filesystem utilities
 include %idir%/../lib/lstring.vfx    \ Cell-counted strings
-include %idir%/../lib/strout2.vfx    \ Capture console output
+include %idir%/../lib/strout.vfx    \ Capture console output
 include %idir%/../lib/counter.vfx
 
 include %idir%/nibs.vfx           \ NIBS (Nib 2.0) OOP system core
@@ -34,8 +34,8 @@ include %idir%/nibs-compact.vfx   \ Compact class syntax parser (c:)
 
 include %idir%/oversight.vfx      \ Contract-based validation system
 
-include %idir%/../cjson/cjson2.vfx   
+include %idir%/../cjson/cjson.vfx   
 include %idir%/nibs-json.vfx   
 include %idir%/checks.vfx         \ Core Forth word safety validations
-include %idir%/array3.vfx         \ NIBS arrays
+include %idir%/array.vfx         \ NIBS arrays
 include %idir%/dltree.vfx         \ Doubly-linked tree

@@ -1,6 +1,6 @@
 \ ==============================================================================
 \ Serialization Support (JSON)
-\ Supports serialization of NIBS objects using cjson2
+\ Supports serialization of NIBS objects using cjson
 \ ==============================================================================
 
 %object :: script@ ( - path len ) s" " ;

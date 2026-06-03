@@ -1,4 +1,4 @@
-\ strout2.vfx - String output capture with dynamic allocation
+\ strout.vfx - String output capture with dynamic allocation
 \ API:
 \   strout ( xt - )       Redirect output, execute xt, free buffer
 \   str@  ( - a len )     Inside xt: get captured output as string

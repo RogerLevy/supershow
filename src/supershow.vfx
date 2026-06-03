@@ -13,7 +13,7 @@ module [supershow.assets]
 	reexport [bitmap]
 	import tileset
 	reexport [tileset]
-	import-as %idir%/tilemap4.vfx tilemap
+	import-as %idir%/tilemap.vfx tilemap
 	reexport [tilemap]
 
 module [supershow]
