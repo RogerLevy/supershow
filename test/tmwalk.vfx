@@ -14,15 +14,15 @@ create map-data
 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 ,
 3 , _ , _ , _ , _ , 4 , _ , _ , _ , 4 , _ , _ , _ , 4 , _ , _ , _ , 4 , _ , 3 ,
 3 , _ , _ , 4 , _ , _ , _ , 4 , _ , _ , _ , 4 , _ , _ , _ , 4 , _ , _ , _ , 3 ,
-3 , _ , _ , _ , _ , _ , 4 , _ , _ , 4 , _ , _ , _ , _ , 4 , _ , _ , _ , 4 , 3 ,
+3 , _ , _ , _ , _ , _ , 4 , _ , 1 , 4 , 2 , _ , _ , _ , 4 , _ , _ , _ , 4 , 3 ,
 3 , _ , _ , _ , _ , 3 , 3 , 3 , 3 , _ , _ , _ , 4 , _ , _ , _ , _ , _ , _ , 3 ,
 3 , _ , 4 , _ , _ , _ , _ , 4 , _ , _ , 4 , _ , _ , _ , _ , 4 , _ , _ , _ , 3 ,
-3 , _ , _ , _ , 4 , _ , _ , _ , _ , 4 , _ , _ , _ , _ , _ , _ , 4 , _ , _ , 3 ,
+3 , _ , _ , _ , 4 , _ , _ , _ , _ , 4 , _ , _ , 1 , _ , 2 , _ , 4 , _ , _ , 3 ,
 3 , _ , _ , _ , 3 , _ , 4 , _ , _ , _ , 4 , _ , _ , 3 , _ , _ , _ , 4 , _ , 3 ,
 3 , _ , _ , _ , 3 , _ , _ , 4 , _ , _ , _ , 4 , _ , 3 , _ , _ , _ , _ , 4 , 3 ,
 3 , _ , _ , _ , 3 , 3 , _ , _ , 4 , _ , _ , _ , _ , 3 , _ , 4 , _ , _ , _ , 3 ,
 3 , 4 , _ , _ , _ , _ , _ , _ , _ , 4 , _ , _ , _ , 3 , _ , _ , 4 , _ , _ , 3 ,
-3 , _ , _ , 4 , _ , _ , 4 , _ , _ , _ , _ , _ , _ , _ , _ , 4 , _ , _ , 4 , 3 ,
+3 , _ , _ , 4 , _ , _ , 4 , _ , 1 , _ , 2 , _ , _ , _ , _ , 4 , _ , _ , 4 , 3 ,
 3 , _ , _ , _ , _ , _ , _ , _ , _ , _ , 3 , 3 , 3 , 3 , _ , _ , _ , _ , _ , 3 ,
 3 , _ , 4 , _ , _ , 4 , _ , _ , 4 , _ , _ , _ , _ , _ , 4 , _ , _ , 4 , _ , 3 ,
 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 , 3 ,
@@ -33,7 +33,19 @@ array} drop
 private
 
 : setup-metas ( - )
+    $0F  the-tileset -> baseid @ 1 +  global-metas el!
+    $0F  the-tileset -> baseid @ 2 +  global-metas el!
     $0F  the-tileset -> baseid @ 3 +  global-metas el! ;
+
+: on-hit ( col row dir - )
+    {: col row dir :}
+    col row the-tilemap tile@
+    dir BIT_WLT BIT_WRT or and 0<> if
+        1 = if  2 col row the-tilemap tile!  then  exit
+    then
+    dir BIT_FLR BIT_CEL or and 0<> if
+        2 = if  1 col row the-tilemap tile!  then
+    then ;
 
 : think ( - )
     player {
@@ -42,7 +54,7 @@ private
         <right> held? if  2. vx ! then
         <up>    held? if -2. vy ! then
         <down>  held? if  2. vy ! then
-        0 0 15 15  the-tilemap  ['] solid?  0  tmslide
+        0 0 15 15  the-tilemap  ['] solid?  ['] on-hit  tmslide
         0 0 15 15  7  cut-corners
         0 0 15 15  the-tilemap  tread>
             4 = if  $FFFFFFFF rot rot the-tilemap tile!
