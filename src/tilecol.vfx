@@ -107,7 +107,7 @@ private
 : check-down ( - )
     py _mbh >p + >row-   ny _mbh >p + >row-  = ?exit
     ny _mbh >p + >row-
-    nx _mbw >p + >col-  nx >col
+    px _mbw >p + >col-  px >col
     {: brow rcol lcol :}
     rcol 1 + lcol ?do
         i brow 2dup set-probe get-meta
@@ -121,7 +121,7 @@ private
 : check-up ( - )
     py >row   ny >row  = ?exit
     ny >row
-    nx _mbw >p + >col-  nx >col
+    px _mbw >p + >col-  px >col
     {: trow rcol lcol :}
     rcol 1 + lcol ?do
         i trow 2dup set-probe get-meta

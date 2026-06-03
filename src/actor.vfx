@@ -48,12 +48,12 @@ class;
     dup valid-object? if drop -1 exit then
     >en @ ;
 
+: init-actor ( actor - )
+    { at@ 2>p x 2! } ;
+
 0 %actor :construct ( - )
     \ node:construct 
-    at@ 2>p x 2! ;
-
-: init-actor ( actor - )
-    { this init } ;
+    this init-actor ;
 
 \ =============================================================================
 \ Actor logic

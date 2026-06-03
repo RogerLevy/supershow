@@ -1,0 +1,63 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+bitmap %idir%/dat/gfx/greyzebes.png
+
+greyzebes.png 16 16 tileset-from the-tileset
+20 15 tilemap the-tilemap
+
+$FFFFFFFF constant _
+
+create map-data
+%int array{
+1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , 1 , 1 , 1 , 1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , 1 , _ , _ , _ , _ , _ , _ , _ , _ , 1 , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , 1 , _ , _ , _ , _ , _ , _ , _ , _ , 1 , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , 1 , 1 , _ , _ , _ , _ , _ , _ , _ , 1 , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 , 1 , 1 , 1 , _ , _ , _ , _ , _ , 1 ,
+1 , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , _ , 1 ,
+1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
+array} drop
+
+%actor object player
+
+private
+
+: setup-metas ( - )
+    $0F  the-tileset -> baseid @ 1 +  global-metas el! ;
+
+: think ( - )
+    player {
+        0. vx !  0. vy !
+        <left>  held? if -2. vx ! then
+        <right> held? if  2. vx ! then
+        <up>    held? if -2. vy ! then
+        <down>  held? if  2. vy ! then
+        0 0 15 15  the-tilemap  ['] solid?  tmslide? drop
+    } ;
+
+: ~player ( - )
+    $ffaa44ff rgba8
+    player { x 2@ 2>i at }
+    15. 15. rectf ;
+
+public
+
+: main
+    the-tilemap { the-tileset ts ! }
+    map-data >data @  300  20  the-tilemap  set-tilemap
+    setup-metas
+    32 32 at  player init-actor
+    work> think
+    show>  0 0 at  the-tilemap draw  ~player ;
+
+main
