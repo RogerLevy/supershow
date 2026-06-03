@@ -1,0 +1,119 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+\ Tileset for metadata infrastructure (bitmap not rendered)
+bitmap %idir%/dat/gfx/greyzebes.png
+greyzebes.png 16 16 tileset-from the-tileset
+20 15 tilemap the-tilemap
+
+\ Tile indices and their metadata:
+\   1 = D     floor only      ($08)
+\   2 = U     ceiling only    ($04)
+\   3 = L     left wall       ($02) BIT_WLT — blocks entry from left
+\   4 = R     right wall      ($01) BIT_WRT — blocks entry from right
+\   5 = UDLR  all solid       ($0F)
+\   6 = DL    floor+left      ($0A)
+\   7 = DR    floor+right     ($09)
+\   8 = UL    ceiling+left    ($06)
+\   9 = UR    ceiling+right   ($05)
+\  10 = UD    floor+ceiling   ($0C)
+\  11 = LR    left+right      ($03)
+\  12 = UDR   floor+ceil+right ($0D)
+\  13 = UDL   floor+ceil+left  ($0E)
+\  14 = ULR   ceil+left+right  ($07)
+\  15 = DLR   floor+left+right ($0B)
+
+$FFFFFFFF constant _
+
+create map-data
+%int array{
+5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ , 10 ,  _ , 11 ,  _ ,  _ , 10 ,  _ , 11 ,  _ ,  _ , 10 ,  _ , 11 ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ , 12 ,  _ ,  _ , 13 ,  _ ,  _ , 14 ,  _ ,  _ , 15 ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  1 ,  1 ,  1 ,  1 ,  1 ,  _ ,  2 ,  2 ,  2 ,  2 ,  2 ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 ,
+5 ,  _ ,  _ ,  3 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  4 ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  3 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  4 ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  3 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  4 ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  6 ,  _ ,  _ ,  _ ,  _ ,  7 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  8 ,  _ ,  _ ,  _ ,  _ ,  9 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  _ ,  5 , 
+5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 ,  5 , 
+array} drop
+
+%actor object player
+
+private
+
+: setup-metas ( - )
+    {: | base :}
+    the-tileset -> baseid @ to base
+    $08  base 1 +  global-metas el!
+    $04  base 2 +  global-metas el!
+    $02  base 3 +  global-metas el!
+    $01  base 4 +  global-metas el!
+    $0F  base 5 +  global-metas el!
+    $0A  base 6 +  global-metas el!
+    $09  base 7 +  global-metas el!
+    $06  base 8 +  global-metas el!
+    $05  base 9 +  global-metas el!
+    $0C  base 10 + global-metas el!
+    $03  base 11 + global-metas el!
+    $0D  base 12 + global-metas el!
+    $0E  base 13 + global-metas el!
+    $07  base 14 + global-metas el!
+    $0B  base 15 + global-metas el! ;
+
+: tile-meta ( tile# - meta )
+    the-tileset -> baseid @ + global-metas el@ ;
+
+: ~tile ( col row tile# - )
+    {: col row tile# | px py meta :}
+    col 16 * to px   row 16 * to py
+    $223344ff rgba8  px py at  16. 16. rectf
+    tile# tile-meta to meta
+    $44aaffff rgba8
+    meta BIT_FLR and if  px      py      at  px 15 + >p  py >p      line  then
+    meta BIT_CEL and if  px      py 15 + at  px 15 + >p  py 15 + >p  line  then
+    meta BIT_WLT and if  px      py      at  px >p       py 15 + >p  line  then
+    meta BIT_WRT and if  px 15 + py      at  px 15 + >p  py 15 + >p  line  then ;
+
+: ~map ( - )
+    15 0 do
+        20 0 do
+            i j the-tilemap tile@
+            dup $FFFFFFFF <> if  i j rot ~tile  else drop then
+        loop
+    loop ;
+
+: think ( - )
+    player {
+        0. vx !  0. vy !
+        <left>  held? if -2. vx ! then
+        <right> held? if  2. vx ! then
+        <up>    held? if -2. vy ! then
+        <down>  held? if  2. vy ! then
+        0 0 15 15  the-tilemap  ['] solid?  0  tmslide
+        0 0 15 15  7  cut-corners
+    } ;
+
+: ~player ( - )
+    $ffaa44ff rgba8
+    player { x 2@ 2>i at }
+    15. 15. rectf ;
+
+public
+
+: main
+    the-tilemap { the-tileset ts ! }
+    map-data >data @  300  20  the-tilemap  set-tilemap
+    setup-metas
+    32 32 at  player init-actor
+    work> think
+    show>  ~map  ~player ;
+
+main
