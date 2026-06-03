@@ -20,13 +20,19 @@ variable mx   variable my
 : clx1  mx @ 28 - >p ;    : cly1  my @  8 - >p ;
 : clx2  mx @ 28 + >p ;    : cly2  my @  8 + >p ;
 
-\ Cursor polygon: small triangle centered on mouse, rebuilt each frame
-create cpoly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
+\ Cursor polygon: small triangle, pen-relative
+create cpoly   3 ,
+    0. ,  -18. ,
+    18. ,   12. ,
+   -18. ,   12. ,
 
-: update-cpoly ( - )
-    mx @ >p       my @ 18 - >p   cpoly 0 pg.vert 2!
-    mx @ 18 + >p  my @ 12 + >p  cpoly 1 pg.vert 2!
-    mx @ 18 - >p  my @ 12 + >p  cpoly 2 pg.vert 2! ;
+\ Pre-transformed cursor polygon for collision (absolute coords, rebuilt each frame)
+create acpoly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
+
+: update-acpoly ( - )
+    mx @ >p       my @ 18 - >p   acpoly 0 pg.vert 2!
+    mx @ 18 + >p  my @ 12 + >p  acpoly 1 pg.vert 2!
+    mx @ 18 - >p  my @ 12 + >p  acpoly 2 pg.vert 2! ;
 
 \ ============================================================
 \ Static shape data (inline)
@@ -52,7 +58,7 @@ create spoly   3 ,
     ctype @ 2 = if  40. 40. 120. 90.   ccx ccy 20.         rect-circ?  exit then
     ctype @ 3 = if  40. 40. 120. 90.   ccx ccy 32. 14.   rect-oval?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2         40. 40. 120. 90.  line-rect?  exit then
-    ctype @ 5 = if  40. 40. 120. 90.   cpoly                 rect-poly?  exit then
+    ctype @ 5 = if  40. 40. 120. 90.   acpoly                 rect-poly?  exit then
     false ;
 
 : hit-s2? ( - flag )
@@ -60,7 +66,7 @@ create spoly   3 ,
     ctype @ 2 = if  ccx ccy 20.          185. 65. 30.  circ-circ?  exit then
     ctype @ 3 = if  false  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   185. 65. 30.   line-circ?  exit then
-    ctype @ 5 = if  185. 65. 30.    cpoly                 circ-poly?  exit then
+    ctype @ 5 = if  185. 65. 30.    acpoly                 circ-poly?  exit then
     false ;
 
 : hit-s3? ( - flag )
@@ -68,7 +74,7 @@ create spoly   3 ,
     ctype @ 2 = if  false  exit then
     ctype @ 3 = if  ccx ccy 32. 14.   270. 65. 38. 18.  oval-oval?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   270. 65. 38. 18.  line-oval?  exit then
-    ctype @ 5 = if  270. 65. 38. 18.  cpoly                  oval-poly?  exit then
+    ctype @ 5 = if  270. 65. 38. 18.  acpoly                  oval-poly?  exit then
     false ;
 
 : hit-s4? ( - flag )
@@ -76,7 +82,7 @@ create spoly   3 ,
     ctype @ 2 = if  40. 140. 130. 200.  ccx ccy 20.         line-circ?  exit then
     ctype @ 3 = if  40. 140. 130. 200.  ccx ccy 32. 14.   line-oval?  exit then
     ctype @ 4 = if  40. 140. 130. 200.  clx1 cly1 clx2 cly2   line-line?  exit then
-    ctype @ 5 = if  40. 140. 130. 200.  cpoly                  line-poly?  exit then
+    ctype @ 5 = if  40. 140. 130. 200.  acpoly                  line-poly?  exit then
     false ;
 
 : hit-s5? ( - flag )
@@ -84,7 +90,7 @@ create spoly   3 ,
     ctype @ 2 = if  ccx ccy 20.          spoly  circ-poly?  exit then
     ctype @ 3 = if  ccx ccy 32. 14.   spoly  oval-poly?  exit then
     ctype @ 4 = if  clx1 cly1 clx2 cly2   spoly  line-poly?  exit then
-    ctype @ 5 = if  cpoly  spoly           poly-poly?  exit then
+    ctype @ 5 = if  acpoly  spoly           poly-poly?  exit then
     false ;
 
 \ ============================================================
@@ -128,7 +134,7 @@ create spoly   3 ,
     ctype @ 2 = if  mx @ my @ at  20. circ  exit then
     ctype @ 3 = if  mx @ my @ at  32. 14. oval  exit then
     ctype @ 4 = if  mx @ 28 - my @ 8 - at  mx @ 28 + >p my @ 8 + >p line  exit then
-    ctype @ 5 = if  0 0 at  cpoly poly  exit then
+    ctype @ 5 = if  mx @ my @ at  cpoly poly  exit then
     ;
 
 \ ============================================================
@@ -152,7 +158,7 @@ public
 : demo ( - )
     handle-keys
     get-mouse  mouse  my !  mx !
-    update-cpoly
+    update-acpoly
     ~s1 ~s2 ~s3 ~s4 ~s5
     ~cursor ;
 
