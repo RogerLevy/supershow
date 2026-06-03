@@ -31,9 +31,6 @@ ec-cell thickness
 : rectf ( w. h. - )
     at@f   at@p 2+ 2p>f   rgba@fds al_draw_filled_rectangle ;
 
-: pixel ( - )
-    at@f rgba@fds al_draw_pixel ;
-
 || : f>c  255e f* 0.5e f+ f>s ;
 
 : f>rgba8 ( f:r f:g f:b f:a - n )
@@ -61,6 +58,27 @@ ec-cell ppenv
     0e sf!+
     ppenu@ p>f sf!+  ppenv@ p>f sf!+
     ppenr@ p>f sf!+  ppeng@ p>f sf!+  ppenb@ p>f sf!+  ppena@ p>f sf!+ ;
+
+: poly ( poly -- )
+    {: poly | vtxs[ 1152 ] :}
+    vtxs[
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@  >i swap >i swap  at vertex
+    loop
+    drop
+    vtxs[ 0 0 0 poly pg.n @ ALLEGRO_PRIM_LINE_LOOP al_draw_prim drop ;
+
+: polyf ( poly -- )
+    {: poly | vtxs[ 1152 ] :}
+    vtxs[
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@  >i swap >i swap  at vertex
+    loop
+    drop
+    vtxs[ 0 0 0 poly pg.n @ ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim drop ;
+
+: pixel ( - )
+    at@f rgba@fds al_draw_pixel ;
 
 || : fvertex ( f:x f:y f:u f:v a - a' )
     {: f: x f: y f: u f: v :}

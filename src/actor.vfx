@@ -12,12 +12,11 @@ class: %actor
     is-a %xy
 
     prop en <readonly
-    prop vx :fixed <save prop vy :fixed <save 
-    
-    \ hitbox 1
-    prop x1 :int <save prop y1 :int <save 
-    prop w1 :int <save prop h1 :int <save 
-    
+    prop vx :fixed <save prop vy :fixed <save
+
+    prop lyr :int       \ collision layer (bitmask: what I am)
+    prop msk :int       \ collision mask (bitmask: what I collide with)
+
     prop beha :xt
     prop phys :xt
     prop time :fixed                \ secs
@@ -94,24 +93,16 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
 
 %actor template {
     prio on
-    -5 -5 x1 2!  10 10 w1 2!
+    -1 lyr !  -1 msk !    \ collide with everything by default
     simple-motion
 }
 
 \ =============================================================================
-\ Object collisions
+\ Collision mask filtering
 \ =============================================================================
 
-: hitbox ( - x1 y1 x2 y2 )
-    x 2@ 2>i x1 2@ 2+  w1 2@ 2over 2+ ; \ 1 1 2- ;
-
-: overlap? ( x1 y1 x2 y2 x3 y3 x4 y4 - flag )
-    2swap 2rot rot >= -rot <= and >r rot >= -rot <= and r> and ;
-
-: hit? ( obj obj - f )
-    2dup = if 2drop 0 exit then  \ actors can't collide with themselves
-    over free? over free? or if 2drop 0 exit then
-    >r { hitbox } r> { hitbox } overlap? ;
+: cmask? ( actor actor -- flag )
+    >r -> lyr @  r> -> msk @  and 0<> ;
 
 \ =============================================================================
 \ Scripting utilities
@@ -140,14 +131,7 @@ redef : halt  beha off  0 0 vx 2! ;
 
 : appear  y @ 16384. invert and y ! ;
 
-%actor object dummy 
-
-: expanded ( %actor amt - actor' )
-    swap dummy copy as>
-        dup negate dup x1 2+! 2 * dup w1 2+!
-        this ;
-
-: hitbox! ( x y w h - ) w1 2! x1 2! ;
+%actor object dummy
 
 : freemove ( actor - )
     ?dup -exit

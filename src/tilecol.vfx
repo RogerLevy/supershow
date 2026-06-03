@@ -1,0 +1,279 @@
+\ =============================================================================
+\ Tile Collision & Reading
+\ =============================================================================
+\
+\ tmslide? -- AABB sweep+pushout against a tilemap grid.
+\   Moves the scoped actor, sliding along solid tile edges.
+\   Usage:  -3 -8 3 0  my-tilemap  ['] my-filter  tmslide?
+\
+\ tread? / tread> -- Detect and iterate tiles under a rectangle.
+\
+\ The actor must be scoped (via { } or as>) before calling.
+\ =============================================================================
+
+require %idir%/checks.vfx
+require %idir%/utilities.vfx
+require %idir%/actor.vfx
+require %idir%/udlr.vfx
+
+\ =============================================================================
+\ Internal state
+\ =============================================================================
+
+private
+
+\ Shared tile dimensions (set by both tmslide? and tread setups)
+0 value _tw   0 value _th
+
+\ tmslide? state
+0 value the-map
+0 value the-ts
+0 value the-filter
+0 value px    0 value py        \ starting top-left of hitbox (fixed)
+0 value nx    0 value ny        \ new top-left after velocity (fixed)
+0 value _mbw  0 value _mbh      \ hitbox w, h (integer pixel offsets: x2-x1, y2-y1)
+0 value any-hit                  \ accumulates collision flag
+
+\ tread state
+0 value _map
+0 value _lc   0 value _tc      \ left col, top row
+0 value _rc   0 value _br      \ right col, bottom row
+0 value _xt
+0 value _meta
+0 value _flag
+
+\ =============================================================================
+\ Shared helpers
+\ =============================================================================
+
+\ Fixed-point position to tile column/row (left/top edge)
+: >col ( x. - col )  >i _tw / ;
+: >row ( y. - row )  >i _th / ;
+
+\ Right/bottom edge to tile column/row.
+\ Back off one fixed-point unit so exact tile boundaries stay in the
+\ previous tile (matching the float roundup-1 convention of the old code).
+: >col- ( x. - col )  1 - >i _tw / ;
+: >row- ( y. - row )  1 - >i _th / ;
+
+\ Set probe globals for a tile
+: set-probe ( col row - )
+    dup to probe-row   _th * _th 2 / + >p to probe-y
+    dup to probe-col   _tw * _tw 2 / + >p to probe-x ;
+
+\ =============================================================================
+\ tmslide? helpers
+\ =============================================================================
+
+\ Get tile metadata via the-map; empty tile ($FFFFFFFF) returns 0
+: get-meta ( col row - meta )
+    the-map tile@ dup $FFFFFFFF = if drop 0 exit then meta ;
+
+\ Pre-check directional bit, then call user filter.
+\ Drops meta and returns false if the bit test fails.
+: ?solid ( meta bit - solid? )
+    over and 0= if drop false exit then
+    the-filter execute ;
+
+\ =============================================================================
+\ Push-out
+\ Each pushes the actor out of the penetrated tile edge and zeroes
+\ the velocity component in that direction.
+\ =============================================================================
+
+: push-up ( - )
+    ny _mbh >p +  _th >p mod  negate  +to ny
+    0. vy ! ;
+
+: push-down ( - )
+    ny  _th >p mod  negate  _th >p +  +to ny
+    0. vy ! ;
+
+: push-left ( - )
+    nx _mbw >p +  _tw >p mod  negate  +to nx
+    0. vx ! ;
+
+: push-right ( - )
+    nx  _tw >p mod  negate  _tw >p +  +to nx
+    0. vx ! ;
+
+\ =============================================================================
+\ Directional sweeps
+\ Each checks whether the leading edge crossed a tile boundary,
+\ then iterates every tile column (or row) the hitbox spans.
+\ On the first solid tile found, it pushes out and exits.
+\ =============================================================================
+
+: check-down ( - )
+    py _mbh >p + >row-   ny _mbh >p + >row-  = ?exit
+    ny _mbh >p + >row-
+    nx _mbw >p + >col-  nx >col
+    {: brow rcol lcol :}
+    rcol 1 + lcol ?do
+        i brow 2dup set-probe get-meta
+        BIT_FLR ?solid if
+            true to any-hit  true to floor?
+            brow to hit-row  i to hit-col
+            push-up  unloop exit
+        then
+    loop ;
+
+: check-up ( - )
+    py >row   ny >row  = ?exit
+    ny >row
+    nx _mbw >p + >col-  nx >col
+    {: trow rcol lcol :}
+    rcol 1 + lcol ?do
+        i trow 2dup set-probe get-meta
+        BIT_CEL ?solid if
+            true to any-hit  true to ceiling?
+            trow to hit-row  i to hit-col
+            push-down  unloop exit
+        then
+    loop ;
+
+: check-right ( - )
+    px _mbw >p + >col-   nx _mbw >p + >col-  = ?exit
+    nx _mbw >p + >col-
+    ny _mbh >p + >row-  ny >row
+    {: rcol brow trow :}
+    brow 1 + trow ?do
+        rcol i 2dup set-probe get-meta
+        BIT_WLT ?solid if
+            true to any-hit  true to rwall?
+            i to hit-row  rcol to hit-col
+            push-left  unloop exit
+        then
+    loop ;
+
+: check-left ( - )
+    px >col   nx >col  = ?exit
+    nx >col
+    ny _mbh >p + >row-  ny >row
+    {: lcol brow trow :}
+    brow 1 + trow ?do
+        lcol i 2dup set-probe get-meta
+        BIT_WRT ?solid if
+            true to any-hit  true to lwall?
+            i to hit-row  lcol to hit-col
+            push-right  unloop exit
+        then
+    loop ;
+
+: sweep-vertical ( - )
+    vy @ 0= ?exit
+    vy @ 0< if check-up else check-down then ;
+
+: sweep-horizontal ( - )
+    vx @ 0= ?exit
+    vx @ 0< if check-left else check-right then ;
+
+\ =============================================================================
+\ tread helpers
+\ =============================================================================
+
+: tread-setup ( x1 y1 x2 y2 tilemap - )
+    to _map
+    _map -> ts @  dup -> baseid @ pile!
+    dup -> tw @ to _tw  -> th @ to _th
+    {: x1 y1 x2 y2 :}
+    x @ x1 >p + >i _tw / to _lc
+    y @ y1 >p + >i _th / to _tc
+    x @ x2 >p + >i _tw / to _rc
+    y @ y2 >p + >i _th / to _br ;
+
+: tile-meta ( col row - meta )
+    _map tile@ dup $FFFFFFFF = if drop 0 exit then meta ;
+
+\ =============================================================================
+\ Public API
+\ =============================================================================
+
+public
+
+\ Slide the scoped actor against tilemap collision.
+\ x1 y1 x2 y2 are relative hitbox corners (integer offsets from actor origin).
+\ filter-xt: ( meta - solid? ) narrow-phase filter; called only for tiles
+\   that pass the directional BIT_* pre-check.  Probe globals (probe-x,
+\   probe-y, probe-col, probe-row) are set before each call.
+\ Returns true if any collision occurred.
+\ Sets floor? ceiling? lwall? rwall? and hit-col hit-row.
+: tmslide? ( x1 y1 x2 y2 tilemap filter-xt - flag )
+    to the-filter  to the-map
+    the-map -> ts @ to the-ts
+    the-ts -> baseid @ pile!
+    the-ts -> tw @ to _tw
+    the-ts -> th @ to _th
+    {: x1 y1 x2 y2 :}
+    x2 x1 - to _mbw   y2 y1 - to _mbh
+    x @ x1 >p + to px   y @ y1 >p + to py
+    px vx @ + to nx      py vy @ + to ny
+    false to any-hit
+    clear-collision-state
+    sweep-vertical sweep-horizontal
+    nx px - x +!
+    ny py - y +!
+    any-hit ;
+
+\ Common filters
+: solid? ( meta - solid? )  0<> ;
+
+\ Nudge the actor around tile corners after tmslide?.
+\ Use the same hitbox corners as the tmslide? call.
+\ fudge: snap tolerance (integer pixels).
+\ If the actor hit a horizontal wall, snaps y so the hitbox corner clears the
+\ tile edge. Likewise x after a vertical hit.
+\ Must be called before the next tmslide? (reads _tw/_th from that call).
+: cut-corners ( x1 y1 x2 y2 fudge - )
+    {: x1 y1 x2 y2 fudge | off fp :}
+    fudge >p to fp
+    lwall? rwall? or if
+        y @ y1 >p +  _th >p mod to off
+        off fp <= if  off negate y +!
+        else  _th >p off - dup fp <= if  y +!  else drop  then
+        then
+    then
+    floor? ceiling? or if
+        x @ x1 >p +  _tw >p mod to off
+        off fp <= if  off negate x +!
+        else  _tw >p off - dup fp <= if  x +!  else drop  then
+        then
+    then ;
+
+\ Scan tiles under a rectangle, call filter for each non-empty tile.
+\ filter-xt: ( meta - match? )
+\ Probe globals are set before each call.
+\ Returns true if any tile matched.
+\ Sets hit-tile, hit-col, hit-row for the last matching tile.
+: tread? ( x1 y1 x2 y2 tilemap filter-xt - flag )
+    to _xt  tread-setup
+    false to _flag
+    _br 1 + _tc ?do
+        _rc 1 + _lc ?do
+            i j 2dup set-probe tile-meta to _meta
+            _meta if
+                _meta _xt execute if
+                    true to _flag
+                    _meta to hit-tile
+                    i to hit-col  j to hit-row
+                then
+            then
+        loop
+    loop
+    _flag ;
+
+\ Iterate non-empty tiles under a rectangle.
+\ Body receives ( col row tile# ) for each non-empty tile.
+\ Probe globals are set before each call.
+\ Exits early if the actor is freed during iteration.
+continuation: tread> ( x1 y1 x2 y2 tilemap - ) ( col row tile# - )
+    to _xt  tread-setup
+    _br 1 + _tc ?do
+        _rc 1 + _lc ?do
+            i j 2dup set-probe
+            _map tile@ dup $FFFFFFFF <> if
+                i j rot _xt execute
+                this free? if unloop unloop exit then
+            else drop then
+        loop
+    loop ;

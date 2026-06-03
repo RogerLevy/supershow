@@ -2,6 +2,8 @@
 \ Spatial hash grid for efficient collision checks of large numbers of
 \ axis-aligned bounding boxes.
 
+require %idir%/collision.vfx
+
 \ =============================================================================
 \ Structs
 \ =============================================================================
@@ -11,6 +13,7 @@ public
 0
 || cell field cb.x1   cell field cb.y1
 || cell field cb.x2   cell field cb.y2
+|| cell field cb.owner    \ pointer to owning actor, or 0
 || cell field cb.s1   cell field cb.s2
 || cell field cb.s3   cell field cb.s4
 constant /cbox
@@ -70,7 +73,7 @@ defer collide ( flag cbox1 cbox2 - keepgoing? )
 
 : box>box? ( box1 box2 - box1 box2 flag )
     2dup = if false exit then
-    2dup >r cbox-xyxy@ r> cbox-xyxy@ overlap? ;
+    2dup >r cbox-xyxy@ r> cbox-xyxy@ rect-rect? ;
 
 : check-sector ( cbox1 sector - flag )
     swap true locals| flag cbox1 |
@@ -109,8 +112,13 @@ public
 : cbox! ( x y w h cbox - )
     >r 2over 2+ 1 1 2- r@ -> cb.x2 2! r> -> cb.x1 2! ;
 
+: cbox-corners! ( x1 y1 x2 y2 cbox - )
+    >r r@ -> cb.x2 2! r> -> cb.x1 2! ;
+
 : cbox@ ( cbox - x y w h )
     dup >r -> cb.x1 2@ r> -> cb.x2 2@ 2over 2- 1 1 2+ ;
+
+: cbox>actor ( cbox - actor )  -> cb.owner @ ;
 
 : reset-cgrid ( cgrid - )
     to the-cgrid
@@ -166,3 +174,11 @@ public
 class: %actor
     /cbox nprop ahb
 class;
+
+\ Bridge: fill ahb from absolute corners, set owner, add to grid
+\ Usage:  { my-hitbox }  me the-grid >cgrid
+: >cgrid ( x1 y1 x2 y2 actor cgrid -- )
+    {: actor grid :}
+    actor -> ahb cbox-corners!
+    actor  actor -> ahb -> cb.owner !
+    actor -> ahb grid add-cbox ;

@@ -1,0 +1,345 @@
+\ =============================================================================
+\ Collision Primitives
+\ Shape intersection tests for: rect, circ, oval, line, poly
+\ All coordinates are 16.16 fixed-point (single-cell).
+\ =============================================================================
+
+require %idir%/utilities.vfx
+
+public
+
+\ =============================================================================
+\ Polygon structure
+\ =============================================================================
+
+0
+cell field pg.n         \ vertex count
+0    field pg.verts     \ fixed-point x y pairs start here
+constant /poly-header
+
+: pg.vert ( poly i -- addr )  2 cells * swap pg.verts + ;
+
+\ =============================================================================
+\ Helpers
+\ =============================================================================
+
+: pclamp ( val min max -- clamped )  rot min max ;
+
+\ =============================================================================
+\ Point-in-shape tests
+\ =============================================================================
+
+: pt-rect? ( px py x1 y1 x2 y2 -- flag )
+    {: px py x1 y1 x2 y2 :}
+    px x1 >=  px x2 <=  and
+    py y1 >=  py y2 <=  and  and ;
+
+: pt-circ? ( px py cx cy r -- flag )
+    {: px py cx cy r :}
+    px py cx cy dist  r <= ;
+
+: pt-oval? ( px py cx cy rx ry -- flag )
+    {: px py cx cy rx ry :}
+    rx 0= ry 0= or if false exit then
+    px cx - rx p/
+    py cy - ry p/
+    hypot  1. <= ;
+
+|| : ray-cross? ( xi yi xj yj px py -- crossed? )
+    {: xi yi xj yj px py :}
+    yi py <=  yj py >  and
+    yj py <=  yi py >  and
+    or if
+        py yi -  xj xi -  p*  yj yi -  p/  xi +
+        px > exit
+    then
+    false ;
+
+: pt-poly? ( px py poly -- flag )
+    {: px py poly | inside :}
+    false to inside
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@
+        poly i 1 + poly pg.n @ mod pg.vert 2@
+        px py ray-cross? if inside not to inside then
+    loop
+    inside ;
+
+\ =============================================================================
+\ Rect-Rect
+\ =============================================================================
+
+: rect-rect? ( ax1 ay1 ax2 ay2  bx1 by1 bx2 by2 -- flag )
+    {: ax1 ay1 ax2 ay2 bx1 by1 bx2 by2 :}
+    ax1 bx2 <=  ax2 bx1 >=  and
+    ay1 by2 <=  ay2 by1 >=  and  and ;
+
+\ =============================================================================
+\ Circ-Circ
+\ =============================================================================
+
+: circ-circ? ( ax ay ar  bx by br -- flag )
+    {: ax ay ar bx by br :}
+    ax ay bx by dist  ar br + <= ;
+
+\ =============================================================================
+\ Oval-Oval (approximate)
+\ Normalize space by oval A's radii, approximate B as circle
+\ =============================================================================
+
+: oval-oval? ( ax ay arx ary  bx by brx bry -- flag )
+    {: ax ay arx ary bx by brx bry | dx dy srx sry :}
+    arx 0= ary 0= or  brx 0= bry 0= or  or if false exit then
+    bx ax - arx p/ to dx
+    by ay - ary p/ to dy
+    brx arx p/ to srx   bry ary p/ to sry
+    dx dy hypot  1.  srx sry + 2 /  +  <= ;
+
+\ =============================================================================
+\ Rect-Circ
+\ =============================================================================
+
+: rect-circ? ( rx1 ry1 rx2 ry2  cx cy cr -- flag )
+    {: rx1 ry1 rx2 ry2 cx cy cr :}
+    cx rx1 rx2 pclamp
+    cy ry1 ry2 pclamp
+    cx cy dist  cr <= ;
+
+\ =============================================================================
+\ Rect-Oval
+\ Scale y-axis to make oval a circle, then rect-circ
+\ =============================================================================
+
+: rect-oval? ( rx1 ry1 rx2 ry2  ox oy orx ory -- flag )
+    {: rx1 ry1 rx2 ry2 ox oy orx ory :}
+    orx 0= ory 0= or if false exit then
+    rx1  ry1 orx p* ory p/  rx2  ry2 orx p* ory p/
+    ox   oy  orx p* ory p/  orx
+    rect-circ? ;
+
+\ =============================================================================
+\ Rect-Poly (SAT)
+\ =============================================================================
+
+: rect-poly? ( rx1 ry1 rx2 ry2 poly -- flag )
+    {: rx1 ry1 rx2 ry2 poly
+       | pxmin pxmax pymin pymax
+         x1 y1 x2 y2 nx ny
+         d1 d2 d3 d4 rmin rmax
+         pmin pmax vx vy d :}
+    \ Project polygon onto x and y axes, check AABB overlap with rect
+    $7fffffff to pxmin  $80000000 to pxmax
+    $7fffffff to pymin  $80000000 to pymax
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@ to vy to vx
+        vx pxmin min to pxmin   vx pxmax max to pxmax
+        vy pymin min to pymin   vy pymax max to pymax
+    loop
+    pxmin rx2 >  pxmax rx1 <  or if false exit then
+    pymin ry2 >  pymax ry1 <  or if false exit then
+    \ Test polygon edge normals
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@ to y1 to x1
+        poly i 1 + poly pg.n @ mod pg.vert 2@ to y2 to x2
+        y2 y1 - to nx   x1 x2 - to ny
+        rx1 nx p*  ry1 ny p*  + to d1
+        rx1 nx p*  ry2 ny p*  + to d2
+        rx2 nx p*  ry1 ny p*  + to d3
+        rx2 nx p*  ry2 ny p*  + to d4
+        d1 d2 min d3 min d4 min to rmin
+        d1 d2 max d3 max d4 max to rmax
+        $7fffffff to pmin  $80000000 to pmax
+        poly pg.n @ 0 ?do
+            poly i pg.vert 2@ to vy to vx
+            vx nx p*  vy ny p*  + to d
+            d pmin min to pmin
+            d pmax max to pmax
+        loop
+        pmin rmax >  pmax rmin <  or if false unloop exit then
+    loop
+    true ;
+
+\ =============================================================================
+\ Circ-Poly
+\ =============================================================================
+
+|| : seg-circ? ( ex1 ey1 ex2 ey2 cx cy cr -- flag )
+    {: ex1 ey1 ex2 ey2 cx cy cr | f: fdx f: fdy f: len2 f: t :}
+    ex2 p>f ex1 p>f f- to fdx
+    ey2 p>f ey1 p>f f- to fdy
+    fdx fdup f*  fdy fdup f*  f+ to len2
+    len2 0e f= if
+        cx cy ex1 ey1 dist  cr <=  exit
+    then
+    cx p>f ex1 p>f f-  fdx f*
+    cy p>f ey1 p>f f-  fdy f*  f+
+    len2 f/  0e fmax  1e fmin  to t
+    ex1 p>f  t fdx f*  f+
+    ey1 p>f  t fdy f*  f+      \ f: cx' cy'
+    fswap  cx p>f f-  fdup f*
+    fswap  cy p>f f-  fdup f*  f+  fsqrt
+    cr p>f f<= ;
+
+: circ-poly? ( cx cy cr poly -- flag )
+    {: cx cy cr poly :}
+    cx cy poly pt-poly? if true exit then
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@
+        poly i 1 + poly pg.n @ mod pg.vert 2@
+        cx cy cr  seg-circ?
+        if true unloop exit then
+    loop
+    false ;
+
+\ =============================================================================
+\ Oval-Poly (approximate: use average radius as circle)
+\ =============================================================================
+
+: oval-poly? ( ox oy orx ory poly -- flag )
+    {: ox oy orx ory poly :}
+    orx 0= ory 0= or if false exit then
+    ox oy  orx ory + 2 /  poly  circ-poly? ;
+
+\ =============================================================================
+\ Line-Line (segment intersection)
+\ Must be defined before line-poly? (no forward references)
+\ =============================================================================
+
+: line-line? ( ax1 ay1 ax2 ay2  bx1 by1 bx2 by2 -- flag )
+    {: ax1 ay1 ax2 ay2 bx1 by1 bx2 by2 | dx1 dy1 dx2 dy2 denom qx qy t u :}
+    ax2 ax1 - to dx1   ay2 ay1 - to dy1
+    bx2 bx1 - to dx2   by2 by1 - to dy2
+    dx1 dy2 p*  dy1 dx2 p*  - to denom
+    denom 0= if false exit then
+    bx1 ax1 - to qx   by1 ay1 - to qy
+    qx dy2 p*  qy dx2 p*  -  denom p/ to t
+    qx dy1 p*  qy dx1 p*  -  denom p/ to u
+    t 0< not  t 1. <=  and
+    u 0< not  u 1. <=  and  and ;
+
+\ =============================================================================
+\ Line-Rect (segment vs AABB, Liang-Barsky)
+\ =============================================================================
+
+: line-rect? ( lx1 ly1 lx2 ly2  rx1 ry1 rx2 ry2 -- flag )
+    {: lx1 ly1 lx2 ly2 rx1 ry1 rx2 ry2 | dx dy t0 t1 r p q :}
+    lx1 ly1 rx1 ry1 rx2 ry2 pt-rect? if true exit then
+    lx2 ly2 rx1 ry1 rx2 ry2 pt-rect? if true exit then
+    lx2 lx1 - to dx   ly2 ly1 - to dy
+    0 to t0   1. to t1
+    \ Left: p=-dx, q=lx1-rx1
+    dx negate to p   lx1 rx1 - to q
+    p 0= if  q 0< if false exit then
+    else
+        q p p/ to r
+        p 0< if  r t0 max to t0  else  r t1 min to t1  then
+        t0 t1 > if false exit then
+    then
+    \ Right: p=dx, q=rx2-lx1
+    dx to p   rx2 lx1 - to q
+    p 0= if  q 0< if false exit then
+    else
+        q p p/ to r
+        p 0< if  r t0 max to t0  else  r t1 min to t1  then
+        t0 t1 > if false exit then
+    then
+    \ Bottom: p=-dy, q=ly1-ry1
+    dy negate to p   ly1 ry1 - to q
+    p 0= if  q 0< if false exit then
+    else
+        q p p/ to r
+        p 0< if  r t0 max to t0  else  r t1 min to t1  then
+        t0 t1 > if false exit then
+    then
+    \ Top: p=dy, q=ry2-ly1
+    dy to p   ry2 ly1 - to q
+    p 0= if  q 0< if false exit then
+    else
+        q p p/ to r
+        p 0< if  r t0 max to t0  else  r t1 min to t1  then
+        t0 t1 > if false exit then
+    then
+    true ;
+
+\ =============================================================================
+\ Line-Circ
+\ =============================================================================
+
+: line-circ? ( lx1 ly1 lx2 ly2  cx cy cr -- flag )
+    {: lx1 ly1 lx2 ly2 cx cy cr | f: fdx f: fdy f: len2 f: t :}
+    lx2 p>f lx1 p>f f- to fdx
+    ly2 p>f ly1 p>f f- to fdy
+    fdx fdup f*  fdy fdup f*  f+ to len2
+    len2 0e f= if
+        cx cy lx1 ly1 dist  cr <=  exit
+    then
+    cx p>f lx1 p>f f-  fdx f*
+    cy p>f ly1 p>f f-  fdy f*  f+
+    len2 f/  0e fmax  1e fmin  to t
+    lx1 p>f  t fdx f*  f+
+    ly1 p>f  t fdy f*  f+      \ f: cx' cy'
+    fswap  cx p>f f-  fdup f*
+    fswap  cy p>f f-  fdup f*  f+  fsqrt
+    cr p>f f<= ;
+
+\ =============================================================================
+\ Line-Oval
+\ Scale y-axis to make oval a circle, then line-circ
+\ =============================================================================
+
+: line-oval? ( lx1 ly1 lx2 ly2  ox oy orx ory -- flag )
+    {: lx1 ly1 lx2 ly2 ox oy orx ory :}
+    orx 0= ory 0= or if false exit then
+    lx1  ly1 orx p* ory p/  lx2  ly2 orx p* ory p/
+    ox   oy  orx p* ory p/  orx
+    line-circ? ;
+
+\ =============================================================================
+\ Line-Poly
+\ =============================================================================
+
+: line-poly? ( lx1 ly1 lx2 ly2 poly -- flag )
+    {: lx1 ly1 lx2 ly2 poly :}
+    lx1 ly1 poly pt-poly? if true exit then
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@
+        poly i 1 + poly pg.n @ mod pg.vert 2@
+        lx1 ly1 lx2 ly2
+        line-line?
+        if true unloop exit then
+    loop
+    false ;
+
+\ =============================================================================
+\ Poly-Poly (SAT)
+\ =============================================================================
+
+|| : project-poly ( poly nx ny -- pmin pmax )
+    {: poly nx ny | pmin pmax vx vy d :}
+    $7fffffff to pmin  $80000000 to pmax
+    poly pg.n @ 0 ?do
+        poly i pg.vert 2@ to vy to vx
+        vx nx p*  vy ny p*  + to d
+        d pmin min to pmin
+        d pmax max to pmax
+    loop
+    pmin pmax ;
+
+|| : sat-edges? ( pa pb -- separated? )
+    {: pa pb | x1 y1 x2 y2 nx ny amin amax bmin bmax :}
+    pa pg.n @ 0 ?do
+        pa i pg.vert 2@ to y1 to x1
+        pa i 1 + pa pg.n @ mod pg.vert 2@ to y2 to x2
+        y2 y1 - to nx   x1 x2 - to ny
+        pa nx ny project-poly to amax to amin
+        pb nx ny project-poly to bmax to bmin
+        bmin amax >  bmax amin <  or
+        if true unloop exit then
+    loop
+    false ;
+
+: poly-poly? ( polyA polyB -- flag )
+    {: pa pb :}
+    pa pb sat-edges? if false exit then
+    pb pa sat-edges? if false exit then
+    true ;

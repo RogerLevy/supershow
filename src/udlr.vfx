@@ -17,7 +17,22 @@ $01 constant BIT_WRT
 0 value floor?
 0 value ceiling?
 
-: clear-collision-state 0 to lwall?  0 to rwall?  0 to floor?  0 to ceiling? ;
+\ Probe context (set before each filter call, readable by filters)
+0 value probe-x       \ fixed-point probe x
+0 value probe-y       \ fixed-point probe y
+0 value probe-col     \ tile column
+0 value probe-row     \ tile row
+
+\ Hit details (set by tmslide?/tread? on contact)
+0 value hit-tile      \ tile metadata value at contact point
+0 value hit-col       \ tile column of last hit
+0 value hit-row       \ tile row of last hit
+0 value hit-obj       \ other actor (for actor-vs-actor)
+
+: clear-collision-state
+    0 to lwall?  0 to rwall?  0 to floor?  0 to ceiling?
+    0 to probe-x  0 to probe-y  0 to probe-col  0 to probe-row
+    0 to hit-tile  0 to hit-col  0 to hit-row  0 to hit-obj ;
 
 class: %actor
     prop fac :int <save

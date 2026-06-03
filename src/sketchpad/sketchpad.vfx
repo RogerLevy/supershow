@@ -25,7 +25,7 @@
 
 private
 
-fload %supershow%/lib/mouse.vfx
+import %supershow%/lib/mouse.vfx
 fload %supershow%/lib/help.vfx
 
 \ ==============================================================================

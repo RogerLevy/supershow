@@ -6,7 +6,7 @@ variable overview
 
 \ -- Dependencies --------------------------------------------------------------
 
-REQUIRE %supershow%/lib/mouse.vfx
+import %supershow%/lib/mouse.vfx
 REQUIRE %idir%/shapes.vfx
 REQUIRE %idir%/colors.vfx
 REQUIRE %idir%/element.vfx

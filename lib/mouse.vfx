@@ -1,3 +1,9 @@
+module [mouse]
+import allegro5
+import supershow.core
+
+public
+
 create mousex 0 , 0 , here cell- constant mousey
 create mickeyx 0 , 0 , here cell- constant mickeyy
 
