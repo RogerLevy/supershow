@@ -218,25 +218,56 @@ public
 \ Common filters
 : solid? ( meta - solid? )  0<> ;
 
+\ Corner-open checks: true if the tile at col/row is passable in the direction
+\ of the current wall/floor hit. Relies on lwall?/rwall?/floor?/ceiling? state.
+|| : hwall-open? ( col row - flag )
+    get-meta
+    rwall? if BIT_WLT and 0= else BIT_WRT and 0= then ;
+|| : vwall-open? ( col row - flag )
+    get-meta
+    floor? if BIT_FLR and 0= else BIT_CEL and 0= then ;
+
 \ Nudge the actor around tile corners after tmslide?.
 \ Use the same hitbox corners as the tmslide? call.
 \ fudge: snap tolerance (integer pixels).
-\ If the actor hit a horizontal wall, snaps y so the hitbox corner clears the
-\ tile edge. Likewise x after a vertical hit.
-\ Must be called before the next tmslide? (reads _tw/_th from that call).
+\ Only nudges when the adjacent corner tile is open (real corner, not flat wall).
+\ Must be called right after tmslide? (reads _tw/_th and the-map from that call).
 : cut-corners ( x1 y1 x2 y2 fudge - )
-    {: x1 y1 x2 y2 fudge | off fp :}
+    {: x1 y1 x2 y2 fudge | off1 off2 step fp wcol wrow :}
+    1 >p to step
     fudge >p to fp
     lwall? rwall? or if
-        y @ y1 >p +  _th >p mod to off
-        off fp <= if  off negate y +!
-        else  _th >p off - dup fp <= if  y +!  else drop  then
+        rwall? if x @ x2 >p + >col else x @ x1 >p + >col- then  to wcol
+        y @ y1 >p + _th >p mod  to off1
+        y @ y2 >p + _th >p mod  to off2
+        \ top edge near next row boundary → check bottom corner, nudge down
+        _th >p off1 - fp <= if
+            wcol  y @ y2 >p + >row-  hwall-open? if
+                _th >p off1 - step min  y +!
+            then
+        then
+        \ bottom edge near prev row boundary → check top corner, nudge up
+        off2 fp <= if
+            wcol  y @ y1 >p + >row  hwall-open? if
+                off2 step min  negate  y +!
+            then
         then
     then
     floor? ceiling? or if
-        x @ x1 >p +  _tw >p mod to off
-        off fp <= if  off negate x +!
-        else  _tw >p off - dup fp <= if  x +!  else drop  then
+        floor? if y @ y2 >p + >row else y @ y1 >p + >row- then  to wrow
+        x @ x1 >p + _tw >p mod  to off1
+        x @ x2 >p + _tw >p mod  to off2
+        \ left edge near next col boundary → check right corner, nudge right
+        _tw >p off1 - fp <= if
+            x @ x2 >p + >col-  wrow  vwall-open? if
+                _tw >p off1 - step min  x +!
+            then
+        then
+        \ right edge near prev col boundary → check left corner, nudge left
+        off2 fp <= if
+            x @ x1 >p + >col  wrow  vwall-open? if
+                off2 step min  negate  x +!
+            then
         then
     then ;
 
