@@ -113,9 +113,8 @@ command : as ( obj - )
     endcase ;
 
 : input ( - )
-    get-mouse
-    dragging 
-    deleting 
+    dragging
+    deleting
 ;
 
 variable flicker-ctr

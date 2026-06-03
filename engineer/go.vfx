@@ -29,8 +29,8 @@ redef : ticks  ( n - ms )
     sdelta f>p to pdelta ;
 
 : poll ( - )
-    poll-keyboard  
-    <alt> held? <altgr> held? or to alt? 
+    poll-keyboard  get-mouse
+    <alt> held? <altgr> held? or to alt?
     <lshift> held? <rshift> held? or to shift? 
     <lctrl> held? <rctrl> held? or to ctrl? ;
 

@@ -185,7 +185,7 @@ public
 
 : demo ( - )
     handle-keys
-    get-mouse  mouse  my !  mx !
+    mouse  my !  mx !
     update-acpoly
     ~s1 ~s2 ~s3 ~s4 ~s5
     ~cursor
