@@ -2,9 +2,12 @@
 \ Tile Collision & Reading
 \ =============================================================================
 \
-\ tmslide? -- AABB sweep+pushout against a tilemap grid.
+\ tmslide -- AABB sweep+pushout against a tilemap grid.
 \   Moves the scoped actor, sliding along solid tile edges.
-\   Usage:  -3 -8 3 0  my-tilemap  ['] my-filter  tmslide?
+\   Usage:  -3 -8 3 0  my-tilemap  ['] my-filter  ['] my-response  tmslide
+\   filter-xt:   ( meta - solid? )
+\   response-xt: ( col row dir - )  dir = BIT_FLR/BIT_CEL/BIT_WLT/BIT_WRT
+\   pushed? is set true if any pushout occurred.
 \
 \ tread? / tread> -- Detect and iterate tiles under a rectangle.
 \
@@ -16,23 +19,29 @@ require %idir%/utilities.vfx
 require %idir%/actor.vfx
 require %idir%/udlr.vfx
 
+public
+0 value pushed?
+
 \ =============================================================================
 \ Internal state
 \ =============================================================================
 
 private
 
-\ Shared tile dimensions (set by both tmslide? and tread setups)
+\ Shared tile dimensions (set by both tmslide and tread setups)
 0 value _tw   0 value _th
 
-\ tmslide? state
+\ tmslide state
 0 value the-map
 0 value the-ts
 0 value the-filter
+0 value the-response
 0 value px    0 value py        \ starting top-left of hitbox (fixed)
 0 value nx    0 value ny        \ new top-left after velocity (fixed)
 0 value _mbw  0 value _mbh      \ hitbox w, h (integer pixel offsets: x2-x1, y2-y1)
-0 value any-hit                  \ accumulates collision flag
+
+: ?respond ( col row dir - )
+    the-response if  the-response execute  else  2drop drop  then ;
 
 \ tread state
 0 value _map
@@ -62,7 +71,7 @@ private
     dup to probe-col   _tw * _tw 2 / + >p to probe-x ;
 
 \ =============================================================================
-\ tmslide? helpers
+\ tmslide helpers
 \ =============================================================================
 
 \ Get tile metadata via the-map; empty tile ($FFFFFFFF) returns 0
@@ -112,9 +121,9 @@ private
     rcol 1 + lcol ?do
         i brow 2dup set-probe get-meta
         BIT_FLR ?solid if
-            true to any-hit  true to floor?
+            true to pushed?  true to floor?
             brow to hit-row  i to hit-col
-            push-up  unloop exit
+            push-up  i brow BIT_FLR ?respond  unloop exit
         then
     loop ;
 
@@ -126,9 +135,9 @@ private
     rcol 1 + lcol ?do
         i trow 2dup set-probe get-meta
         BIT_CEL ?solid if
-            true to any-hit  true to ceiling?
+            true to pushed?  true to ceiling?
             trow to hit-row  i to hit-col
-            push-down  unloop exit
+            push-down  i trow BIT_CEL ?respond  unloop exit
         then
     loop ;
 
@@ -140,9 +149,9 @@ private
     brow 1 + trow ?do
         rcol i 2dup set-probe get-meta
         BIT_WLT ?solid if
-            true to any-hit  true to rwall?
+            true to pushed?  true to rwall?
             i to hit-row  rcol to hit-col
-            push-left  unloop exit
+            push-left  rcol i BIT_WLT ?respond  unloop exit
         then
     loop ;
 
@@ -154,9 +163,9 @@ private
     brow 1 + trow ?do
         lcol i 2dup set-probe get-meta
         BIT_WRT ?solid if
-            true to any-hit  true to lwall?
+            true to pushed?  true to lwall?
             i to hit-row  lcol to hit-col
-            push-right  unloop exit
+            push-right  lcol i BIT_WRT ?respond  unloop exit
         then
     loop ;
 
@@ -193,13 +202,13 @@ public
 
 \ Slide the scoped actor against tilemap collision.
 \ x1 y1 x2 y2 are relative hitbox corners (integer offsets from actor origin).
-\ filter-xt: ( meta - solid? ) narrow-phase filter; called only for tiles
-\   that pass the directional BIT_* pre-check.  Probe globals (probe-x,
-\   probe-y, probe-col, probe-row) are set before each call.
-\ Returns true if any collision occurred.
-\ Sets floor? ceiling? lwall? rwall? and hit-col hit-row.
-: tmslide? ( x1 y1 x2 y2 tilemap filter-xt - flag )
-    to the-filter  to the-map
+\ filter-xt:   ( meta - solid? ) narrow-phase filter; called only for tiles
+\   that pass the directional BIT_* pre-check.
+\ response-xt: ( col row dir - ) called on each pushout; dir = BIT_FLR/CEL/WLT/WRT.
+\   Pass 0 for no response.
+\ Sets pushed? floor? ceiling? lwall? rwall? hit-col hit-row.
+: tmslide ( x1 y1 x2 y2 tilemap filter-xt response-xt - ) ( meta - solid? ) ( col row dir - )
+    to the-response  to the-filter  to the-map
     the-map -> ts @ to the-ts
     the-ts -> baseid @ pile!
     the-ts -> tw @ to _tw
@@ -208,12 +217,11 @@ public
     x2 x1 - to _mbw   y2 y1 - to _mbh
     x @ x1 >p + to px   y @ y1 >p + to py
     px vx @ + to nx      py vy @ + to ny
-    false to any-hit
+    false to pushed?
     clear-collision-state
     sweep-vertical sweep-horizontal
     nx px - x +!
-    ny py - y +!
-    any-hit ;
+    ny py - y +! ;
 
 \ Common filters
 : solid? ( meta - solid? )  0<> ;
@@ -227,11 +235,11 @@ public
     get-meta
     floor? if BIT_FLR and 0= else BIT_CEL and 0= then ;
 
-\ Nudge the actor around tile corners after tmslide?.
-\ Use the same hitbox corners as the tmslide? call.
+\ Nudge the actor around tile corners after tmslide.
+\ Use the same hitbox corners as the tmslide call.
 \ fudge: snap tolerance (integer pixels).
 \ Only nudges when the adjacent corner tile is open (real corner, not flat wall).
-\ Must be called right after tmslide? (reads _tw/_th and the-map from that call).
+\ Must be called right after tmslide (reads _tw/_th and the-map from that call).
 : cut-corners ( x1 y1 x2 y2 fudge - )
     {: x1 y1 x2 y2 fudge | off1 off2 step fp wcol wrow :}
     1 >p to step

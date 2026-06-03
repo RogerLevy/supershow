@@ -137,7 +137,7 @@ public
     r@ -> cb.x2 2@                        ?corner ?dup if dup r@ -> cb.s3 ! r@ swap link else r@ -> cb.s3 off then
     r> drop ;
 
-: check-cgrid ( cbox xt cgrid - )
+: check-cgrid ( cbox xt cgrid - ) ( flag cbox1 cbox2 - keepgoing? )
     to the-cgrid is collide
     locals| cbox |
     cbox dup -> cb.s1 @ ?check-sector -exit
@@ -145,7 +145,7 @@ public
     cbox dup -> cb.s3 @ ?check-sector -exit
     cbox dup -> cb.s4 @ ?check-sector drop ;
 
-: check-cbox ( cbox xt cgrid - )
+: check-cbox ( cbox xt cgrid - ) ( flag cbox1 cbox2 - keepgoing? )
     to the-cgrid is collide
     locals| cbox |
     cbox ?cbox-in-bounds
@@ -176,8 +176,8 @@ class: %actor
 class;
 
 \ Bridge: fill ahb from absolute corners, set owner, add to grid
-\ Usage:  { my-hitbox }  me the-grid >cgrid
-: >cgrid ( x1 y1 x2 y2 actor cgrid -- )
+\ Usage:  { my-hitbox }  me the-grid gridify
+: gridify ( x1 y1 x2 y2 actor cgrid -- )
     {: actor grid :}
     actor -> ahb cbox-corners!
     actor  actor -> ahb -> cb.owner !

@@ -42,7 +42,7 @@ private
         <right> held? if  2. vx ! then
         <up>    held? if -2. vy ! then
         <down>  held? if  2. vy ! then
-        0 0 15 15  the-tilemap  ['] solid?  tmslide? drop
+        0 0 15 15  the-tilemap  ['] solid?  0  tmslide
         0 0 15 15  7  cut-corners
         0 0 15 15  the-tilemap  tread>
             4 = if  $FFFFFFFF rot rot the-tilemap tile!
