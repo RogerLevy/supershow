@@ -1,7 +1,0 @@
-class: TEST
-    %actor derive
-class;
-
-TEST :: start ( - )
-    act> ;
-

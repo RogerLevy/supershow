@@ -9,7 +9,7 @@ icons1.png  16 16 tileset-from  icons1.ts
 
 16 ttf-font %idir%/dat/fonts/Habbo.ttf
 
-shader default.s %supershow%/src/glsl/default.vs %idir%/dat/glsl/default.fs
+shader default.s %supershow%/glsl/default.vs %idir%/dat/glsl/default.fs
 
 sample %idir%/dat/smp/snd-02.ogg
 

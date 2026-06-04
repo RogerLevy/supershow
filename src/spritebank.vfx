@@ -43,8 +43,8 @@ private
 || 0 value _sb-shader
 || 0 value _vp   \ vertex write cursor
 
-create _sb-vs  s" %supershow%/src/glsl/spritebank.vs" file,  0 c,
-create _sb-fs  s" %supershow%/src/glsl/spritebank.fs" file,  0 c,
+create _sb-vs  s" %supershow%/glsl/spritebank.vs" file,  0 c,
+create _sb-fs  s" %supershow%/glsl/spritebank.fs" file,  0 c,
 
 fast{ optimising on
 
