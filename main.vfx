@@ -1,0 +1,2 @@
+module [supershow]
+include %idir%/src/supershow.vfx
