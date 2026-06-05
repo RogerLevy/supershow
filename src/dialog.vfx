@@ -91,7 +91,7 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
 
 %dialog :: draw ( - )
     zstr @ -exit    
-    batch>
+    1 batch>
     minh @ if
         ~dlg-text
     else

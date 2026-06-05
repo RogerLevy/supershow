@@ -33,10 +33,10 @@ continuation: sorted-actors> ( xt - ) ( - )
 fast}
 
 : backsprites ( - )
-    ec> batch> [: >prio @ ;] sorted-actors> prio @ ?exit this render ?pillory ;
+    ec> 1 batch> [: >prio @ ;] sorted-actors> prio @ ?exit this render ?pillory ;
 
 : sprites ( - )
-    ec> batch> [: >prio @ ;] sorted-actors> prio @ -exit this render ?pillory ;
+    ec> 1 batch> [: >prio @ ;] sorted-actors> prio @ -exit this render ?pillory ;
 
 \ =============================================================================
 \ Frame animation

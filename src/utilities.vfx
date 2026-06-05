@@ -8,13 +8,11 @@ public
 
 : 4>p  2>p 2>r 2>p 2r> ;
 : 2?  2@ swap . . ;
-: begin-batch  1 al_hold_bitmap_drawing ;
-: end-batch  0 al_hold_bitmap_drawing ;
 0 value batching
-continuation: batch>
-    batching >r  1 to batching  begin-batch
+continuation: batch> ( flag -- )
+    batching >r  swap dup to batching  0<> 1 and al_hold_bitmap_drawing
     ( xt ) catch
-    r> dup to batching  al_hold_bitmap_drawing  throw ;
+    r> dup to batching  0<> 1 and al_hold_bitmap_drawing  throw ;
 : h|  $1000000 or ;
 : v|  $2000000 or ;
 : hv|  h| v| ;
