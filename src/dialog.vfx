@@ -22,6 +22,10 @@ class: %dialog
     template { 2. spd ! }
 class;
 
+%dialog :: unload ( - )
+    zstr @ free throw 
+    actor:unload ;
+
 private
 
 \ ── Line table access ────────────────────────────────────────────────────────
@@ -111,10 +115,11 @@ public
     { pos @ >i zstr @ zcount nip >= } ;
 
 : dlg-set-text ( addr len %dialog - )
-    { zstr @ ?dup if free throw then
+    { zstr @ free throw 
       *zbuf zstr !
       0 pos !
       dlg-wrap } ;
 
 : dlg-reveal-all ( %dialog - )
     { zstr @ zcount nip >p pos ! } ;
+
