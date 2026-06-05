@@ -1,0 +1,194 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+import allegro5
+
+\ =============================================================================
+\ Assets
+\ =============================================================================
+
+bitmap %idir%/dat/gfx/alfador.png
+bitmap %idir%/dat/gfx/fairgirl.png
+bitmap %idir%/dat/gfx/2200man.png
+
+alfador.png   18 20 tileset-from cat.ts
+fairgirl.png  21 28 tileset-from girl.ts
+2200man.png   21 36 tileset-from man.ts
+
+0 value the-font
+
+: load-font ( - )
+    s" %idir%/dat/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
+    the-font 0= abort" Failed to load Habbo.ttf" ;
+
+\ =============================================================================
+\ Fancy dialog — extends %dialog with background, indicator, open/close anim
+\ =============================================================================
+
+10 constant DLG_PAD
+
+class: %fancydlg
+    %dialog derive
+    prop bgclr :int         \ background RGBA
+    prop anim :fixed        \ 0..1. animation progress
+    prop closing
+class;
+
+\ ── Animation ────────────────────────────────────────────────────────────────
+
+: dlg-anim-speed  0.06 ;
+
+: st-display ( - )
+    act> dlg-advance ;
+
+: st-close ( - )
+    closing on
+    act>
+        anim @ 0 <= if
+            0 anim !  this unload  exit
+        then
+        dlg-anim-speed negate anim +! ;
+
+: st-open ( - )
+    act>
+        anim @ 1. >= if 1. anim !  st-display  exit then
+        dlg-anim-speed anim +! ;
+
+%fancydlg :: start ( - )
+    st-open ;
+
+\ ── Draw ─────────────────────────────────────────────────────────────────────
+
+create ind-poly  3 ,  0. , 0. ,  6. , 0. ,  3. , 5. ,
+
+|| 0 value bgy  0 value bgh
+
+: ~background ( - )
+    bgclr @ -exit
+    h @ >i anim @ p* to bgh
+    y @ >i  h @ >i bgh - 2 / + to bgy
+    bgclr @ rgba8
+    x @ >i DLG_PAD -  
+    bgy DLG_PAD -  at
+    w @ >i DLG_PAD 2 * +
+    bgh DLG_PAD 2 * +  2>p rectf ;
+
+: ~indicator ( - )
+    this dlg-done? -exit
+    gamelife @ 30 mod 15 < -exit
+    $ffffffff rgba8
+    w 2@ 2>i +at
+    fnt @ fnt!  ind-poly polyf
+    -10 -5 +at  'Z' glyph ;
+
+%fancydlg :: draw ( - )
+    zstr @ -exit
+    anim @ -exit
+    0 batch>
+        ~background
+    closing @ ?exit
+    1 batch>
+        DLG_PAD dup +at
+        $ffffffff rgba8 dialog:draw
+    0 batch>
+        x 2@ 2>i at
+        ~indicator ;
+
+%fancydlg :: render ( - )
+    this draw ;
+
+\ =============================================================================
+\ Clickable sprite
+\ =============================================================================
+
+class: %clicksprite
+    %actor derive
+    prop msg :addr          \ counted string
+    prop dlg :addr          \ associated dialog (0 = none open)
+class;
+
+%clicksprite :: draw ( - )
+    bmp @ put ;
+
+: sprite-w ( - n )   bmp @ id>albmp al_get_bitmap_width ;
+: sprite-h ( - n )   bmp @ id>albmp al_get_bitmap_height ;
+
+: clicked? ( - flag )
+    {: | mx my :}
+    <lmb> pressed? dup -exit drop
+    mouse to my to mx
+    mx x @ >i dup sprite-w + within? 
+    my y @ >i dup sprite-h + within? and ;
+
+: open-dialog ( - )
+    dlg @ exists? ?exit
+    x @ >i 40 - 
+    y @ >i sprite-h - 50 -  at
+    %fancydlg one dlg ! 
+    dlg @ {
+        the-font fnt !
+        100. w !
+        40. minh !
+        rnd32 $ffffff00 and $80 or bgclr !
+        2. spd !
+    }
+    msg @ count dlg @ dlg-set-text ;
+
+: close-dialog ( - )
+    dlg @ exists? -exit
+    dlg @ { st-close } ;
+
+%clicksprite :: start ( - )
+    act> 
+    dlg @ exists? not if dlg off then    
+    clicked? if
+        dlg @ exists? if
+            dlg @ dlg-done? if close-dialog else dlg @ dlg-reveal-all then
+        else
+            open-dialog
+        then
+    then ;
+
+\ =============================================================================
+\ Setup
+\ =============================================================================
+
+create msg0 ," Hello! I'm Alfador, a small cat with big dreams."
+create msg1 ," Nice to meet you! I love exploring forests and finding hidden treasures."
+create msg2 ," Hmm, you look familiar. Have we met in another game before?"
+
+: spawn-sprite ( bmpid msg x y - )
+    at %clicksprite one { msg ! bmp ! } ;
+
+: init ( - )
+    load-font
+    just
+    cat.ts  1 tile  msg0  60  100  spawn-sprite
+    girl.ts 0 tile  msg1  140 180  spawn-sprite
+    man.ts  1 tile  msg2  220 100  spawn-sprite ;
+
+\ =============================================================================
+\ Main loop
+\ =============================================================================
+
+: ~test ( - )
+    $555577ff rgba8 screen
+    sprites ;
+
+: close-dialogs
+    actives> this %clicksprite is? if close-dialog then ;
+
+: controls
+    <z> pressed? if close-dialogs then ;
+
+: think ( - )
+    controls step sweep ;
+
+public
+
+: main
+    init
+    show> ~test
+    work> think ;
+
+main

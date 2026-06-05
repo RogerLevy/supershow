@@ -35,18 +35,26 @@ continuation: actives> ( - ) ( - )
 \ Actor Errors
 \ =============================================================================
 
+|| redef create buf 256 allot
+
 || : restore-sp ( a - )
     \ Restore SP. If debug mode is on, report stack imbalances.
     debug @ if
         \ Compare SP to previous SP.
         \ The data stack grows downward.
         dup sp@ cell+ cell+ > if
-            [: ." Positive stack imbalance in logic for actor " this .summary
-            str@ log ;] strout .rs .s   \ "
+            [: 
+            ." Positive stack imbalance in logic for actor " this .summary cr
+            .rs .s
+            str@ buf place ;] strout   \ "
+            buf count log
         then
         dup sp@ cell+ cell+ < if
-            [: ." Negative stack imbalance in logic for actor " this .summary
-            str@ log ;] strout .rs .s   \ "
+            [: 
+            ." Negative stack imbalance in logic for actor " this .summary cr 
+            .rs .s
+            str@ buf place ;] strout    \ "
+            buf count log
         then
     then
     sp! ;
@@ -100,7 +108,7 @@ continuation: who> ( - actor|0 ) ( - f )
     unloaded on ; 
 
 : sweep ( - )
-    actives>  unloaded @ -exit  this recycle ;
+    actives>  unloaded @ -exit  unloaded off  en off  this recycle ;
 
 : step ( - )
     hold @ ?exit

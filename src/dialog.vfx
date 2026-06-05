@@ -103,15 +103,19 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
 
 \ ── Think ─────────────────────────────────────────────────────────────────────
 
-: ?adv ( - )
+\ ── API ──────────────────────────────────────────────────────────────────────
+
+public
+
+: dlg-advance ( - )
     zstr @ -exit
     pos @ >i zstr @ zcount nip >= ?exit
     spd @ pos +! ;
 
-%dialog :: start ( - )
-    act> ?adv ;
+private
 
-\ ── API ──────────────────────────────────────────────────────────────────────
+%dialog :: start ( - )
+    act> dlg-advance ;
 
 public
 

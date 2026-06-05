@@ -44,8 +44,8 @@ class;
     >en @ 0= ;
 
 : exists? ( actor - flag )
-    dup 0= if drop 0 exit then
-    dup valid-object? if drop -1 exit then
+    dup -exit
+    dup valid-object? not if drop 0 exit then
     >en @ ;
 
 : init-actor ( actor - )
