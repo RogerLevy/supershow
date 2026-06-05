@@ -10,7 +10,11 @@ public
 : 2?  2@ swap . . ;
 : begin-batch  1 al_hold_bitmap_drawing ;
 : end-batch  0 al_hold_bitmap_drawing ;
-continuation: batch>  begin-batch  ( xt ) catch  end-batch  throw ;
+0 value batching
+continuation: batch>
+    batching >r  1 to batching  begin-batch
+    ( xt ) catch
+    r> dup to batching  al_hold_bitmap_drawing  throw ;
 : h|  $1000000 or ;
 : v|  $2000000 or ;
 : hv|  h| v| ;
