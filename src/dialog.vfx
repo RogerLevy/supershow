@@ -90,7 +90,7 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
     clip} ;
 
 %dialog :: draw ( - )
-    zstr @ -exit
+    zstr @ -exit    
     minh @ if
         ~dlg-text
     else
@@ -98,7 +98,9 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
     then ;
 
 %dialog :: render ( - )
-    x 2@ 2>i at this draw ;
+    end-batch
+    x 2@ 2>i at this draw 
+; \    begin-batch ;
 
 \ ── Think ─────────────────────────────────────────────────────────────────────
 
