@@ -25,7 +25,7 @@ variable sample-ok
 
 \ ---- Display ---------------------------------------------------------------
 
-: render
+: ~test
     cls
     Habbo.ttf
     0 0 at    s" Autoload test" print
@@ -47,6 +47,6 @@ variable sample-ok
 : main
     just
     check-sample
-    show> render ;
+    show> ~test ;
 
 main

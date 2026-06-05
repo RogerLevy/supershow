@@ -24,7 +24,7 @@ bgm softice  %idir%/dat/bgm/softice.ogg
 
 \ ---- Display ---------------------------------------------------------------
 
-: render
+: ~test
     cls
     vga-8x8 fnt!
     0   0 at  s" Waveplay test" print
@@ -34,6 +34,6 @@ bgm softice  %idir%/dat/bgm/softice.ogg
 
 : main
     just
-    show> think render ;
+    show> think ~test ;
 
 main

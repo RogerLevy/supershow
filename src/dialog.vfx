@@ -97,6 +97,9 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
         0. 0. w @ h @ this draw-view
     then ;
 
+%dialog :: render ( - )
+    x 2@ 2>i at this draw ;
+
 \ ── Think ─────────────────────────────────────────────────────────────────────
 
 : ?adv ( - )

@@ -134,7 +134,7 @@ create player-cbox /cbox allot
     by cam-y - gameh >=    if false exit then
     true ;
 
-: render
+: ~test
     $181818ff rgba8 screen
     $446688ff rgba8
     #boxes 0 do
@@ -169,6 +169,6 @@ public
     init-boxes
     update-cam
     work> think
-    show> render ;
+    show> ~test ;
 
 main

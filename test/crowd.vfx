@@ -112,7 +112,10 @@ create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
 class: %marker  %actor derive  class;
 
 %marker :: draw ( - )
-    x 2@ 2>i at  lyle.png bcput ;
+    lyle.png bcput ;
+
+%marker :: render ( - )
+    x 2@ 2>i at this draw ;
 
 \ =============================================================================
 \ Spritebank
@@ -128,7 +131,10 @@ class: %marker  %actor derive  class;
     girl.ts npc-bank add-tileset-to-bank ;
 
 %npc :: draw ( - )
-    bmp @ -exit  x 2@ 2>i at  bmp @ bcput ;
+    bmp @ -exit  bmp @ bcput ;
+
+%npc :: render ( - )
+    x 2@ 2>i at this draw ;
 
 \ =============================================================================
 \ Main
@@ -138,9 +144,9 @@ public
 
 fast{
 || : draw-npcs ( - )
-    [: >y @ >i ;] sorted-actors> this draw  ?pillory ;
+    [: >y @ >i ;] sorted-actors> this render  ?pillory ;
 
-: render
+: ~test
     $808080ff rgba8 screen
     npc-bank bank>
     draw-npcs ;
@@ -154,7 +160,7 @@ fast}
     init-npc-bank
     gamew 2 / gameh 2 / at  %marker one drop
     2000 sprinkle
-    show> render
+    show> ~test
     work> think
 ;
 

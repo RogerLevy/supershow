@@ -26,6 +26,7 @@ trait;
 
 trait: %drawable
     :: draw ( - ) ;
+    :: render ( - ) draw ;
     :: draw-view ( sx. sy. w. h. - )
         {: sx sy vpw vph :}
         at@p  vpw  vph  clip{
@@ -33,12 +34,6 @@ trait: %drawable
             draw
         clip} ;
 trait;
-
-defer _ndraw  \ had to do the recursion this way because [: RECURSE ;] didn't work.
-: ndraw ( drawable-iterable - )
-    \ dup .summary cr
-    dup draw ['] _ndraw swap each ;
-' ndraw is _ndraw
 
 trait: %dimensional
     prop w :int

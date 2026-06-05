@@ -8,7 +8,10 @@ class: %actor
 class;
 
 %actor :: draw ( - )
-    bmp @ -exit  x 2@ 2>i at bmp @ cput ;
+    bmp @ -exit  bmp @ cput ;
+
+%actor :: render ( - )
+    x 2@ 2>i at this draw ;
 
 : ?pillory ( - )
     this benched? if
@@ -30,10 +33,10 @@ continuation: sorted-actors> ( xt - ) ( - )
 fast}
 
 : backsprites ( - )
-    ec> batch> [: >prio @ ;] sorted-actors> prio @ ?exit this draw ?pillory ;
+    ec> batch> [: >prio @ ;] sorted-actors> prio @ ?exit this render ?pillory ;
 
 : sprites ( - )
-    ec> batch> [: >prio @ ;] sorted-actors> prio @ -exit this draw ?pillory ;
+    ec> batch> [: >prio @ ;] sorted-actors> prio @ -exit this render ?pillory ;
 
 \ =============================================================================
 \ Frame animation

@@ -33,13 +33,13 @@ class: %spewer  %actor derive  class;
 
 \ ---- Main -------------------------------------------------------------------
 
-: render  sprites ;
+: ~test  sprites ;
 : think   step ;
 
 : main
     just
     3 0 do  %spewer one drop  loop
-    show> think render ;
+    show> think ~test ;
 
 main
 

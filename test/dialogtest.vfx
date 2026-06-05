@@ -58,9 +58,9 @@ create arrow-poly  3 ,  0. , 0. ,  6. , 0. ,  3. , 5. ,
     then ;
 
 : ~dialog
-    $ffffffff rgba8  dlg { x 2@ 2>i at  this draw } ;
+    $ffffffff rgba8  dlg render ;
 
-: render ( -- )
+: ~test ( -- )
     $333333ff rgba8 screen
     ~dialog
     ~indicator ;
@@ -73,7 +73,7 @@ public
 
 : main
     init-dialog
-    show> render
+    show> ~test
     work> think ;
 
 main
