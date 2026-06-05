@@ -39,6 +39,7 @@ module [supershow]
 	include stage                \ Actor/sprite system
 	include timer
 	include sprites
+	include dialog
 	include udlr                 \ Movement utilities
 	include collision            \ Shape intersection primitives
 	include cgrid                \ Broad-phase AABB collision grid

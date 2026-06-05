@@ -191,3 +191,6 @@ ec-cell fnt
 
 : glyph ( n - )
     >r  fnt@ rgba@fds at@f  r> al_draw_glyph ;
+
+: glyph+ ( n - )
+    dup glyph fnt@ swap 0 al_get_glyph_advance 0 +at ;

@@ -1,0 +1,120 @@
+\ =============================================================================
+\ Dialog box actor — typewriter text reveal with word wrap
+\ =============================================================================
+
+32 constant DLG-MAX-LINES
+
+public
+
+class: %dialog
+    %actor derive
+
+    prop zstr :addr         \ allocated z-string (full text)
+    prop pos :fixed         \ glyph position (fractional for sub-frame speed)
+    redef prop #lines :int
+    DLG-MAX-LINES 4 * nprop linetbl       \ 32 x (u16 offset, u16 length)
+    prop w :fixed
+    prop h :fixed
+    prop fnt                \ ALLEGRO_FONT
+    prop spd :fixed         \ glyphs per frame
+    prop minh :fixed        \ auto-size h when > 0
+
+    template { 2. spd ! }
+class;
+
+private
+
+\ ── Line table access ────────────────────────────────────────────────────────
+
+: line-ofs@ ( n - u16 )   4 * linetbl + w@ ;
+: line-len@ ( n - u16 )   4 * linetbl + 2 + w@ ;
+: line-ofs! ( u16 n - )   4 * linetbl + w! ;
+: line-len! ( u16 n - )   4 * linetbl + 2 + w! ;
+
+\ ── Word-wrap pass (called once when text is set) ────────────────────────────
+
+|| 0 value wrap-target
+
+FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
+    drop >r swap drop                   ( lineptr  R: size )
+    wrap-target {
+        #lines @ DLG-MAX-LINES >= if r> 2drop 0 exit then
+        zstr @ -                        #lines @ line-ofs!
+        r>                              #lines @ line-len!
+        1 #lines +!
+    } 1
+;
+
+: dlg-wrap ( - )
+    this to wrap-target
+    0 #lines !
+    fnt @  w @ p>f  zstr @
+    (dlg-wrap-cb)  0
+    al_do_multiline_text
+    minh @ -exit
+    fnt @ al_get_font_line_height #lines @ * >p minh @ max h !
+    ;
+
+\ ── Glyph-by-glyph draw ─────────────────────────────────────────────────────
+
+: ~dlg-text ( - )
+    {: | base gidx px0 :}
+    fnt @ fnt!
+    zstr @ to base
+    0 to gidx
+    #lines @ for
+        penx@ to px0
+        base i line-ofs@ +
+        i line-len@ for
+            gidx pos @ >i < if
+                c@+ glyph+
+                1 +to gidx
+            then
+        loop
+        drop
+        px0 peny@ line-spacing @ + at
+    loop ;
+
+\ ── Draw protocol ────────────────────────────────────────────────────────────
+
+%dialog :: draw-view ( sx. sy. w. h. - )
+    {: sx sy vpw vph :}
+    zstr @ -exit
+    at@p vpw vph clip{
+        sx sy 2negate +atp
+        ~dlg-text
+    clip} ;
+
+%dialog :: draw ( - )
+    zstr @ -exit
+    minh @ if
+        ~dlg-text
+    else
+        0. 0. w @ h @ this draw-view
+    then ;
+
+\ ── Think ─────────────────────────────────────────────────────────────────────
+
+: ?adv ( - )
+    zstr @ -exit
+    pos @ >i zstr @ zcount nip >= ?exit
+    spd @ pos +! ;
+
+%dialog :: start ( - )
+    act> ?adv ;
+
+\ ── API ──────────────────────────────────────────────────────────────────────
+
+public
+
+: dlg-done? ( dialog - flag )
+    { pos @ >i zstr @ zcount nip >= } ;
+
+: dlg-set-text ( addr len %dialog - )
+    { zstr @ ?dup if free throw then
+      *zbuf zstr !
+      0 pos !
+      dlg-wrap } ;
+
+: dlg-reveal-all ( %dialog - )
+    { zstr @ zcount nip >p pos ! } ;

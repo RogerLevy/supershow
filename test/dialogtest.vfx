@@ -1,0 +1,77 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+import allegro5
+
+0 value the-font
+0 value dlg
+
+: load-font ( -- )
+    s" %idir%/dat/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
+    the-font 0= abort" Failed to load Habbo.ttf" ;
+
+create text0
+    ," The quick brown fox jumped over the lazy dog. It was a fine afternoon and nobody seemed to mind very much."
+create text1
+    ," Meanwhile, in a completely different part of the forest, a small rabbit was contemplating the meaning of carrots."
+
+variable which
+
+: current-text ( -- addr len )
+    which @ if text1 else text0 then count ;
+
+: next-text ( -- )
+    which toggle
+    current-text dlg dlg-set-text ;
+
+: init-dialog ( -- )
+    load-font
+    just
+    20 160 at  %dialog one to dlg
+    dlg {
+        the-font fnt !
+        280. w !
+        100. minh !
+        the-font al_get_font_line_height 3 * >p h !
+        2. spd !
+    }
+    current-text dlg dlg-set-text ;
+
+: ~indicator ( -- )
+    dlg dlg-done? if 
+        $ffffffff rgba8
+        dlg {
+            x @ >i  w @ >i +  4 -
+            y @ >i  h @ >i +  2 +
+        } at
+        6. 6. rectf 
+    then ;
+
+: handle-input ( -- )
+    <Z> pressed? -exit
+    dlg dlg-done? if
+        next-text
+    else
+        dlg dlg-reveal-all
+    then ;
+
+: ~dialog
+    $ffffffff rgba8  dlg { x 2@ 2>i at  this draw } ;
+
+: render ( -- )
+    $333333ff rgba8 screen
+    ~dialog
+    ~indicator ;
+
+: think ( -- )
+    handle-input
+    step ;
+
+public
+
+: main
+    init-dialog
+    show> render
+    work> think ;
+
+main

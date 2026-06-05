@@ -368,7 +368,7 @@ extern "C" void * al_get_fs_entry_name( void * e );
 \ extern "C" al_get_fs_entry_size( );
 \ extern "C" al_get_fs_interface( );
 extern "C" int al_get_glyph( void * font, int prev_codepoint, int codepoint, void * glyph );
-\ extern "C" al_get_glyph_advance( );
+extern "C" int al_get_glyph_advance( void *font, int codepoint1, int codepoint2 );
 \ extern "C" al_get_glyph_dimensions( );
 \ extern "C" al_get_glyph_width( );
 \ extern "C" al_get_haptic_autocenter( );

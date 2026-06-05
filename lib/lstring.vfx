@@ -32,3 +32,6 @@
 
 : lsize! ( lstr - n )
     cell+ ! ;
+
+: *lstring ( a n - a' )
+    dup cell+ 256 max allocate throw >r r@ lplace r> ;
