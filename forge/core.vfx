@@ -386,7 +386,7 @@ variable old-dp
 : $@+ ( a - a' str len ) count 2dup + -rot ;
 : $, ( a len - ) dup >r    here place    r> 1 + allot ;
 
-: evaluator ( name len - )
+: evaluator ( code len <name> - )
     create $, immediate does> count evaluate ;
 
 : indent ( n - ) 4 * spaces ;

@@ -575,7 +575,9 @@ create %protocol  %class dmake {
 
 : ?accessor ( name len - )
     2dup f" >%s" sfind nip if 2drop exit then
-    2dup fe" s\" -> %s\" evaluator >%s" evaluate ;
+    save-order  only forth definitions
+    2dup fe" s\" -> %s\" evaluator >%s" evaluate 
+    restore-order ;
 
 : nproperty ( size <name> - ) ( - a )
     {: size | property0 :}
