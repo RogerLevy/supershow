@@ -209,5 +209,3 @@ extern int SHCreateDirectoryExA( void* hwnd, void* zpath, void* psa );
     fid close-file drop
     fp len f" Slurped: %s" .info ;
 
-: lslurp ( fp len - lstr )
-    here -rot 2dup fsize dup , ,  file,  ;

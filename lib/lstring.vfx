@@ -1,37 +1,126 @@
 \ ------------------------------------------------------------------------------
 \ Cell-counted strings
-\ max , size , data ...
+\
+\ Header (4 cells / 16 bytes, all variants):
+\   max     >= 0 = fixed capacity; -1 = auto-grow
+\   size    current length in bytes
+\   cap     data capacity in bytes
+\   dataptr -> data  (fixed: points inline at base+/lhdr)
+\
+\ Fixed lstrings have data inline immediately after the header.
+\ Auto lstrings start with data in the same 256-byte block; grow to heap.
 \ ------------------------------------------------------------------------------
 
-: lcount ( lstr - addr len )
-    cell+ dup cell+ swap @ ;
+4 cells constant /lhdr
 
-: lplace ( addr len lstr - )
-    cell+ 2dup ! cell+ swap move ;
+\ --- named field accessors ----------------------------------------------------
 
-: lappend ( addr len lstr - )
-    cell+ >r
-    r@ cell+ r@ @ +  ( addr len dest )
-    over >r swap move r>
-    r@ @ + r> ! ;
+: lmaxsize  ( lstr - n )    @ ;
+: lmaxsize! ( n lstr - )    ! ;
+: lsize     ( lstr - n )    cell+ @ ;
+: lsize!    ( n lstr - )    cell+ ! ;
+: lcap@     ( lstr - n )    2 cells + @ ;
+: lcap!     ( n lstr - )    2 cells + ! ;
+: ldata@    ( lstr - addr ) 3 cells + @ ;
+: ldata!    ( addr lstr - ) 3 cells + ! ;
 
-: l$,  ( a len - )
-    dup cell+ dup , allot here lplace ;
+\ --- lcount: no branching; dataptr is always valid ----------------------------
 
-: l$@+ ( a - a' a'' len )
-    lcount 2dup cell+ + -rot ;
+: lcount ( lstr - addr len )   dup ldata@  swap lsize ;
 
-: lmaxsize ( lstr - n )
-    @ ;
+\ --- auto-grow internal -------------------------------------------------------
 
-: lmaxsize! ( n lstr - )
-    ! ;
+: ?lgrow ( need lstr -- )
+    {: need ls | newcap newbuf :}
+    need ls lcap@ <= if exit then
+    need ls lcap@ 2 * max to newcap
+    newcap allocate throw to newbuf
+    ls ldata@  newbuf  ls lsize move
+    ls ldata@  ls /lhdr +  <>  if  ls ldata@ free throw  then
+    newbuf ls ldata!
+    newcap ls lcap! ;
 
-: lsize ( lstr - n )
-    cell+ @ ;
+\ --- mutators -----------------------------------------------------------------
 
-: lsize! ( lstr - n )
-    cell+ ! ;
+: lplace ( addr len lstr -- )
+    {: a n ls :}
+    ls lmaxsize -1 = if  
+        n ls ?lgrow
+    else  
+        n ls lmaxsize > abort" lstring overflow" 
+    then
+    n ls lsize!
+    n if  a ls ldata@  n move  then ;
 
-: *lstring ( a n - a' )
-    dup cell+ 256 max allocate throw >r r@ lplace r> ;
+: lappend ( addr len lstr -- )
+    {: a n ls :}
+    n 0= if exit then
+    ls lmaxsize -1 = if  
+        ls lsize n +  ls ?lgrow
+    else  
+        ls lsize n +  ls lmaxsize > abort" lstring overflow" 
+    then
+    a  ls ldata@  ls lsize +  n move
+    n ls lsize + ls lsize! ;
+
+\ --- compile-time helpers -----------------------------------------------------
+
+: l$, ( a len -- )
+    here >r
+    dup ,           \ max
+    0 ,             \ size
+    dup ,           \ cap = max
+    here cell+ ,    \ dataptr = base + /lhdr  (after this cell)
+    dup allot align
+    r> lplace ;
+
+: l$@+ ( a -- a' a'' len )   lcount 2dup + -rot ;
+
+\ --- compile-time literal -----------------------------------------------------
+
+: l,"   '"' parse l$, ;
+
+\ --- heap constructor / destructor --------------------------------------------
+
+: *lstring ( a n -- lstr )
+    256 allocate throw >r
+    -1           r@ !
+    0            r@ cell+ !
+    256 /lhdr -  r@ 2 cells + !
+    r@ /lhdr +   r@ 3 cells + !
+    r@ lplace
+    r> ;
+
+: lfree ( lstr -- )
+    dup /lhdr +  over ldata@  <>  if  dup ldata@ free throw  then
+    free throw ;
+
+: lclear ( lstr -- )
+    dup lmaxsize -1 = if
+        dup /lhdr +  over ldata@  <>  if
+            dup ldata@ free throw
+            dup /lhdr +  over ldata!
+            256 /lhdr -  over lcap!
+        then
+    then
+    0 swap lsize! ;
+
+\ --- named static allocators --------------------------------------------------
+
+: lstring-init ( max addr -- )
+    {: max addr :}
+    max  addr lmaxsize!
+    0    addr lsize!
+    max  addr lcap!
+    addr /lhdr +  addr ldata! ;
+
+: lstring ( max-size <name> -- ) ( -- lstr )
+    create
+    dup ,           \ max
+    0 ,             \ size
+    dup ,           \ cap = max
+    here cell+ ,    \ dataptr inline
+    allot ;
+
+: lslurp ( fp len - lstr )
+    here -rot 2dup fsize dup , dup , dup , here cell+ , drop file, ;
