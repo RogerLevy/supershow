@@ -136,11 +136,11 @@ class;
 
 : close-dialog ( - )
     dlg @ exists? -exit
-    dlg @ { st-close } ;
+    dlg @ { st-close } 
+    dlg off ;
 
 %clicksprite :: start ( - )
     act> 
-    dlg @ exists? not if dlg off then    
     clicked? if
         dlg @ exists? if
             dlg @ dlg-done? if close-dialog else dlg @ dlg-reveal-all then
@@ -184,11 +184,14 @@ create msg2 ," Hmm, you look familiar. Have we met in another game before?"
 : think ( - )
     controls step sweep ;
 
+: ~help 
+    the-font fnt!  15 color  4 0 at s" Click an NPC!" print ;
+
 public
 
 : main
     init
-    show> ~test
+    show> ~test ~help
     work> think ;
 
 main
