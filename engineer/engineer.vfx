@@ -102,7 +102,7 @@ public
 : init-engineer ( - )
     reset-format-buffers
     identity 
-    vga-8x8 fnt! 
+    vga-8x8 default-font!
     reset-rootec
     'show off ;
 
@@ -250,7 +250,7 @@ private
     frigid
     freeze  \ Avoids dictionary corruption after calling EMPTY
     boot 
-    backup remember 
+    \ backup remember 
     ." Starting engine..." cr
     \ s" ^ engineer" evaluate 
     repl-go 

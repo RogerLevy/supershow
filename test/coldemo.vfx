@@ -192,7 +192,7 @@ public
     ~labels ;
 
 : main
-    vga-8x8 fnt!
+    vga-8x8 default-font!
     show>  demo ;
 
 main

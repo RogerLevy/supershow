@@ -52,7 +52,7 @@ init-icon-font
         : file-action ( fp len ) 
             2dup ext file-actions find-in ?dup if execute else 2drop then ;
 
-        : label  e{ habbo.ttf fnt! 0 20 +at srcpath$ count -path print e} ;
+        : label  e{ habbo.ttf default-font! 0 20 +at srcpath$ count -path print e} ;
         : icon  srcpath$ count file-icon put ;
         : arrow  parent @ {: p :} p %icon is? -exit p white-connector ;
     private;

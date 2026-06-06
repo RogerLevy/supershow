@@ -157,7 +157,9 @@ redef : cls ( - )
 
 \ || variable rmargin
 variable line-spacing  8 line-spacing !
-ec-cell fnt
+variable default-font
+: default-font@  default-font @ ;
+: default-font!  default-font ! ;
 
 \ Text rendering
 
@@ -167,7 +169,7 @@ ec-cell fnt
     a len *zbuf to zstr
     w s>f f>ds to w
     line-spacing @ s>f f>ds to lh 
-    fnt@  rgba@fds  at@f w lh 0 zstr al_draw_multiline_text 
+    default-font@  rgba@fds  at@f w lh 0 zstr al_draw_multiline_text 
     zstr free throw ;
 
 : print ( a len - )
@@ -179,18 +181,20 @@ ec-cell fnt
     r> line-spacing ! ;
 
 : textw ( a n - n )
-    *zbuf >r  fnt@  r@  al_get_text_width  r> free throw ;  
+    *zbuf >r  default-font@  r@  al_get_text_width  r> free throw ;  
 
 : textbox ( a n - x y w h )
     \ TODO: Support multiline text (need to use al_do_multiline_text)
     {: | buf[ 16 ] :}
     *zbuf >r
-    fnt@  r@  buf[ dup cell+ dup cell+ dup cell+ al_get_text_dimensions
+    default-font@  r@  buf[ dup cell+ dup cell+ dup cell+ al_get_text_dimensions
     r> free throw
     buf[ @+ swap @+ swap @+ swap @ ;
 
-: glyph ( n - )
-    >r  fnt@ rgba@fds at@f  r> al_draw_glyph ;
+: fnt|default ( font|0 - font )   dup 0= if drop default-font@ then ;
 
-: glyph+ ( n - )
-    dup glyph fnt@ swap 0 al_get_glyph_advance 0 +at ;
+: glyph ( n font|0 - )
+    swap >r fnt|default rgba@fds at@f r> al_draw_glyph ;
+
+: glyph+ ( n font|0 - )
+    2dup glyph  fnt|default swap 0 al_get_glyph_advance 0 +at ;

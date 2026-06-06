@@ -317,7 +317,7 @@ trait: %textual
     prop ty :fixed
 
     : _update-box  
-        fnt @ fnt!  txt @ lcount textbox 2>p w 2! 2>p tx 2! ;
+        fnt @ default-font!  txt @ lcount textbox 2>p w 2! 2>p tx 2! ;
 
     :: text! ( a n - ) 
         dup 0< if 2drop exit then
@@ -348,7 +348,7 @@ class: %label
     prop clr <save
     prop editable <save
     prop clear-on-edit <save
-    template { fnt@ fnt ! $FFFFFFFF clr ! editable on }
+    template { default-font@ fnt ! $FFFFFFFF clr ! editable on }
 
     :: on-clone
         this text@ *lstring txt ! _update-box ;
@@ -356,9 +356,9 @@ class: %label
     : editing-me?  editing @ focused this = and ;
 
     : _draw-text
-        txt @ ?dup if fnt @ fnt! lcount print then
+        txt @ ?dup if fnt @ default-font! lcount print then
         editing-me? if
-            this text@ nip 8 * 0 +at '_' glyph
+            this text@ nip 8 * 0 +at '_' 0 glyph
         then ;
 
     :: _draw

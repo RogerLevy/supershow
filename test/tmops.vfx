@@ -113,7 +113,7 @@ public
 
 : main
     init-tilemap-renderer
-    vga-8x8 fnt!
+    vga-8x8 default-font!
 
     \ Assign tileset to all tilemaps
     font-ts

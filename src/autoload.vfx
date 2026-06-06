@@ -130,7 +130,7 @@ class: %font
     prop size :int            \ TTF point size; 0 = bitmap font
     16 nprop ident :cstring   \ filename hint (".ttf" or ".png")
 
-    : does-font  does> -> alfont @ fnt! ;
+    : does-font  does> -> alfont @ default-font! ;
 
     create char-range  0 ,  255 ,
 

@@ -6,14 +6,12 @@ public
 
 private
 
-: hunk   used cell+ allocate throw ;
-: ?free  ?dup -exit free throw ;
+: ?lfree  ?dup -exit lfree ;
 
 public
 
-: remember  ( variable - ) 
-    dup @ ?free  hunk over !  dp used rot @ lplace ;
+: remember  ( variable - )
+    dup @ ?lfree  0 0 *lstring over !  dp used rot @ lplace ;
 
-: pristine  ( variable - ) 
+: pristine  ( variable - )
     @ lcount dp swap move   quit ;
-

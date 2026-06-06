@@ -26,7 +26,7 @@ bgm softice  %idir%/dat/bgm/softice.ogg
 
 : ~test
     cls
-    vga-8x8 fnt!
+    vga-8x8 default-font!
     0   0 at  s" Waveplay test" print
     0  20 at  s" 1-5: play samples" print
     0  30 at  s" M: stream BGM (softice.ogg)" print

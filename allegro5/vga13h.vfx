@@ -283,5 +283,5 @@ create vga.png
     r> al_fclose drop
     1` char-range` al_grab_font_from_bitmap
     to vga-8x8 
-    vga-8x8 fnt! ;
+    vga-8x8 default-font! ;
 

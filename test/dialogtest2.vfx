@@ -78,8 +78,8 @@ create ind-poly  3 ,  0. , 0. ,  6. , 0. ,  3. , 5. ,
     gamelife @ 30 mod 15 < -exit
     $ffffffff rgba8
     w 2@ 2>i +at
-    fnt @ fnt!  ind-poly polyf
-    -10 -5 +at  'Z' glyph ;
+    fnt @ default-font!  ind-poly polyf
+    -10 -5 +at  'Z' 0 glyph ;
 
 %fancydlg :: draw ( - )
     zstr @ -exit
@@ -185,7 +185,7 @@ create msg2 ," Hmm, you look familiar. Have we met in another game before?"
     controls step sweep ;
 
 : ~help 
-    the-font fnt!  15 color  4 0 at s" Click an NPC!" print ;
+    the-font default-font!  15 color  4 0 at s" Click an NPC!" print ;
 
 public
 

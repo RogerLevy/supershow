@@ -40,7 +40,7 @@ variable sample-ok
     0 100 at  s" sample: snd-02.ogg " print
         128 0 +at 
         sample-ok @ if s" OK" else s" FAILED" then print
-    vga-8x8 fnt!
+    vga-8x8 default-font!
     0 120 at
     8 0 do  icons1.ts i tile put  16 0 +at  loop ;
 

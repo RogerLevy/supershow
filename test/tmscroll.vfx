@@ -54,7 +54,7 @@ public
     show>
         draw-bg
         draw-view-demo
-        vga-8x8 fnt!
+        vga-8x8 default-font!
         16 16 at the-tileset 2 tile put ;
 
 main

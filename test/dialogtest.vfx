@@ -46,7 +46,7 @@ create arrow-poly  3 ,  0. , 0. ,  6. , 0. ,  3. , 5. ,
             x 2@ 2>i  w 2@ 2>i 2+ 
         } at
         arrow-poly polyf
-        -10 -5 +at  'Z' glyph
+        -10 -5 +at  'Z' 0 glyph
     then ;
 
 : handle-input ( -- )

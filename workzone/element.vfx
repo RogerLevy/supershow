@@ -209,7 +209,7 @@ redef : sweep ( iterable - )
 %element :: draw
     this active? -exit
     \ TODO: fix this workaround
-    vga-8x8 fnt!
+    vga-8x8 default-font!
     at-me  
     this _draw 
 

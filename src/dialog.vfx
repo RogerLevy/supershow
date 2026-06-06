@@ -63,7 +63,7 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
 
 : ~dlg-text ( - )
     {: | base gidx px0 :}
-    fnt @ fnt!
+    fnt @ default-font!
     zstr @ to base
     0 to gidx
     #lines @ for
@@ -71,7 +71,7 @@ FromC 4 1 CallProc: (dlg-wrap-cb)  ( lnum lineptr size extra - continue )
         base i line-ofs@ +
         i line-len@ for
             gidx pos @ >i < if
-                c@+ glyph+
+                c@+ 0 glyph+
                 1 +to gidx
             then
         loop
