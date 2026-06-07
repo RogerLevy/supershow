@@ -5,12 +5,12 @@ import eyes-task
 public
 
 class: %eyeball  %actor derive
-    prop clr       \ iris color (rgba8 value)
-    prop kxt       \ xt: ( - flag ) button/key test
-    prop lid       \ 0=open .. 15=closed
-    prop lx :int   \ local x offset from owner (pixels)
-    prop ly :int   \ local y offset from owner (pixels)
-    prop owner     \ owner actor address or 0
+    prop clr :int  \ iris color (rgba8 value)
+    prop kxt :xt   \ xt: ( - flag ) button/key test
+    prop lid :int  \ 0=open .. 15=closed
+    prop lx :fixed \ local x offset from owner (pixels)
+    prop ly :fixed \ local y offset from owner (pixels)
+    prop owner :ref %actor    \ owner actor address or 0
 class;
 
 private
