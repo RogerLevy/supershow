@@ -69,6 +69,10 @@ This is a custom system developed by the user specifically for their game develo
 - **Type queries**: `is?` for runtime type/trait checking, `can?` for capability checking
 - **Base trait**: All objects inherit `_object` trait with lifecycle protocols
 
+### System Manual
+
+**Read `doc/claude/supershow-manual.md` at the start of every session.** It covers: VFX Forth grammar and dialect, module system, NIBS OOP (with property access examples), actor system, drawing, input, math, continuations, cooperative multitasking, asset loading, worked examples from test/, and a VFX Forth dialect glossary. It also repeats critical rules (forward references, property access, locals in continuations) that Claude violates regularly.
+
 ### Conventions
 
 - **VFXLand5 Dialect**: doc/claude/vfxland5-dialect.md
