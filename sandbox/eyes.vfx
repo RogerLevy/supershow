@@ -1,6 +1,7 @@
-module [eyes]
+module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
+import eyes-task
 public
 
 class: %eyeball  %actor derive
@@ -32,12 +33,18 @@ private
         owner @ -exit
         owner @ >x 2@  lx 2@  2+  x 2! ;
 
+: ?close  trigger? -exit begin lid @ 15 < while yield 2 lid +! repeat ;
+: ?open   trigger? ?exit begin lid @ 0 > while yield -2 lid +! repeat ;
+
 %eyeball :: start ( - )
     eyeball-physics
-    act> 
-        trigger? if  lid @ 15 < if 2 lid +! then
-        else    lid @ 0>  if -2 lid +! then
-        then ;
+    0 task>
+        begin ?close ?open yield again ;
+
+    \ act> 
+    \     trigger? if  lid @ 15 < if 2 lid +! then
+    \     else    lid @ 0>  if -2 lid +! then
+    \     then ;
 
 : irisxy  mouse 2>p  x 2@ 2- angof  mouse 2>p  x 2@ dist 10. min  vec ;
 

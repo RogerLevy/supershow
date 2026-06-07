@@ -1,0 +1,66 @@
+module [supershow.task]
+import engineer
+import supershow
+public
+
+\ Cooperative multitasking - translated from VFXLand4
+\ Two unknowns marked ???
+
+class: %actor
+    prop task.sp
+    prop task.rp
+    prop task.ds
+    prop task.rs
+class;
+
+%actor object host
+host value task
+
+: yield
+    this dup
+    sp@ task -> task.sp !
+    rp@ task -> task.rp !
+    host to task
+    task -> task.rp @ rp!
+    task -> task.sp @ sp!
+    drop as ;
+
+: fyield ( f:n - f:n ) \ preserves a float on the data stack
+    f>sf yield sf>f ;
+
+: wait ( n. - )  
+    ?dup -exit
+    p>f begin fyield fdelta f- fdup 0e f<= until fdrop ;  \ ??? delta equivalent
+
+|| : (spin)  
+    begin yield again ;
+
+|| : ?*stacks  
+    task.ds @ ?exit
+    2 kb allocate throw task.ds !
+    16 kb allocate throw task.rs ! ;
+
+: perform ( n xt - )
+    ?*stacks
+    swap ( xt n ) task.ds @ 1024 + !  
+    task.ds @ 1024 + task.sp !  
+    this task.ds @ 1024 + cell+ !
+    task.rs @ 16 kb + cell- cell- !
+    task.rs @ 16 kb + cell- cell- task.rp !
+    ['] (spin) task.rs @ 16 kb + cell- !
+    act>
+        this dup
+        sp@ task -> task.sp !
+        rp@ task -> task.rp !
+        this to task
+        task -> task.rp @ rp!
+        task -> task.sp @ sp!
+        drop as ;
+
+continuation: task> ( n - <code;> ) ( n - ... )
+    perform ;
+
+%actor :: unload
+    task.ds @ free drop  0 task.ds !
+    task.rs @ free drop  0 task.rs !
+    actor:unload ;
