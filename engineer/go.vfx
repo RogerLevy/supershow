@@ -24,9 +24,9 @@ redef : ticks  ( n - ms )
 : update-delta  ( - )
     ustime  ucounter 2dup to ustime  2swap 2-
         d>s to usdelta
-    usdelta s>f 1000000e f/ to sdelta
+    usdelta s>f 1000000e f/ to fdelta
     ustime 1000 m/ to mstime
-    sdelta f>p to pdelta ;
+    fdelta f>p to pdelta ;
 
 : poll ( - )
     poll-keyboard  get-mouse

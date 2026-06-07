@@ -33,7 +33,7 @@ wordlist constant honing-wl
 0 value mstime \ int, in milliseconds
 0 value usdelta
 0 value pdelta \ fixed, in seconds
-0e fvalue sdelta \ in seconds
+0e fvalue fdelta \ in seconds
 create zcommand 256 allot 
 variable backup
 

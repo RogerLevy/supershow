@@ -16,10 +16,10 @@ ec-cell ppenx \ fixed
 ec-cell ppeny \ fixed
 
 : rgba@fds
-    ppenr@ p>f f>ds
-    ppeng@ p>f f>ds
-    ppenb@ p>f f>ds
-    ppena@ p>f f>ds    
+    ppenr@ p>f f>sf
+    ppeng@ p>f f>sf
+    ppenb@ p>f f>sf
+    ppena@ p>f f>sf    
 ;
 
 : rgba ( r. g. b. a. - )
@@ -166,8 +166,8 @@ variable default-font
     {: a len w | lh zstr :}
     a len or -exit
     a len *zbuf to zstr
-    w s>f f>ds to w
-    line-spacing @ s>f f>ds to lh 
+    w s>f f>sf to w
+    line-spacing @ s>f f>sf to lh 
     default-font@  rgba@fds  at@f w lh 0 zstr al_draw_multiline_text 
     zstr free throw ;
 

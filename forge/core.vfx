@@ -178,7 +178,9 @@ include %idir%/../textmode/textmode-tools.vfx
         pop-attribute
     else . then ;
 
-: f>ds  ( f:n - dl dh ) 0 >r rp@ sf! r> ;
+: f>sf  ( f:n - n ) 0 sp@ sf! ;
+: sf>f  ( n - f:n ) sp@ sf@ drop ;
+
 : :now  :noname  ';' parse evaluate  postpone ;  execute ;
 
 : link ( list - )
