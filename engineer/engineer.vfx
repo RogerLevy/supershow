@@ -253,8 +253,7 @@ private
     \ backup remember 
     ." Starting engine..." cr
     \ s" ^ engineer" evaluate 
-    repl-go 
-    >vfx ;
+    repl-go ;
 
 ['] dev-entrypoint is EntryPoint
 ['] dev-cold is .cold

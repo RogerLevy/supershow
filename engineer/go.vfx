@@ -121,4 +121,5 @@ public
 : go ( - ) 
     blocking-go ;
 
-continuation: show> ( - ) ( - ) 'show ! ; 
+continuation: show> ( - ) ( - ) 
+    'show !  debug @ if >display then ;
