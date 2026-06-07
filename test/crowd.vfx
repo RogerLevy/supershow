@@ -96,8 +96,8 @@ class;
 : girl-npc ( - )
     girl-down anm-down !  girl-up anm-up !  girl-left anm-left ! ;
 
-create npc-types  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
-: rnd-npc ( - )  3 rnd cells npc-types + @ execute ;
+jumptable npc  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
+: rnd-npc ( - )  3 rnd npc ;
 
 : sprinkle ( n - )
     for

@@ -262,8 +262,8 @@ aka parse' parse
 : >lowercase ( a c - a c ) 2dup bounds ?do i dup c@ lc swap c! loop ;
 : >uppercase ( a c - a c ) 2dup upper ;
 
-: jumptable ( a - <name> ) ( ... - ... ) 
-    create , does> @+ @ cells + @ ?execute ;
+: jumptable ( - <name> ) ( ... n - ... ) 
+    create does> swap cells + @ ?execute ;
 
 : h.8 ( n - )
     base @ hex  swap
