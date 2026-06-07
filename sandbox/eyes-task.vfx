@@ -4,7 +4,8 @@ import supershow
 public
 
 \ Cooperative multitasking - translated from VFXLand4
-\ Two unknowns marked ???
+
+16 kb constant TASK_RSIZE
 
 class: %actor
     prop task.sp
@@ -37,17 +38,17 @@ host value task
 
 || : ?*stacks  
     task.ds @ ?exit
-    2 kb allocate throw task.ds !
-    16 kb allocate throw task.rs ! ;
+    2048 allocate throw task.ds !
+    TASK_RSIZE allocate throw task.rs ! ;
 
 : perform ( n xt - )
     ?*stacks
     swap ( xt n ) task.ds @ 1024 + !  
     task.ds @ 1024 + task.sp !  
     this task.ds @ 1024 + cell+ !
-    task.rs @ 16 kb + cell- cell- !
-    task.rs @ 16 kb + cell- cell- task.rp !
-    ['] (spin) task.rs @ 16 kb + cell- !
+    task.rs @ TASK_RSIZE + cell- cell- !
+    task.rs @ TASK_RSIZE + cell- cell- task.rp !
+    ['] (spin) task.rs @ TASK_RSIZE + cell- !
     act>
         this dup
         sp@ task -> task.sp !
