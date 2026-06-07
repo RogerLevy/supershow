@@ -189,3 +189,9 @@ extern BOOL SetThreadPriority( hthread, priority );
 
 aka alqueue queue
 aka almixer mixer 
+
+: albmpwh  9 cells + 2@ ;
+: albmpxy  $164 + 2@ ;
+
+: albmpw  albmpwh drop ;
+: albmph  albmpwh nip ;

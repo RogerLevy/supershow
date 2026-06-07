@@ -110,8 +110,8 @@ class;
 %clicksprite :: draw ( - )
     bmp @ put ;
 
-: sprite-w ( - n )   bmp @ id>albmp al_get_bitmap_width ;
-: sprite-h ( - n )   bmp @ id>albmp al_get_bitmap_height ;
+: sprite-w ( - n )   bmp @ bmpw ;
+: sprite-h ( - n )   bmp @ bmph ;
 
 : clicked? ( - flag )
     {: | mx my :}
@@ -163,9 +163,9 @@ create msg2 ," Hmm, you look familiar. Have we met in another game before?"
 : init ( - )
     load-font
     just
-    cat.ts  1 tile  msg0  60  100  spawn-sprite
+    cat.ts  0 tile  msg0  60  100  spawn-sprite
     girl.ts 0 tile  msg1  140 180  spawn-sprite
-    man.ts  1 tile  msg2  220 100  spawn-sprite ;
+    man.ts  0 tile  msg2  220 100  spawn-sprite ;
 
 \ =============================================================================
 \ Main loop

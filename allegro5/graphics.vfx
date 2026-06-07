@@ -58,9 +58,6 @@ ec-cell ppeny \ fixed
 \ Drawing primitives
 \ =============================================================================
 
-: albmpw ( albmp - w ) dup if al_get_bitmap_width then ;
-: albmph ( albmp - h ) dup if al_get_bitmap_height then ;
-
 : draw-bitmap ( albmp n - )
     over if at@f al_draw_bitmap else 2drop then ;
 
