@@ -104,3 +104,11 @@ public
 : main  start-eyes ;
 
 main
+
+cr
+cr
+." -- Notes about the old version --" cr
+." Rendered in the task with a cached bitmap: no LID property, state lived on the coroutine stack." cr
+." Cache only redrew when eyelids were moving; task idles cheaply when open or closed." cr
+." Drawing a bitmap instead of circles means no `0 batch>` needed." cr
+cr
