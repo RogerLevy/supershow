@@ -14,7 +14,7 @@ The working directory is `supershow/`. Key subdirs:
 - `allegro5/` — Allegro 5 FFI bindings; `graphics.vfx` has pen/color/drawing; `input.vfx` has keyboard/mouse; `keys.vfx` has `<A>` etc.; `vga13h.vfx` has `color` (palette index)
 - `src/` — actor system (`actor.vfx`, `stage.vfx`, `sprites.vfx`), traits (`traits.vfx`), tilemaps, collision, audio, border, mode
 - `addons/shapes.vfx` — circle, rect, line, oval drawing primitives
-- `sandbox/` — working demos including `eyes.vfx` and `eyes-task.vfx`
+- `sandbox/` — working demos including `eyes.vfx`
 - `test/` — test programs; read these for usage patterns
 - `lib/` — utilities: `mersenne.vfx` (RNG), `rsort.vfx`, `lstring.vfx`, etc.
 - `doc/claude/` — this file and other docs for Claude
@@ -617,9 +617,9 @@ Optional flags between `%` and specifier: `-` left-justify, `0` zero-pad, decima
 
 ---
 
-## Cooperative Multitasking (sandbox/eyes-task.vfx)
+## Cooperative Multitasking (src/task.vfx)
 
-This is NOT part of the standard engine yet — it lives in `sandbox/eyes-task.vfx` and is only imported by `eyes.vfx`. Do not import it from any other file until it has been promoted to the engine proper.
+Part of the standard engine — included automatically by `import supershow`. Available to all programs that import supershow.
 
 It extends `%actor` with four props: `task.sp`, `task.rp`, `task.ds`, `task.rs` (stack pointers and heap-allocated stack buffers).
 

@@ -37,6 +37,7 @@ module [supershow]
 	import %idir%/../lib/rsort.vfx
 	include actor
 	include stage                \ Actor/sprite system
+	include task                 \ Cooperative multitasking
 	include timer
 	include sprites
 	include dialog

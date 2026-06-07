@@ -1,9 +1,6 @@
-module [supershow.task]
-import engineer
-import supershow
-public
-
 \ Cooperative multitasking - translated from VFXLand4
+
+public
 
 16 kb constant TASK_RSIZE
 
@@ -29,22 +26,22 @@ host value task
 : fyield ( f:n - f:n ) \ preserves a float on the data stack
     f>sf yield sf>f ;
 
-: wait ( n. - )  
+: wait ( n. - )
     ?dup -exit
     p>f begin fyield fdelta f- fdup 0e f<= until fdrop ;  \ ??? delta equivalent
 
-|| : (spin)  
+|| : (spin)
     begin yield again ;
 
-|| : ?*stacks  
+|| : ?*stacks
     task.ds @ ?exit
     2048 allocate throw task.ds !
     TASK_RSIZE allocate throw task.rs ! ;
 
 : perform ( n xt - )
     ?*stacks
-    swap ( xt n ) task.ds @ 1024 + !  
-    task.ds @ 1024 + task.sp !  
+    swap ( xt n ) task.ds @ 1024 + !
+    task.ds @ 1024 + task.sp !
     this task.ds @ 1024 + cell+ !
     task.rs @ TASK_RSIZE + cell- cell- !
     task.rs @ TASK_RSIZE + cell- cell- task.rp !
