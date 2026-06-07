@@ -12,7 +12,7 @@
 
 : angle-to ( srcx. srcy. destx. desty. - angle. )
     \ Calculate angle from src to dest
-    2swap 2- xy>ang ;
+    2swap 2- angof ;
 
 : ->line ( destx. desty. - )
     \ Draw line from pen to dest with arrowhead at dest

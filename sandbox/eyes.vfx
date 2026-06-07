@@ -1,0 +1,99 @@
+module [eyes]
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+public
+
+class: %eyeball  %actor derive
+    prop clr       \ iris color (rgba8 value)
+    prop kxt       \ xt: ( - flag ) button/key test
+    prop lid       \ 0=open .. 15=closed
+    prop lx :int   \ local x offset from owner (pixels)
+    prop ly :int   \ local y offset from owner (pixels)
+    prop owner     \ owner actor address or 0
+class;
+
+private
+
+: trigger? ( - flag )   kxt @ ?execute ;
+
+: ~lids ( - )
+    {: | n cx cy :}
+    lid @ to n
+    at@ to cy to cx
+    $c8a080ff rgba8
+    cx 15 - cy 15 - at      30. n >p rectf
+    cx 15 - cy 15 n - + at  30. n >p rectf ;
+
+\ Owner-relative positioning: eyeball.x = owner.x + lx, eyeball.y = owner.y + ly
+\ If eyeballs needed to drift locally (e.g., float), you'd swap lx/ly with x/y
+\ at the right moment rather than using them directly. Document this for future.
+: eyeball-physics ( - )
+    physics>
+        owner @ -exit
+        owner @ >x 2@  lx 2@  2+  x 2! ;
+
+%eyeball :: start ( - )
+    eyeball-physics
+    act> 
+        trigger? if  lid @ 15 < if 2 lid +! then
+        else    lid @ 0>  if -2 lid +! then
+        then ;
+
+: irisxy  mouse 2>p  x 2@ 2- angof  mouse 2>p  x 2@ dist 10. min  vec ;
+
+%eyeball :: draw ( - )
+    0 batch>
+    15 color  15. circf
+    at@p
+    clr @ rgba8  irisxy +atp  5. circf
+    0 color  3. circf
+    atp
+    ~lids ;
+
+public
+
+\ Blink strategies: one per key. ' blink-q? stored in kxt, called each frame.
+\ The strategy pattern means no subclassing — one class, 14 behaviors.
+: blink-q?   <Q> held? ;
+: blink-w?   <W> held? ;
+: blink-e?   <E> held? ;
+: blink-r?   <R> held? ;
+: blink-t?   <T> held? ;
+: blink-y?   <Y> held? ;
+: blink-u?   <U> held? ;
+: blink-i?   <I> held? ;
+: blink-o?   <O> held? ;
+: blink-p?   <P> held? ;
+: blink-a?   <A> held? ;
+: blink-s?   <S> held? ;
+: blink-d?   <D> held? ;
+: blink-f?   <F> held? ;
+
+0 value controller   \ owner actor providing reference position
+
+: start-eyes ( - )
+    $c8a080ff backdrop ! 
+
+    -30 30 at  %actor one to controller
+
+    %eyeball one { ['] blink-q? kxt !  $ffff55ff clr !   64.  12. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-w? kxt !  $ffff55ff clr !  320.  12. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-e? kxt !  $0000ffff clr !  160.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-r? kxt !  $0000ffff clr !  224.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-t? kxt !  $00aa00ff clr !  128. 160. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-y? kxt !  $00aa00ff clr !  256. 160. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-u? kxt !  $ff8000ff clr !   64.  64. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-i? kxt !  $ff8000ff clr !   64. 128. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-o? kxt !  $ff8000ff clr !   32.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-p? kxt !  $ff8000ff clr !   96.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-a? kxt !  $55ff55ff clr !  320.  64. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-s? kxt !  $5555ffff clr !  320. 128. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-d? kxt !  $ff55ffff clr !  288.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-f? kxt !  $ff5555ff clr !  352.  96. lx 2!  controller owner ! }
+;
+
+public
+
+: main  start-eyes ;
+
+main

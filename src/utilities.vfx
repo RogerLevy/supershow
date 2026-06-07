@@ -35,9 +35,9 @@ continuation: batch> ( flag -- )
 : uvec ( deg. - x. y. ) p>f deg>rad fdup fcos f>p fsin f>p ;  
 : fuvec ( f: deg - f: x f: y ) deg>rad fdup fcos fswap fsin ;  
 : vec ( deg. len. - x. y. ) p>f p>f fuvec frot fscale f>p f>p swap ;
-: xy>ang ( x. y. - deg. ) p>f p>f fatan2 rad>deg 360e f+ 360e fmod f>p ;
+: angof ( x. y. - deg. ) p>f p>f fatan2 rad>deg 360e f+ 360e fmod f>p ;
 : hypot ( x. y. - n. ) p>f fdup f* p>f fdup f* f+ fsqrt f>p ;
-: dist ( x. y. x. y. - n. ) 2- hypot ;   
+: dist ( x. y. x. y. - n. ) 2- hypot ;
 
 \ =============================================================================
 \ Other math helpers
