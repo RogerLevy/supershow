@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## NEVER GUESS
+
+**NEVER GUESS.** Always read the source before stating any fact.
+
+- Before writing a commit message: read the full diff AND the surrounding context of every changed line to identify function names and intent. Never name a function based on a changed line alone.
+- Before staging a commit: check for any new assets, referenced files, or dependencies that also need to be staged.
+- When unsure of anything: stop and verify before proceeding.
+
+**NEVER GUESS. NEVER GUESS. NEVER GUESS.**
+
 ## VFXLand 5 (codename "Starling")
 
 - Custom game engine and 2D games written in VFX Forth.
