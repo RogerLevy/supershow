@@ -122,4 +122,5 @@ public
     blocking-go ;
 
 continuation: show> ( - ) ( - ) 
+    dup 'show @ = if drop exit then  \ guards against locking the window focus
     'show !  debug @ if >display then ;
