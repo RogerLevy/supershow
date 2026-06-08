@@ -617,6 +617,42 @@ Optional flags between `%` and specifier: `-` left-justify, `0` zero-pad, decima
 
 ---
 
+## String Output Capture (lib/lstrout.vfx)
+
+Capture output (from `emit`, `type`, `cr`, `.`, etc.) into a dynamic lstring buffer. Used for special cases where you need to capture console output - `f"` handles most string formatting needs.
+
+```forth
+lstrout ( xt - lstr )   \ Execute xt with output redirected, return lstring
+```
+
+**Important:** Caller must free the returned lstring with `lfree`.
+
+**Usage:**
+```forth
+create buf 256 allot
+[: actor .summary ;] lstrout   ( - lstr )
+dup lcount buf place
+lfree
+```
+
+**Common pattern - capture to log:**
+```forth
+create msg-buf 256 allot
+[: ." Error in " actor .summary ;] lstrout
+dup lcount msg-buf place
+lfree
+f" %s" msg-buf count log
+```
+
+**Inline pattern:**
+```forth
+[: actor .summary ;] lstrout
+dup lcount type
+lfree
+```
+
+---
+
 ## Cooperative Multitasking (src/task.vfx)
 
 Part of the standard engine — included automatically by `import supershow`. Available to all programs that import supershow.
