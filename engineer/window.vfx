@@ -21,8 +21,9 @@ public
         s\" s\" " type  last-file$ count type  s\" \" last-file$ place" type  cr
         s\" s\" " type  project-file$ count type  s\" \" project-file$ place" type  cr
         s\" s\" " type  project$ count type  s\" \" project$ place" type  cr \ "
-        str@ session-ini-path fwrite
-    ;] strout ;
+    ;] lstrout
+    dup lcount session-ini-path fwrite
+    lfree ;
 
 also moduleing 
 : restore-session

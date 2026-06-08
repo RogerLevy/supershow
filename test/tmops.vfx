@@ -69,11 +69,12 @@ variable t
 : ~data-panel
     0  2 panel-y  at
     src-map tilemap>data
-    [: 
-        swap f" tdata w:%n h:%n " type 
+    [:
+        swap f" tdata w:%n h:%n " type
         8 for @+ . loop drop
-        str@ print 
-    ;] strout ;
+    ;] lstrout
+    dup lcount print
+    lfree ;
 
 variable anim-tile
 variable fillclr-t

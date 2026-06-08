@@ -1,0 +1,69 @@
+\ lstrout.vfx - String output capture with dynamic allocation
+\ API:
+\   lstrout ( xt - lstr )  Redirect output, execute xt, return lstring (caller must free)
+
+module
+forth-public
+
+|| aligned-page strout-stack
+|| variable ssp   strout-stack ssp !
+|| : ss-push ( ? - ) cell ssp c+!  ssp @ ! ;
+|| : ss-pop ( - ? )  ssp @ @  cell negate ssp c+! ;
+
+|| : lbuf ( - lstring ) ssp @ @ ;
+
+\ --- I/O device vectors ---
+
+|| variable cbuf
+|| : Emit-string ( c ? - )
+    drop  cbuf c!  cbuf 1 lbuf lappend ;
+
+|| : Type-string ( a len ? - )
+    drop  lbuf lappend ;
+
+|| : CR-string ( ? - )
+    drop  10 cbuf c!  cbuf 1 lbuf lappend ;
+
+|| create string-vectors
+    ' drop ,          \ 0
+    ' drop ,          \ 1
+    ' drop ,          \ 2
+    ' drop ,          \ 3
+    ' drop ,          \ 4
+    ' drop ,          \ 5
+    ' drop ,          \ 6
+    ' drop ,          \ 7
+    ' drop ,          \ 8
+    ' Emit-string ,   \ 9  - emit
+    ' drop ,          \ 10
+    ' Type-string ,   \ 11 - type
+    ' CR-string ,     \ 12 - cr
+    ' drop ,          \ 13
+    ' drop ,          \ 14
+    ' drop ,          \ 15
+    ' drop ,          \ 16
+    ' drop ,          \ 17
+    ' drop ,          \ 18
+    ' drop ,          \ 19
+    ' drop ,          \ 20
+    ' drop ,          \ 21
+    ' drop ,          \ 22
+    ' drop ,          \ 23
+    ' drop ,          \ 24
+
+|| create strdev   0 , string-vectors ,
+
+\ --- Main API ---
+
+: lstrout ( xt - lstr )
+    {: xt :}
+    0 0 *lstring                 ( xt lstr )
+    >r
+    op-handle @ ss-push
+    r@ ss-push
+    strdev op-handle !
+    xt catch
+    ss-pop drop
+    ss-pop op-handle !
+    throw
+    r> ;
