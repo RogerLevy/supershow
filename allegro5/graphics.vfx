@@ -68,13 +68,14 @@ ec-cell ppeny \ fixed
 : -albmp ( albmp - )
     ?dup -exit al_destroy_bitmap ;
 
-: screen ( n - )
-    rgba8 rgba@fds al_clear_to_color ;
+: screen ( - )
+    rgba@fds al_clear_to_color ;
 
 variable backdrop  $000000ff backdrop !
 
 redef : cls ( - )
-    e{ backdrop @ screen e} ;
+    backdrop @ -exit
+    e{ backdrop @ $ff or rgba8 screen e} ;
 
 \ =============================================================================
 \ Matrix stack

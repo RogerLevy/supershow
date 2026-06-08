@@ -48,7 +48,7 @@ variable __user-zoom
 : border ( - )
     identity
     0 0 winw winh al_set_clipping_rectangle
-    $000000ff screen 
+    e{ $000000ff rgba8 screen e}
 
     tv-xy 2s>f`` 
     tv-xy2 2s>f``
