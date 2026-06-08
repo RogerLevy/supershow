@@ -42,8 +42,6 @@ create this-path 256 allot   \ current scene file path (counted string)
 
 \ Commands
 
-: editable? ( obj - flag )  drop true ;
-
 : (scene-path)  bl parse this-path place ;
 
 : (this-set?)  this-path c@ 0= abort" No current scene!  Required: `SAVEAS <name>` or `EDIT <name>`" ;
@@ -100,7 +98,7 @@ command : as ( obj - )
     dup start ;
 
 : ?copy ( obj - obj` )
-    ctrl? if copy-actor ." copy" cr then  ;
+    dup ctrl? if copy-actor ." copy" cr nip then ;
 
 : dragging ( - )
     lb <lb - 
