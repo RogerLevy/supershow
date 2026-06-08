@@ -35,7 +35,7 @@ $01 constant BIT_WRT
     0 to hit-tile  0 to hit-col  0 to hit-row  0 to hit-obj ;
 
 class: %actor
-    prop fac :int <save
+    prop dir :int <save
 class;
 
 : dirkeys? ( - f )
@@ -45,15 +45,15 @@ class;
     <left> letgo? <right> letgo? or <up> letgo? or <down> letgo? or ;
 
 : pudlr4 ( - )
-    <left> pressed? if  left fac !  exit then
-    <right> pressed? if  right fac !  exit then
-    <up> pressed? if  up fac !  exit then
-    <down> pressed? if  down fac !  exit then ;
+    <left> pressed? if  left dir !  exit then
+    <right> pressed? if  right dir !  exit then
+    <up> pressed? if  up dir !  exit then
+    <down> pressed? if  down dir !  exit then ;
 
 : sudlr4 ( - )
-    <left> held? if  left fac !  exit then
-    <right> held? if  right fac !  exit then
-    <up> held? if  up fac !  exit then
-    <down> held? if  down fac !  exit then ;
+    <left> held? if  left dir !  exit then
+    <right> held? if  right dir !  exit then
+    <up> held? if  up dir !  exit then
+    <down> held? if  down dir !  exit then ;
 
 : dir>v  2 cells * walkv's + 2@ ;
