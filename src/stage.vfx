@@ -59,10 +59,6 @@ continuation: actives> ( - ) ( - )
     then
     sp! ;
 
-|| : ?actorerr
-    catch ?dup -exit
-    dup err_bailed = if drop exit else this bench throw then ;
-
 \ =============================================================================
 \ Find actors
 \ =============================================================================
@@ -74,7 +70,7 @@ class;
 || 0 value xt
 
 || : (find) ( 0 %actor - 0|actor )
-    dup -> en @ 0= if drop exit then    
+    dup -> en @ 0= if drop exit then
     { xt execute if enough drop this then } ;
 
 continuation: who> ( - actor|0 ) ( - f )
@@ -96,12 +92,27 @@ continuation: who> ( - actor|0 ) ( - f )
 \ : priority ( n - )
 \     nextpri! ;
 
-|| : (behave)  actives> ?benched sp@ >r behave r> restore-sp ;
-|| : (move)  actives> ?benched physics ;
+|| : (behave)
+    actives>
+        ?benched
+        sp@ >r
+        ['] behave catch if
+            dup err_bailed = if drop else this bench then
+        then
+        r> restore-sp ;
+
+|| : (move)
+    actives>
+        ?benched
+        ['] physics catch if
+            dup err_bailed = if drop else this bench then
+        then ;
+
 || : (+time)  +gametime actives> +time ;
+
 || : (step) ( - )
-    ['] (behave) ?actorerr 
-    ['] (move) ?actorerr 
+    (behave)
+    (move)
     (+time) ;
 
 %actor :: unload ( - )
