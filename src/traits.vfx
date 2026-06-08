@@ -52,5 +52,5 @@ trait: %xy
 trait;
 
 trait: %_bitmap 
-    prop bmp :int <save
+    prop bmp :int
 trait;

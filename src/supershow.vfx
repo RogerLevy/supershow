@@ -45,6 +45,7 @@ module [supershow]
 	include collision            \ Shape intersection primitives
 	include cgrid                \ Broad-phase AABB collision grid
 	include tilecol              \ Tilemap slide collision & tile reading
+	include scene                \ JSON scene save/load
 
 	\ ?
 	include border               \ TV border / ininclude 

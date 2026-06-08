@@ -36,27 +36,30 @@ defer sketchpad-overlay
 
 private
 
-0 value this
+create this-path 256 allot   \ current scene file path (counted string)
 
 \ ==============================================================================
 
 \ Commands
 
-command : save ( - )
-    \ Save current scene.
-    this 0= 
-        abort" No current scene!  Required: `SAVEAS <scene>` or `EDIT <scene>`"
-    this keep ;    
+: editable? ( obj - flag )  drop true ;
 
-: (friendly-scene)  bl parse f" +scene %s.scn" evaluate ;
+: (scene-path)  bl parse this-path place ;
+
+: (this-set?)  this-path c@ 0= abort" No current scene!  Required: `SAVEAS <name>` or `EDIT <name>`" ;
+
+command : save ( - )
+    \ Save current scene to current path.
+    (this-set?)
+    this-path count save-scene ;
 
 command : saveas ( <name> - )
-    \ Save stage as scene with given name.
-    (friendly-scene) to this   save ; 
+    \ Save stage as named scene (.json).
+    bl parse f" dat/scn/%s.json" this-path place   save ;
 
 command : edit ( <name> - )
-    \ Edit scene of given name.
-    (friendly-scene) to this   just this load ;
+    \ Clear stage and load named scene.
+    bl parse f" dat/scn/%s.json" this-path place   just   this-path count load-scene ;
 
 command : ctrl+s ( - )
     \ Hotkey: Save current scene.

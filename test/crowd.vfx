@@ -40,7 +40,6 @@ girl.ts animation girl-left  3 frame, 4 frame, 3 frame, 4 frame,
 3 constant DIR_RIGHT
 
 class: %npc  %actor derive
-    prop dir :int
     prop anm-down :addr
     prop anm-up   :addr
     prop anm-left :addr
@@ -78,15 +77,6 @@ class;
     dir @ 1 xor face  walk-velocity  
     x 2@ 0 0 gamew gameh 2>p 1. 1. 2- 2clamp x 2! ;
 
-%npc :: start ( - )
-    act>
-        boundary? if about-face walk-velocity then
-        60 rnd 0= if rnd-dir face walk-velocity then ;
-
-\ =============================================================================
-\ Spawn helpers
-\ =============================================================================
-
 : man-npc ( - )
     man-down anm-down !  man-up anm-up !  man-left anm-left ! ;
 
@@ -99,11 +89,14 @@ class;
 jumptable npc  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
 : rnd-npc ( - )  3 rnd npc ;
 
+%npc :: start ( - )
+    rnd-npc  rnd-dir face  walk-velocity
+    act>
+        boundary? if about-face walk-velocity then
+        60 rnd 0= if rnd-dir face walk-velocity then ;
+
 : sprinkle ( n - )
-    for
-        gamew rnd gameh rnd at
-        %npc one { rnd-npc  rnd-dir face  walk-velocity }
-    loop ;
+    for  gamew rnd gameh rnd at  %npc one drop  loop ;
 
 \ =============================================================================
 \ Unoptimized test sprite (not in bank — tests flush-on-fallback)

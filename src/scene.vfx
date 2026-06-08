@@ -1,0 +1,42 @@
+\ =============================================================================
+\ Scene save/load — flat JSON actor serialization
+\ =============================================================================
+
+module [supershow]
+
+public
+
+\ =============================================================================
+\ Saving
+\ =============================================================================
+
+|| 0 value _arr
+
+|| : (collect-actor) ( - )
+    this *json 0 _arr cjson-add-object ;
+
+|| : build-actors-array ( root - )
+    {: root :}
+    cjson-new-array to _arr
+    ['] (collect-actor) each-active
+    _arr "actors" root cjson-add-array ;
+
+: save-scene ( path len - )
+    ['] build-actors-array serjson ;
+
+\ =============================================================================
+\ Loading
+\ =============================================================================
+
+|| : json>actor ( cjson - )
+    {: cjson :}
+    cjson "class" j>s evaluate one
+    cjson swap read-props ;
+
+: load-scene ( path len - )
+    {: path len | root :}
+    path len load-json to root
+    root 0= abort" load-scene: file not found or parse error"
+    root "actors" j>j
+    [: json>actor ;] jeach-fast
+    root destroy-json ;

@@ -12,7 +12,7 @@ class: %actor
     is-a %xy
 
     prop en <readonly
-    prop vx :fixed <save prop vy :fixed <save
+    prop vx :fixed <save  prop vy :fixed <save
 
     prop lyr :int       \ collision layer (bitmask: what I am)
     prop msk :int       \ collision mask (bitmask: what I collide with)
@@ -21,7 +21,7 @@ class: %actor
     prop phys :xt
     prop time :fixed                \ secs
     prop prio :int <save            \ 0 = behind BG, <>0 = in front of BG   
-    prop id :int <save
+    prop id :int
 
     template { -1 id ! }
 
