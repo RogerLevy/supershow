@@ -111,7 +111,7 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
 : *{ ( class - <code> } )
     \ Parse-ahead instantiation for serialized objects/actors
     \ Allows property settings between *{ } that can be picked up by START
-    s" (one) { " evaluate
+    s" one { " evaluate
     '}' parse' evaluate  1 >in +!
     s" this start }" evaluate ; immediate
 
