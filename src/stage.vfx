@@ -43,18 +43,16 @@ continuation: actives> ( - ) ( - )
         \ Compare SP to previous SP.
         \ The data stack grows downward.
         dup sp@ cell+ cell+ > if
-            [: 
+            [:
             ." Positive stack imbalance in logic for actor " this .summary cr
             .rs .s
-            str@ buf place ;] strout   \ "
-            buf count log
+            ;] lstrout dup lcount log lfree
         then
         dup sp@ cell+ cell+ < if
-            [: 
-            ." Negative stack imbalance in logic for actor " this .summary cr 
+            [:
+            ." Negative stack imbalance in logic for actor " this .summary cr
             .rs .s
-            str@ buf place ;] strout    \ "
-            buf count log
+            ;] lstrout dup lcount log lfree
         then
     then
     sp! ;
@@ -97,16 +95,22 @@ continuation: who> ( - actor|0 ) ( - f )
         ?benched
         sp@ >r
         ['] behave catch if
-            dup err_bailed = if drop else this bench then
+            dup err_bailed = if drop else
+                this swap bench
+            then
         then
         r> restore-sp ;
 
 || : (move)
     actives>
         ?benched
+        sp@ >r
         ['] physics catch if
-            dup err_bailed = if drop else this bench then
-        then ;
+            dup err_bailed = if drop else
+                this swap bench
+            then
+        then
+        r> restore-sp ;
 
 || : (+time)  +gametime actives> +time ;
 

@@ -62,7 +62,14 @@ class;
 \ Actor benching (disabling when there's an error)
 c: %actor benched ;  \ controls behavior and physics
 : benched? ( actor - ) -> benched @ ;
-: bench ( actor - ) -> benched on ;
+
+: bench ( actor errcode - )
+    {: actor errcode | ls :}
+    actor [: .summary ;] lstrout to ls
+    ls lcount  errcode   f" Benched actor (error %n): %s" .warn
+    ls lfree
+    actor -> benched on ;
+
 : ?benched  benched @ if r> drop then ;
 : resurrect ( actor - ) { benched off   this start } ;
 
