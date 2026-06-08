@@ -49,7 +49,7 @@ class;
     >en @ ;
 
 : init-actor ( actor - )
-    { at@ 2>p x 2!   this start } ;
+    { at@ 2>p x 2! } ;
 
 0 %actor :construct ( - )
     \ node:construct 

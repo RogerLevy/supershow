@@ -31,7 +31,8 @@ public
 || : json>actor ( cjson - )
     {: cjson :}
     cjson "class" j>s evaluate one
-    cjson swap read-props ;
+    cjson swap read-props
+    start ;
 
 : load-scene ( path len - )
     {: path len | root :}

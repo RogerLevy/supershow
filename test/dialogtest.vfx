@@ -27,7 +27,7 @@ variable which
 : init-dialog ( -- )
     load-font
     just
-    20 160 at  %dialog one to dlg
+    20 160 at  %dialog spawn to dlg
     dlg {
         the-font fnt !
         280. w !

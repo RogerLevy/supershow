@@ -96,7 +96,7 @@ jumptable npc  ' man-npc ,  ' cat-npc ,  ' girl-npc ,
         60 rnd 0= if rnd-dir face walk-velocity then ;
 
 : sprinkle ( n - )
-    for  gamew rnd gameh rnd at  %npc one drop  loop ;
+    for  gamew rnd gameh rnd at  %npc spawn drop  loop ;
 
 \ =============================================================================
 \ Unoptimized test sprite (not in bank — tests flush-on-fallback)
@@ -149,9 +149,9 @@ fast}
 
 : main
     just
-    
+
     init-npc-bank
-    gamew 2 / gameh 2 / at  %marker one drop
+    gamew 2 / gameh 2 / at  %marker spawn drop
     2000 sprinkle
     show> ~test
     work> think

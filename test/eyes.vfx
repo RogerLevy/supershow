@@ -93,32 +93,32 @@ class: %sparkle  %actor derive class;
 class: %cursor  %actor derive class;
 
 %cursor :: start ( - )
-    act>  
-        time @ 90. p*  100.  vec  160. 120. 2+  x 2! 
-        this 0 0 from  %sparkle one { 2.0 rnd 1.0 - vx ! } ;
+    act>
+        time @ 90. p*  100.  vec  160. 120. 2+  x 2!
+        this 0 0 from  %sparkle one { 2.0 rnd 1.0 - vx !  this start } ;
 
 0 value controller   \ owner actor providing reference position
 
 : start-eyes ( - )
-    $c8a080ff backdrop ! 
+    $c8a080ff backdrop !
 
-    -30 30 at  %actor one to controller
-    160 120 at  %cursor one to cursor
+    -30 30 at  %actor spawn to controller
+    160 120 at  %cursor spawn to cursor
 
-    %eyeball one { ['] blink-1? kxt !  $ffff55ff clr !   64.  12. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-2? kxt !  $ffff55ff clr !  320.  12. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-3? kxt !  $0000ffff clr !  160.  96. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-4? kxt !  $0000ffff clr !  224.  96. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-5? kxt !  $00aa00ff clr !  128. 160. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-6? kxt !  $00aa00ff clr !  256. 160. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-7? kxt !  $ff8000ff clr !   64.  64. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-8? kxt !  $ff8000ff clr !   64. 128. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-9? kxt !  $ff8000ff clr !   32.  96. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-10? kxt !  $ff8000ff clr !   96.  96. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-11? kxt !  $55ff55ff clr !  320.  64. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-12? kxt !  $5555ffff clr !  320. 128. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-13? kxt !  $ff55ffff clr !  288.  96. lx 2!  controller owner ! }
-    %eyeball one { ['] blink-14? kxt !  $ff5555ff clr !  352.  96. lx 2!  controller owner ! }
+    %eyeball one { ['] blink-1? kxt !  $ffff55ff clr !   64.  12. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-2? kxt !  $ffff55ff clr !  320.  12. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-3? kxt !  $0000ffff clr !  160.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-4? kxt !  $0000ffff clr !  224.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-5? kxt !  $00aa00ff clr !  128. 160. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-6? kxt !  $00aa00ff clr !  256. 160. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-7? kxt !  $ff8000ff clr !   64.  64. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-8? kxt !  $ff8000ff clr !   64. 128. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-9? kxt !  $ff8000ff clr !   32.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-10? kxt !  $ff8000ff clr !   96.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-11? kxt !  $55ff55ff clr !  320.  64. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-12? kxt !  $5555ffff clr !  320. 128. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-13? kxt !  $ff55ffff clr !  288.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-14? kxt !  $ff5555ff clr !  352.  96. lx 2!  controller owner !  this start }
 ;
 
 public

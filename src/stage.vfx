@@ -135,13 +135,16 @@ continuation: who> ( - actor|0 ) ( - f )
     push ;
 
 : stage-init ( actor stage - )
-    udup push  { -1 rnd id !   en on   this init-actor } ;
+    udup push  { -1 rnd id !   en on } ;
 
 : one-in ( class stage - actor )
     >r >r free-nodes pop r> over construct dup r> stage-init ;
 
 : one ( class - actor )
     stg@ one-in ;
+
+: spawn ( class - actor )
+    one dup start ;
 
 \ Default stage
 %stage object actors

@@ -18,4 +18,4 @@ class;
     xt1 ! 0 max dur ! act-timer ;
 
 continuation: timer> ( time. - ) ( - )
-    ( xt ) %timer one { (timer) } ;
+    ( xt ) %timer one { (timer)  this start } ;

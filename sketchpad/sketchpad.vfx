@@ -96,7 +96,8 @@ command : as ( obj - )
 
 : copy-actor ( obj - obj` )
     %actor one copy
-    dup actors index over -> id ! ;
+    dup actors index over -> id !
+    dup start ;
 
 : ?copy ( obj - obj` )
     ctrl? if copy-actor ." copy" cr then  ;

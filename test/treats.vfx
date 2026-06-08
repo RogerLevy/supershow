@@ -28,7 +28,7 @@ class: %spewer  %actor derive  class;
 %spewer :: start
     act>
         gamew rnd  gameh rnd  at
-        %treat one as>
+        %treat spawn as>
             4. -2. 2rnd  -2. -2. 2+  vx 2! ;
 
 \ ---- Main -------------------------------------------------------------------
@@ -38,7 +38,7 @@ class: %spewer  %actor derive  class;
 
 : main
     just
-    3 0 do  %spewer one drop  loop
+    3 0 do  %spewer spawn drop  loop
     show> think ~test ;
 
 main

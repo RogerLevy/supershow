@@ -122,15 +122,16 @@ class;
 
 : open-dialog ( - )
     dlg @ exists? ?exit
-    x @ >i 40 - 
+    x @ >i 40 -
     y @ >i sprite-h - 50 -  at
-    %fancydlg one dlg ! 
+    %fancydlg one dlg !
     dlg @ {
         the-font fnt !
         100. w !
         40. minh !
         rnd32 $ffffff00 and $80 or bgclr !
         2. spd !
+        this start
     }
     msg @ count dlg @ dlg-set-text ;
 
@@ -158,7 +159,7 @@ create msg1 ," Nice to meet you! I love exploring forests and finding hidden tre
 create msg2 ," Hmm, you look familiar. Have we met in another game before?"
 
 : spawn-sprite ( bmpid msg x y - )
-    at %clicksprite one { msg ! bmp ! } ;
+    at %clicksprite one { msg ! bmp !  this start } ;
 
 : init ( - )
     load-font
