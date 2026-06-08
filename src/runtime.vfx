@@ -50,6 +50,7 @@ public
     hold off
     user-zoom off
     refit
+    reinit-task-actors
     init-tilemap-renderer
     init-autoloads
     \ init-crt
@@ -63,7 +64,7 @@ public
 init-supershow
 
 : boot-supershow ( - )
-    init-supershow 
+    init-supershow
     run-main ;
 
 ' boot-supershow is boot

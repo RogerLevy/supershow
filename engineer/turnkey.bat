@@ -35,8 +35,8 @@ echo [trace]
 echo level=none
 ) > ..\rel\%relpath%\allegro5.cfg
 
-SET saveString=%2 save-release ..\rel\%relpath%\%~n1 save-debug ..\rel\%relpath%-debug\%~n1-debug
-SET configString=debug off validations off safety off
+SET saveString=%2 turnkey-mode off save-release ..\rel\%relpath%\%~n1 save-debug ..\rel\%relpath%-debug\%~n1-debug
+SET configString=debug off validations off safety off turnkey-mode on
 
 if exist %1.vfx (
     engineer.exe %configString% include %1.vfx %saveString%

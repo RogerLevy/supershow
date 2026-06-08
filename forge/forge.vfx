@@ -1,4 +1,5 @@
 variable debug  debug on
+variable turnkey-mode
 
 [defined] release-target [if] debug off [then]
 

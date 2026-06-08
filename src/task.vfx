@@ -2,6 +2,8 @@
 
 public
 
+create task-actor-list /list allot  task-actor-list /list erase
+
 16 kb constant TASK_RSIZE
 
 class: %actor
@@ -36,7 +38,8 @@ host value task
 || : ?*stacks
     task.ds @ ?exit
     2048 allocate throw task.ds !
-    TASK_RSIZE allocate throw task.rs ! ;
+    TASK_RSIZE allocate throw task.rs !
+    turnkey-mode @ if this task-actor-list add-to then ;
 
 : perform ( n xt - )
     ?*stacks
@@ -58,7 +61,20 @@ host value task
 continuation: task> ( n - <code;> ) ( n - ... )
     perform ;
 
+|| : reinit-task ( actor - )
+    as>
+    0 beha !
+    0 task.sp !  0 task.rp !
+    0 task.ds !  0 task.rs ! ;
+
+: reinit-task-actors ( - )
+    task-actor-list list-count for
+        list-next
+        dup InForth? if reinit-task else drop then
+    loop drop ;
+
 %actor :: unload
-    task.ds @ free drop  0 task.ds !
-    task.rs @ free drop  0 task.rs !
+    task.ds @ free drop  
+    task.rs @ free drop  
+    this reinit-task
     actor:unload ;

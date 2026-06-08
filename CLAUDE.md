@@ -174,8 +174,8 @@ The system has different entry points depending on build type:
 
 ### Exporting Releases
 
-- supershow/loader.vfx - standard compilation sequence for games
-- `turnkey` copies game files to ../rel/<game>/ and saves executables
+- `engineer/turnkey.bat GAMENAME` — builds release and debug executables into `../rel/GAMENAME/`
+- Accepts optional second argument for Forth code to run before `save-release`
 
 ## Key Systems
 
