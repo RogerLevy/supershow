@@ -1,0 +1,41 @@
+\ Headless check. Run by engineer.exe (turnkey: full engineer layer + 256MB
+\ dict baked in) -- or by plain vfxforth, in which case we load the stack
+\ ourselves. Output is redirected to _ctest.log; _ctest.ok holds "err=N"
+\ (0 = clean compile + checks passed).
+
+\ Load the engineer stack only if it isn't already present.
+[undefined] [engineer] [if]
+    +xrefs 256 1024 * xref-kb
+    require %idir%/../lib/file.fth
+    require %idir%/../lib/configtools.fth
+    include %idir%/../forge/forge.vfx
+    include %idir%/../allegro5/allegro5.vfx
+    include %idir%/engineer.vfx
+    ProtectedExterns
+[then]
+
+\ Redirect output to a log file (the windowed exe's console doesn't reach the pipe).
+[undefined] filedev: [if]  include %vfxpath%\Lib\Genio\file.fth  [then]
+filedev: OutDev
+\ genio's filedev-open uses Windows OPEN_ALWAYS, which opens an existing file
+\ WITHOUT truncating -- so a shorter run would leave the previous run's tail.
+\ Delete first; open-gio then creates a fresh empty file.
+s" _ctest.log" delete-file drop
+s" _ctest.log" r/w OutDev open-gio 2drop
+op-handle @ value SaveOut
+OutDev op-handle !
+
+0 value terr
+: load-body  s" _ctest_body.vfx" included ;
+['] load-body catch to terr
+
+flushOP-gen drop
+SaveOut op-handle !
+OutDev close-gio drop
+
+variable fh
+: write-result
+    s" _ctest.ok" w/o create-file abort" cf" fh !
+    terr f" err=%n" fh @ write-file drop
+    fh @ close-file drop ;
+write-result bye

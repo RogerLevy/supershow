@@ -2,6 +2,7 @@ node_modules
 *.log
 XREF.XRF
 engineer.exe
+engineer/_ctest.ok
 
 textmode/Release/textmode.12345678.tlog/CL.command.1.tlog
 
