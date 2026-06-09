@@ -14,8 +14,8 @@ The working directory is `supershow/`. Key subdirs:
 - `allegro5/` — Allegro 5 FFI bindings; `graphics.vfx` has pen/color/drawing; `input.vfx` has keyboard/mouse; `keys.vfx` has `<A>` etc.; `vga13h.vfx` has `color` (palette index)
 - `src/` — actor system (`actor.vfx`, `stage.vfx`, `sprites.vfx`), traits (`traits.vfx`), tilemaps, collision, audio, border, mode
 - `addons/shapes.vfx` — circle, rect, line, oval drawing primitives
-- `sandbox/` — working demos including `eyes.vfx`
-- `test/` — test programs; read these for usage patterns
+- `test/` — worked demos and test programs (`eyes.vfx`, `treats.vfx`, `crowd.vfx`, `boxland.vfx`, `coldemo.vfx`, `shapetest.vfx`); read these for usage patterns
+- `sandbox/` — scratch programs (`dictionary.vfx`, `playable.vfx`)
 - `lib/` — utilities: `mersenne.vfx` (RNG), `rsort.vfx`, `lstring.vfx`, etc.
 - `doc/claude/` — this file and other docs for Claude
 
@@ -154,7 +154,7 @@ class: %myclass
 class;
 ```
 
-Property type annotations (`:int`, `:fixed`, `:xt`, `:ref`, `:addr`) are metadata for display/serialization only. They do not affect the cell size — all properties are one cell. They affect `<save` (which props get serialized) and introspection.
+Property type annotations (`:int`, `:fixed`, `:float`, `:xt`, `:ref`, `:addr`) are metadata for display/serialization only. They do not affect the cell size — all properties are one cell. They affect `<save` (which props get serialized) and introspection.
 
 `<save` after a prop declaration marks it as serializable.
 `<readonly` marks it as read-only.
@@ -173,7 +173,7 @@ A protocol is a late-bound method. Defined with `::` inside a trait (creates the
     ... startup code ... ;
 ```
 
-`start` is called by the constructor (`init-actor`) when an actor is spawned.
+`start` is run by `spawn` (see Spawning) — **not** by `one` and **not** by the constructor. It's where you install `act>` and do per-instance setup.
 `draw` is called by `render` to draw the actor relative to the pen position.
 `render` is the engine-facing entry: positions the pen and calls `draw`. Usually you only override `draw`.
 `unload` is called when the actor is removed.
@@ -182,15 +182,17 @@ A protocol is a late-bound method. Defined with `::` inside a trait (creates the
 
 ```forth
 %myclass object myobj      \ named dictionary object (compile-time)
-%myclass one               \ pool-allocate actor, returns it on stack
+%myclass spawn             \ pool-allocate + construct AND run start, returns it
+%myclass one               \ pool-allocate + construct only (NO start), returns it
 %myclass make              \ allocate unnamed object (in dict or heap), returns it on stack
 ```
 
-`one` is the main way to spawn actors at runtime. It pulls from the node pool and calls the constructor (which calls `init-actor` → `start`).
+`spawn` is the usual way to create a *running* actor: it does `one`, then calls the actor's `start` protocol. Both pull a node from the pool and run the constructor (template + `:construct` → `init-actor`, which sets `(x,y)` from the pen and stamps the clock); the only difference is whether `start` runs. Use `one` when you must set properties **before** `start` reads them — then call `start` yourself:
 
 ```forth
-%myclass one { foo ! bar ! }   \ create and initialize in one go
-%myclass one to myvalue         \ store handle
+%myclass spawn                            \ create and start (uses defaults)
+%myclass one { foo ! bar ! this start }   \ configure first, THEN start
+%myclass one to myvalue                   \ create without starting; start later
 ```
 
 ### Object scoping and property access
@@ -265,16 +267,16 @@ The actor system is built on a pool of `%node` objects backed by `%actor`. All a
 
 ### %actor properties (from traits and class)
 
-From `%xy` trait: `prop x :fixed`, `prop y :fixed` — position, as adjacent pair → `x 2@` / `x 2!`
-From `%actor`: `prop vx :fixed`, `prop vy :fixed` — velocity pair → `vx 2@` / `vx 2!`
-From `%actor`: `prop en` — enabled flag (non-zero = alive)
-From `%actor`: `prop beha :xt` — per-frame behavior XT (set by `act>`)
-From `%actor`: `prop phys :xt` — per-frame physics XT (set by `physics>`)
-From `%actor`: `prop time :fixed` — actor's own timer (in seconds, resets when `act>` fires)
-From `%actor`: `prop prio :int` — draw priority (0 = draw behind BG via `backsprites`)
-From `%actor`: `prop lyr :int`, `prop msk :int` — collision layer/mask bitmasks
-From `%_bitmap` trait: `prop bmp :int` — bitmap ID for sprite rendering
-From `%animator` trait: `prop anm`, `prop a.ts`, `prop a.spd`, etc. — frame animation
+`prop x :fixed`, `prop y :fixed` — position, as adjacent pair → `x 2@` / `x 2!`
+`prop vx :fixed`, `prop vy :fixed` — velocity pair → `vx 2@` / `vx 2!`
+`prop en` — enabled flag (non-zero = alive)
+`prop beha :xt` — per-frame behavior XT (set by `act>`)
+`prop phys :xt` — per-frame physics XT (set by `physics>`)
+`prop _time :fixed` — internal gametime stamp (16.16 seconds). Don't read directly: use the `time` getter (secs since last stamp) and `/time` to re-stamp. See Timing.
+`prop prio :int` — draw priority (0 = draw behind BG via `backsprites`)
+`prop lyr :int`, `prop msk :int` — collision layer/mask bitmasks
+`prop bmp :int` — bitmap ID for sprite rendering
+`prop anm`, `prop a.ts`, `prop a.spd`, etc. — frame animation
 
 The `simple-motion` physics (default): each frame adds `(vx, vy)` to `(x, y)`.
 
@@ -291,10 +293,23 @@ class;
         mydata @ . ;      \ runs every frame; ends at ;
 
 : launch
-    160 120 at  %myactor one drop ;
+    160 120 at  %myactor spawn drop ;
 ```
 
-`act>` is a continuation — the code following it in the same word is the per-frame body. It also resets `time` to 0. You cannot have two `act>` in the same word body. If you need separate physics and behavior, use `physics>` for physics and `act>` for logic.
+`act>` is a continuation — the code following it in the same word is the per-frame body. It also re-stamps the actor's clock (via `/time`), so `time` reads 0 at install.
+
+**Multiple `act>` in one word = a state machine.** Because `act>` reassigns `beha` to "the rest of the word," a second `act>` reached at runtime simply swaps the actor into a new behavior. The actor keeps running the current `act>` body until execution actually reaches the next `act>`, so guard a later `act>` with a condition + `?exit`/`-exit` to delay the transition. And since every `act>` re-stamps via `/time`, `time` measures how long the actor has been in its *current* state:
+
+```forth
+%foe :: start
+    act>                      \ state 1: approach
+        move-toward-target
+        reached? -exit        \ not there yet → stay in state 1 this frame
+        act>                  \ state 2: attack (installed on arrival; clock resets)
+            time 1.0 passed? if fire then ;
+```
+
+For separate physics and behavior, use `physics>` for physics and `act>` for logic.
 
 `physics>` is also a continuation — sets the physics XT. The physics body runs before `beha`. Default physics (`simple-motion`) is installed in the template; override it by calling `physics>` in `start`.
 
@@ -331,19 +346,21 @@ If you need them independent (reinstallable separately / the most typical use ca
 
 ### Spawning
 
+`spawn ( class - actor )` = `one` + the actor's `start`; it's the normal way to create a live actor. `one ( class - actor )` constructs without starting — use it to configure before `start`.
+
 ```forth
-%myactor one              \ ( - actor ) spawn from pool, returns actor
-%myactor one drop         \ spawn without keeping reference
-gamew rnd gameh rnd at  %myactor one drop   \ spawn at random position
-%myactor one { 5 mydata ! }                 \ spawn and configure
-%myactor one to myvalue                     \ store reference in a VALUE
+%myactor spawn            \ ( - actor ) construct AND start, returns actor
+%myactor spawn drop       \ start without keeping reference
+gamew rnd gameh rnd at  %myactor spawn drop   \ start at a random position
+%myactor one { 5 mydata ! this start }        \ configure first, then start
+%myactor spawn to myvalue                     \ keep the handle
 
 \ from: position relative to another actor
-another-actor  dx dy  from  %myactor one drop
+another-actor  dx dy  from  %myactor spawn drop
 \ `from` sets the pen to (another-actor.x + dx, another-actor.y + dy)
 ```
 
-`init-actor` (called by constructor) calls `start` with the pen position as the initial `(x, y)`.
+The pen position at construct time becomes the actor's initial `(x, y)` (set by `init-actor`); `start` runs afterward (under `spawn`, or when you call it). An actor made with `one` and never started exists with physics (`simple-motion`) but no behavior — its `act>` is never installed.
 
 ### Removing actors
 
@@ -358,7 +375,7 @@ Actual removal is deferred to `sweep` (called at end of each `step`).
 
 ### Frame loop integration
 
-`step` — runs one frame of actor logic: all actors' `beha`, then `phys`, then advances time. Called once per frame from your `think` word.
+`step` — runs one frame of actor logic: all actors' `beha`, then `phys`, then advances the game clock (`+gametime`). Called once per frame from your `think` word.
 
 `animate` — advances frame animations for all actors with `anm` set.
 
@@ -388,7 +405,7 @@ Actually the simplest pattern (from `treats.vfx`):
 : think  step ;
 : main
     just
-    3 0 do  %spewer one drop  loop
+    3 0 do  %spewer spawn drop  loop
     show> think ~test ;   \ show> takes EVERYTHING after it as the body
 main
 ```
@@ -449,7 +466,7 @@ The rectangle and line words treat the pen as the top-left / start point respect
 | `#` | suffix | index or ID (`classifier#`, `bmp#`) |
 | `*` | prefix | create/instantiate (`*stacks`, `*zbuf`) |
 | `-` | prefix | destroy, negate, clear, remove (`-albmp`, `-exit`) |
-| `+` | prefix | add, increment, push (`+at`, `+time`) |
+| `+` | prefix | add, increment, push (`+at`, `+gametime`) |
 | `/` | prefix | initialize/setup (`/object-base`) |
 | `s/` | prefix | size of in bytes (`s/node`, `s/ec`) |
 | `?` | prefix | conditional execution (`?exit`, `?execute`, `?dup`) |
@@ -519,14 +536,42 @@ Global modifier flags: `alt?`, `ctrl?`, `shift?` — updated each frame.
 
 ## Timing
 
-`fdelta` — `( - f:seconds )` float delta time, seconds since last frame. On the float stack.
-`pdelta` — `( - n. )` fixed-point delta time.
-`usdelta` — `( - n )` integer delta time in microseconds.
-`time` — per-actor timer property (fixed-point seconds). Resets when `act>` is installed.
-`passed? ( n. - flag )` — true if `time >= n.`, and resets `time` to 0 if so. Useful for timeouts inside `act>`.
+### Where time comes from (Engineer)
+
+Engineer owns the real clock. Once per frame, `update-delta` (engineer/go.vfx) samples the kernel microsecond counter `ucounter` (a `QueryPerformanceCounter`-based monotonic wall clock) and recomputes a set of global time values, all defined in engineer/variables.vfx:
+
+`ustime` — `( - d )` double, absolute time in **microseconds**. A monotonic wall-clock snapshot taken once per frame. Does NOT pause.
+`mstime` — `( - n )` integer, `ustime` in milliseconds.
+`usdelta` — `( - n )` integer microseconds elapsed since the previous frame, **clamped to `max-usdelta`**.
+`pdelta` — `( - n. )` fixed-point seconds elapsed since the previous frame (derived from clamped `usdelta`).
+`fdelta` — `( - f:seconds )` float seconds elapsed since the previous frame (derived from clamped `usdelta`). On the float stack.
+`max-usdelta` — `( - n )` value; cap on `usdelta` (default `250000`, i.e. 0.25 s). Absorbs dev stalls / frame hitches so the deltas — and everything derived from them, including `gametime` — can't lurch forward. Note `ustime` itself is **not** clamped; it always holds true wall time.
+`tps` — `( - f )` float target ticks (frames) per second (default `60e`); the Allegro frame timer fires at this rate.
+`ticks` — `( n - ms )` convert a count of frames to milliseconds at the current `tps`.
+
+These are the framerate-independence primitives: scale per-frame movement by `pdelta`/`fdelta` so motion is time-based, not frame-based. The `max-usdelta` clamp also prevents physics from exploding or tunnelling on a single slow frame.
+
+### The game clock (Supershow)
+
+Layered on top of Engineer's `usdelta`, Supershow keeps a pausable **game clock** (src/actor.vfx):
+
+`gametime` — `( - d )` double **microseconds** of accumulated game time. Each frame `+gametime` adds `usdelta` to it, but **only while `clock` is on** — so it freezes when the game is paused.
+`clock` — variable gating `gametime`; `clock off` pauses game time, `clock on` resumes.
+`gamelife` — frame counter, incremented every frame regardless of `clock`.
+
+`gametime` (not the wall clock) is what actor timers are built on, so actor timers automatically pause with the game.
+
+### Per-actor timer
+
+Each actor carries `_time` (internal `:fixed` property) — a 16.16 **stamp** of `gametime` (in seconds), not an accumulator. Two words operate on it (both require an active `this`, i.e. inside `act>` or a protocol):
+
+`/time` — `( - )` stamp the current actor's clock to now. Called automatically when `act>` is installed and when the actor spawns.
+`time` — `( - n. )` fixed-point seconds elapsed since the last `/time`.
+`passed?` — `( n. - flag )` true if `time >= n.`; when it fires it re-stamps via `/time`, so it behaves as a repeating interval. Useful for timeouts inside `act>`.
 
 ```forth
-act>  2.0 passed? if ... then ;   \ do something after 2 seconds
+act>  2.0 passed? if ... then ;   \ do something every 2 seconds
+act>  time 0.5 >= if ... then ;   \ test elapsed without resetting
 ```
 
 For a one-shot timed callback:
@@ -728,30 +773,14 @@ class: %ball  %actor derive  class;
     act>  0.1 vy +! ;       \ accelerate downward each frame
 
 : launch
-    160 120 at  %ball one drop ;
-```
-
-### Strategy pattern (XT stored in property)
-
-```forth
-class: %eyeball  %actor derive
-    prop kxt :xt
-class;
-
-: blink-q?  <Q> held? ;
-: blink-w?  <W> held? ;
-
-%eyeball one { ['] blink-q? kxt ! }   \ store XT in property
-
-\ Inside act>: call it
-kxt @ ?execute    \ calls the stored XT if non-zero
+    160 120 at  %ball spawn drop ;
 ```
 
 ### Relative positioning with `from`
 
 ```forth
 \ `from` ( actor x y - ): sets pen to actor.pos + (x,y)
-parent-actor  10 5  from  %child one drop
+parent-actor  10 5  from  %child spawn drop
 ```
 
 ### Owner-relative positioning via physics>
@@ -768,7 +797,7 @@ parent-actor  10 5  from  %child one drop
 
 ```forth
 act>
-    this 0 0 from  %sparkle one { 2. rnd 1. - vx ! } ;
+    this 0 0 from  %sparkle one { 2. rnd 1. - vx ! this start } ;
 \ `this 0 0 from` = pen at self position; spawns sparkle there
 ```
 
@@ -841,7 +870,7 @@ Pattern: `show> thing ;` where `thing` draws and updates state. No `step`, no `a
 %spewer :: start
     act>
         gamew rnd gameh rnd at    \ random position
-        %treat one as>            \ spawn treat, scope it
+        %treat spawn as>          \ spawn treat (runs start), scope it
             4. -2. 2rnd  -2. -2. 2+  vx 2! ;   \ set random velocity
 ```
 
@@ -855,15 +884,13 @@ Shows: `tileset-from`, `animation`, `range,`, `frame,`, `cycle` for frame animat
 
 Uses `cgrid` directly. Player state is `value`s, not actor properties. Demonstrates: `work> think show> ~test` split, `check-cbox` with callback, axis-separated slide response.
 
-Pattern: not everything needs the actor system. Simple programs can use `value` and `variable` for state.
-
 ### coldemo.vfx — collision shape tests, mouse input
 
 Reads `mouse  my !  mx !` for mouse position. Uses `ctype @` switch for cursor shape. Demonstrates all collision primitives. Text rendering: `vga-8x8 default-font!` then `x y at  s" text" print`.
 
 ### eyes.vfx — comprehensive actor patterns
 
-The most complete example. Shows: owner-relative positioning, strategy XT pattern (`kxt`), `eyes-task` cooperative multitasking, `from` for relative spawn position, `target-pos` abstraction, `irisxy` using `angof`/`dist`/`vec`, `~lids` draw helper.
+The most complete example. Shows: owner-relative positioning (`eyeball-physics`); the strategy-XT pattern (`kxt`/`trigger?` — one class, 14 blink behaviors `blink-1?`..`blink-14?`); cooperative multitasking via `0 task>` running `?close`/`?open` to animate the eyelids (`lid`) with `yield`; smoothed target tracking (`target` + `lag`/`laggard` via `2plerp`); the `iris` offset computed from `angof`/`dist`/`vec`; the `~lids` draw helper; and shape-based drawing under `0 batch>`. Spawns eyeballs with `one { … this start }` (configure before `start`), and uses `from` for relative sparkle spawn position.
 
 Note: `0 task>` takes an initial stack value (passed to the task body). `begin ... yield ... again` is the standard infinite-loop task pattern.
 
@@ -980,7 +1007,6 @@ If you encounter a word not in this list and not findable in supershow/, check V
 | Lstrings (32-bit-counted strings; dictionary-allocated `lstring` `l$,` `l,"` `lplace` variants have overflow protection, heap-allocated `*lstring` variants can grow) | `lib/lstring.vfx` |
 | Dialog / UI system | `src/dialog.vfx` |
 | Tweak (persistent variable UI) | `src/tweak.vfx` |
-| UDLR movement helpers | `src/udlr.vfx` |
 | TV border / display framing | `src/border.vfx` |
 | Game modes | `src/mode.vfx` |
 | Asset autoloading | `src/autoload.vfx` |
