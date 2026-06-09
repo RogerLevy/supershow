@@ -58,7 +58,27 @@
       "Bash(rm -f test/treats/dat/gfx/icons1.png test/waveplay/dat/smp/snd-02.ogg)",
       "Bash(git rm:*)",
       "Bash(rm -rf test/autoload test/shapes test/tilemap test/treats test/waveplay)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git --no-pager diff -- allegro5/al-utils.vfx engineer/engineer.vfx forge/fixed.vfx src/actor.vfx src/stage.vfx engineer/go.vfx engineer/variables.vfx)",
+      "Bash(git --no-pager grep -n -E \":[[:space:]]+spawn\\( |\\\\\\(\\)\" -- '*.vfx')",
+      "Bash(git --no-pager grep -n -E \"\\\\b[a-z0-9#@.-]+ actor\\\\b\" -- '*.vfx')",
+      "Bash(git --no-pager diff src/stage.vfx)",
+      "Bash(git --no-pager diff --stat test/eyes.vfx)",
+      "Bash(git --no-pager show HEAD:test/eyes.vfx)",
+      "Bash(git --no-pager diff test/eyes.vfx)",
+      "Bash(git --no-pager diff --cached --stat)",
+      "Bash(cp src/stage.vfx /tmp/stage.full)",
+      "Bash(cp test/eyes.vfx /tmp/eyes.full)",
+      "Bash(git restore *)",
+      "Bash(git --no-pager grep -n \"\\(+time\\)\\\\|\\(step\\)\\\\|+gametime\" -- src/stage.vfx)",
+      "Bash(git --no-pager grep -n \"time @\" -- test/eyes.vfx)",
+      "Bash(git --no-pager diff --cached)",
+      "Bash(cp /tmp/stage.full src/stage.vfx)",
+      "Bash(cp /tmp/eyes.full test/eyes.vfx)",
+      "Bash(git --no-pager log --oneline -1)",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager log --oneline -8)",
+      "Bash(git --no-pager status --short)"
     ],
     "deny": []
   }
