@@ -112,12 +112,10 @@ continuation: who> ( - actor|0 ) ( - f )
         then
         r> restore-sp ;
 
-|| : (+time)  +gametime actives> +time ;
-
 || : (step) ( - )
     (behave)
     (move)
-    (+time) ;
+    +gametime ;
 
 %actor :: unload ( - )
     unloaded on ; 

@@ -87,14 +87,14 @@ class: %sparkle  %actor derive class;
 %sparkle :: start 
     sparkle.png bmp !
     act>  
-        time @ 0.23 0.2 rnd + >= if me unload exit then 
+        time 0.23 0.2 rnd + >= if me unload exit then
         0.09 vy +! ;
 
 class: %cursor  %actor derive class;
 
 %cursor :: start ( - )
     act>
-        time @ 90. p*  100.  vec  160. 120. 2+  x 2!
+        time 90. p*  100.  vec  160. 120. 2+  x 2!
         this 0 0 from  %sparkle one { 2.0 rnd 1.0 - vx !  this start } ;
 
 0 value controller   \ owner actor providing reference position

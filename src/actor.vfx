@@ -19,7 +19,7 @@ class: %actor
 
     prop beha :xt
     prop phys :xt
-    prop time :fixed                \ secs
+    prop _time :fixed               \ gametime stamp (16.16 secs); read via TIME, set via /TIME
     prop prio :int <save            \ 0 = behind BG, <>0 = in front of BG   
     prop id :int
 
@@ -82,13 +82,16 @@ c: %actor benched ;  \ controls behavior and physics
 
 : behave  beha @ ?oexec ;
 : physics  phys @ ?oexec ;
-: +time  ?benched pdelta time +! ;
+
+|| : gametime-fixed ( - n. ) gametime 65536 1000000 m*/ d>s ;  \ gametime us -> 16.16 secs (integer math)
+: /time ( - )  gametime-fixed _time ! ;      \ stamp this actor's clock to now
+: time ( - n. )  gametime-fixed _time @ - ;  \ secs since last /TIME
 
 \ =============================================================================
 \ Actor scripting
 \ =============================================================================
 
-continuation: act> ( - ) ( - ) 0 time !  beha ! ; 
+continuation: act> ( - ) ( - ) /time  beha ! ;
 continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
 
 : simple-motion ( - )
@@ -102,6 +105,7 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
     prio on
     -1 lyr !  -1 msk !    \ collide with everything by default
     simple-motion
+    /time
 }
 
 \ =============================================================================
@@ -122,7 +126,7 @@ continuation: physics> ( - ) ( - ) ( xt ) phys ! ;
     '}' parse' evaluate  1 >in +!
     s" this start }" evaluate ; immediate
 
-: passed? ( n. - flag ) time @ <= dup if 0 time ! then ;
+: passed? ( n. - flag ) time <= dup if /time then ;
 
 : from ( %actor x y - ) rot as> x 2@ 2+ atp  ;
 
