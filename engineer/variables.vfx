@@ -34,6 +34,7 @@ wordlist constant honing-wl
 0 value usdelta
 0 value pdelta \ fixed, in seconds
 0e fvalue fdelta \ in seconds
+250000 value max-usdelta \ cap on usdelta (us); absorbs stalls/hitches so time can't lurch
 create zcommand 256 allot 
 variable backup
 

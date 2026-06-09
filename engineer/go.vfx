@@ -24,6 +24,7 @@ redef : ticks  ( n - ms )
 : update-delta  ( - )
     ustime  ucounter 2dup to ustime  2swap 2-
         d>s to usdelta
+    usdelta max-usdelta min to usdelta      \ cap stalls/hitches; ustime stays true wall time
     usdelta s>f 1000000e f/ to fdelta
     ustime 1000 m/ to mstime
     fdelta f>p to pdelta ;
