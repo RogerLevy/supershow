@@ -1,0 +1,130 @@
+module
+
+\ 3D model system, ported from Ramen's 3dpack (model.f + 3dpack.f).
+\
+\ Coordinates are floats (see lib/v3d.vfx): no 16.16 overflow ceiling, and
+\ Allegro's transform/primitive APIs are float-native. Per the VFX FFI
+\ convention, pointer/int args ride the DATA stack and `float` args ride the
+\ x87 FLOAT stack -- so a vector is pushed for an Allegro call with `3sf@`
+\ (components onto the float stack) while the transform pointer stays on data.
+
+import %supershow%/src/supershow.vfx
+import allegro5
+import %supershow%/lib/v3d.vfx
+import %supershow%/lib/colors.vfx
+reexport [v3d]      \ model API exposes v3d positions/scales; callers need its ops
+reexport [colors]   \ models are authored with named color words
+public
+
+\ ---- primitive-type aliases ----
+ALLEGRO_PRIM_LINE_LIST      constant LINE_LIST
+ALLEGRO_PRIM_LINE_STRIP     constant LINE_STRIP
+ALLEGRO_PRIM_LINE_LOOP      constant LINE_LOOP
+ALLEGRO_PRIM_TRIANGLE_LIST  constant TRIANGLE_LIST
+ALLEGRO_PRIM_TRIANGLE_STRIP constant TRIANGLE_STRIP
+ALLEGRO_PRIM_TRIANGLE_FAN   constant TRIANGLE_FAN
+ALLEGRO_PRIM_POINT_LIST     constant POINT_LIST
+
+\ ---- transform buffers (ALLEGRO_TRANSFORM = 4x4 floats = 64 bytes) ----
+64 constant s/transform
+: transform: ( <name> - )  create here s/transform allot al_identity_transform ;
+transform: p        \ projection
+transform: t        \ scratch model rotation
+transform: t2       \ scratch model compose
+transform: camt     \ camera transform (identity until a camera writes it)
+create axis s/v3d allot
+
+\ ---- angle helper ----
+0.0174532925e fconstant (deg>rad)
+: deg>rad ( f: deg - rad )  (deg>rad) f* ;
+
+\ ---- projection setup ----
+80 value fov
+0e fvalue focal
+0e fvalue aspect
+: 3d ( - )
+    fov s>f deg>rad 2e f/ ftan to focal
+    gamew s>f gameh s>f f/ to aspect
+    p al_identity_transform
+    p 0e 0e -1e al_translate_transform_3d
+    p  aspect focal f* fnegate  focal  1e
+       aspect focal f*  focal fnegate  32768e  al_perspective_transform
+    p al_use_projection_transform
+    ALLEGRO_DEPTH_TEST 1 al_set_render_state
+    1e al_clear_depth_buffer ;
+
+: 2d ( - )
+    p al_identity_transform
+    p 0e 0e -16384e  gamew s>f gameh s>f 16384e  al_orthographic_transform
+    p al_use_projection_transform
+    ALLEGRO_DEPTH_TEST 0 al_set_render_state ;
+
+\ ---- mesh data (the vertex/index buffers; distinct from the %model object) ----
+\ layout (5 cells): vptr vcount iptr icount primtype
+\ vptr/vcount are adjacent (>vertices 2@), iptr/icount are adjacent (>indices 2@)
+: >vertices ( mesh - a )  ;
+: >vcount   ( mesh - a )  cell+ ;
+: >indices  ( mesh - a )  2 cells + ;
+: >icount   ( mesh - a )  3 cells + ;
+: >primtype ( mesh - a )  4 cells + ;
+: mesh ( primtype - )  0 , 0 , 0 , 0 , , ;   \ use after `create name`
+
+\ ---- vertex / index builders ----
+\ A vertex is an ALLEGRO_VERTEX record: x y z u v r g b a, all floats.
+\ v, takes 16.16-fixed coords (kept small in the data files) and the current
+\ pen color (set by a color word) for the four color components.
+: f, ( f: x - )  f>sf , ;
+: v, ( px. py. pz. pu. pv. - )
+    {: px py pz pu pv :}
+    px p>f f,  py p>f f,  pz p>f f,  pu p>f f,  pv p>f f,
+    rgba@fds  >r >r >r >r  r> , r> , r> , r> , ;
+
+: vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
+: ;vertices ( mesh start - )     here swap -  /ALLEGRO_VERTEX /  swap >vcount ! ;
+: indices:  ( mesh - mesh start )  here  2dup swap >indices ! ;
+: ;indices  ( mesh start - )     here swap -  cell /  swap >icount ! ;
+
+\ ---- model object ----
+class: %model
+    v3d-prop pos
+    v3d-prop scl
+    prop tilt :fixed
+    prop pan  :fixed
+    redef prop roll :fixed
+    prop msh  :addr     \ pointer to mesh data (vertices/indices/primtype)
+    prop tex  :int
+class;
+
+\ The following assume `this` is bound to a %model (call via draw-model).
+: texture@ ( - bmp )  tex @ ;   \ 0 = untextured; bmpid->ALLEGRO_BITMAP* is a TODO
+
+: modelview ( - )
+    t al_identity_transform
+    t 0e 0e 1e  roll @ p>f deg>rad   al_rotate_transform_3d
+    t 0e 1e 0e  pan  @ p>f deg>rad   al_rotate_transform_3d
+    1e 0e 0e axis 3sf!
+    t  axis v3d.x  axis v3d.y  axis v3d.z  al_transform_coordinates_3d
+    t axis 3sf@  tilt @ p>f deg>rad  al_rotate_transform_3d
+    t2 al_identity_transform
+    t2 scl 3sf@ al_scale_transform_3d
+    t2 t al_compose_transform
+    t2 pos 3sf@ al_translate_transform_3d
+    t2 camt al_compose_transform
+    t2 al_use_transform ;
+
+: ~model ( - )
+    msh @ -exit
+    modelview
+    msh @ >indices @ if
+        msh @ >vertices @  0  texture@  msh @ >indices 2@  msh @ >primtype @
+            al_draw_indexed_prim
+    else
+        msh @ >vertices 2@  >r  0  texture@  0  r>  msh @ >primtype @
+            al_draw_prim drop
+    then ;
+
+: draw-model ( model - )  { ~model } ;
+
+\ set the model's mesh and give it unit scale
+: /model ( mesh model - )
+    { msh !  1 1 1 scl s>v3 } ;

@@ -1,0 +1,68 @@
+module [v3d]
+
+\ 3D vector type for the Supershow 3D pack.
+\
+\ A v3d is three contiguous 32-bit float cells: x, y, z.  Declare one as a
+\ NIBS property with `v3d-prop name` (the `:v3d` type lives in forge/nibs.vfx),
+\ or as a standalone scratch buffer with `create name s/v3d allot`.
+\
+\ Vectors live in memory.  To compute, pull the triple onto the DATA stack with
+\ `3@` -- the cells carry IEEE-float bit patterns untouched -- operate, then
+\ `3!` back.  The arithmetic words (`3+`, `3-`, `3negate`) move each component
+\ through the x87 stack two operands at a time via `sf>f`/`f>sf`, so the float
+\ stack is never more than ~2 slots deep regardless of how many vectors are in
+\ flight.  Slower than native fixed-point adds, but it sidesteps both the 16.16
+\ overflow ceiling and the x87's 8-slot depth limit.
+
+\ TODO: optimize with SSE2 instructions
+
+public
+
+3 cells constant s/v3d
+
+\ --- component field-address accessors ( v3d - field-addr ) ---
+\ Named v3d.x/.y/.z, NOT >x/>y/>z: the latter would silently shadow the address
+\ accessors the %xy trait defines. Use these when you need a component's address
+\ (e.g. al_transform_coordinates_3d's float* args); for values use z@/z!.
+: v3d.x  ( v3d - a )  ;
+: v3d.y  ( v3d - a )  cell+ ;
+: v3d.z  ( v3d - a )  2 cells + ;
+
+\ --- scalar access ( the cells hold float bits ) ---
+: z@  ( addr - z )  2 cells + @ ;
+: z!  ( z addr - )  2 cells + ! ;
+
+\ --- whole-triple moves (plain cell copies; float bits ride along) ---
+: 3@  ( addr - x y z )  dup @  over cell+ @  rot 2 cells + @ ;
+: 3!  ( x y z addr - )  >r  r@ 2 cells + !  r@ cell+ !  r> ! ;
+
+\ --- bridges to/from the float stack (for Allegro calls), z ends on top ---
+: 3sf@  ( addr - ) ( f: - x y z )  dup sf@  dup cell+ sf@  2 cells + sf@ ;
+: 3sf!  ( addr - ) ( f: x y z - )  >r  r@ 2 cells + sf!  r@ cell+ sf!  r> sf! ;
+
+\ --- build a vector from three integers ---
+: s>v3  ( ix iy iz addr - )
+    {: ix iy iz addr :}
+    ix s>f  iy s>f  iz s>f  addr 3sf! ;
+
+\ --- arithmetic on triples sitting on the data stack ---
+: 3+  ( x1 y1 z1 x2 y2 z2 - x3 y3 z3 )
+    {: x1 y1 z1 x2 y2 z2 :}
+    x1 sf>f x2 sf>f f+ f>sf
+    y1 sf>f y2 sf>f f+ f>sf
+    z1 sf>f z2 sf>f f+ f>sf ;
+
+: 3-  ( x1 y1 z1 x2 y2 z2 - x3 y3 z3 )
+    {: x1 y1 z1 x2 y2 z2 :}
+    x1 sf>f x2 sf>f f- f>sf
+    y1 sf>f y2 sf>f f- f>sf
+    z1 sf>f z2 sf>f f- f>sf ;
+
+: 3negate  ( x y z - -x -y -z )
+    {: x1 y1 z1 :}
+    x1 sf>f fnegate f>sf
+    y1 sf>f fnegate f>sf
+    z1 sf>f fnegate f>sf ;
+
+\ --- accumulate a triple into the vector at addr ---
+: 3+!  ( x y z addr - )  dup >r 3@ 3+ r> 3! ;

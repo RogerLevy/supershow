@@ -1204,6 +1204,7 @@ aka prop property
 100 constant TYPE_ADDR
 101 constant TYPE_XT
 102 constant TYPE_OBJREF
+103 constant TYPE_V3D     \ 3 contiguous 32-bit floats (see lib/v3d.vfx)
 
 
 \ Metadata words - operate on current-property
@@ -1245,6 +1246,12 @@ aka prop property
 
 : cstring-prop ( <name> - ) 256 nprop :cstring <save ;
 
+: :v3d ( - )
+    ?no-property
+    TYPE_V3D current-property classifier >property-type ! ;
+
+: v3d-prop ( <name> - ) 3 cells nprop :v3d ;
+
 : :lstring ( - )
     ?no-property
     TYPE_LSTRING current-property classifier >property-type ! ;
@@ -1279,7 +1286,8 @@ aka prop property
         TYPE_CELL       of val-addr ? endof  
         TYPE_INT        of val-addr ? endof 
         TYPE_FIXED      of val-addr p? endof   
-        TYPE_FLOAT      of val-addr sf@ f. endof   
+        TYPE_FLOAT      of val-addr sf@ f. endof
+        TYPE_V3D        of ." (v3d) " val-addr sf@ f. val-addr cell+ sf@ f. val-addr 2 cells + sf@ f. endof
         TYPE_CSTRING    of ." ($) " val-addr count type endof
         TYPE_LSTRING    of ." (lstr) " val-addr @ ?dup if lcount type else ." <null>" then endof
         TYPE_ADDR       of ." (addr) " val-addr @ .data endof

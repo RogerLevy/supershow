@@ -1,0 +1,31 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/3d/model.vfx
+import %supershow%/3d/cube.vfx
+public
+
+\ Minimal 3D demo: one colored cube spinning about its Y axis.
+\ Validates the ported 3dpack pipeline (projection, vertex buffer, modelview,
+\ indexed/non-indexed draw). Camera is the identity transform; the cube sits
+\ in front of it. If it isn't visible, tune `pos` z, `scl`, or `fov`.
+
+%model object thecube
+
+\ Access v3d props via `-> name` (not `>name`): the >pos accessor would collide
+\ with VFX's console `>pos` primitive.
+: setup ( - )
+    cube-mesh thecube /model        \ set mesh (and unit scale)
+    0 0 -6 thecube -> pos s>v3       \ 6 units in front of the camera
+    1 1 1  thecube -> scl s>v3 ;     \ cube spans -1..+1 -- bump this to enlarge
+
+: ~render ( - )
+    cls                             \ clear color buffer (backdrop, default black)
+    3d                              \ set perspective projection + clear depth
+    1. thecube -> pan +!            \ spin 1 degree/frame about Y
+    thecube draw-model ;
+
+: main ( - )
+    setup
+    show> ~render ;
+
+main

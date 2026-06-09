@@ -1,0 +1,74 @@
+module [colors]
+
+\ Named color words. Each sets the current pen color via `rgba8`, so they feed
+\ both 2D drawing and the 3D vertex builder (which reads the pen via `rgba@fds`).
+\ Moved here from workzone/ so any project can use them.
+
+import [allegro5.utils]    \ rgba8, ppen*@/!, c>p
+public
+
+|| : color  create , does> @ rgba8 ;
+
+\ Primary/Secondary
+$e03000ff color red
+$4ade80ff color green
+$3b82f6ff color blue
+$facc15ff color yellow
+$22d3eeff color cyan
+$d946efff color magenta
+
+\ Grayscale
+$ffffffff color white
+$000000ff color black
+$808080ff color gray
+$808080ff color grey
+
+\ Common colors
+$f97316ff color orange
+$8050f0ff color purple
+$8b5cf6ff color violet
+$f472b6ff color pink
+$804000ff color brown
+$a3e635ff color lime
+
+\ Dark variants
+$891c1cff color dark-red
+$16a34aff color dark-green
+$1d4ed8ff color dark-blue
+$ca8a04ff color dark-yellow
+$0891b2ff color dark-cyan
+$a21cafff color dark-magenta
+$404040ff color dark-gray
+$404040ff color dark-grey
+$c2410cff color dark-orange
+$7c3aedff color dark-purple
+$402000ff color dark-brown
+
+\ Light variants
+$fca5a5ff color light-red
+$86efacff color light-green
+$93c5fdff color light-blue
+$fef08aff color light-yellow
+$a5f3fcff color light-cyan
+$f9a8d4ff color light-pink
+$c0c0c0ff color light-gray
+$c0c0c0ff color light-grey
+$a06020ff color light-brown
+
+\ Named colors
+$dc143cff color crimson
+$4b0082ff color indigo
+$f0e68cff color khaki
+$d2b48cff color tan
+$d0d0b0ff color beige
+$e6e6faff color lavender
+$87ceebff color skyblue
+
+: mix ( rgba8 t. - )
+    {: c t :}
+    1.0 t - to t
+    c
+    dup c>p ppenr@ t plerp ppenr! 8 >>
+    dup c>p ppeng@ t plerp ppeng! 8 >>
+    dup c>p ppenb@ t plerp ppenb! 8 >>
+    c>p ppena@ t plerp ppena! ;
