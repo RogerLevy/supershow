@@ -111,7 +111,8 @@ public
     reset-system-classifiers
     ['] noop is onSwitchIn
     ['] run-main is boot
-    honing off ;
+    honing off 
+    $000000ff backdrop ! ;
 
 \ Isolation tool - for verifying that modules in a project can be loaded
 \ individually.
@@ -248,7 +249,7 @@ private
     ." ~~~ Engineer v2 (regress) ~~~ " cr cr
     dev-init
     frigid
-    freeze  \ Avoids dictionary corruption after calling EMPTY
+    freeze  \ Prevents dictionary corruption after calling EMPTY
     boot 
     \ backup remember 
     ." Starting engine..." cr
