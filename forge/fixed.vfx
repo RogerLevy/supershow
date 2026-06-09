@@ -33,7 +33,7 @@ forth-public
 : 2pfloor pfloor swap pfloor swap ;
 : 2p* ( x. y. x. y. - x. y. ) rot p* >r p* r> ;
 : 2p/ ( x. y. x. y. - x. y. ) rot swap p/ >r p/ r> ;
-
+: 2plerp ( x1. y1. x2. y2. n. - x. y. )   >r  rot swap r@ plerp -rot r> plerp swap ;
 
 || : (>FIXED)	\ c-addr u -- flag ; F: -- f | --
 \ *G Try to convert the string at c-addr/u to a floating point number.
