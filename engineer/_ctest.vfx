@@ -14,13 +14,10 @@
     ProtectedExterns
 [then]
 
-\ Redirect output to a log file (the windowed exe's console doesn't reach the pipe).
+\ Redirect output to a log file so we can read it after the run.
 [undefined] filedev: [if]  include %vfxpath%\Lib\Genio\file.fth  [then]
 filedev: OutDev
-\ genio's filedev-open uses Windows OPEN_ALWAYS, which opens an existing file
-\ WITHOUT truncating -- so a shorter run would leave the previous run's tail.
-\ Delete first; open-gio then creates a fresh empty file.
-s" _ctest.log" delete-file drop
+s" _ctest.log" delete-file drop          \ open-gio (OPEN_ALWAYS) won't truncate
 s" _ctest.log" r/w OutDev open-gio 2drop
 op-handle @ value SaveOut
 OutDev op-handle !
