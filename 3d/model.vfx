@@ -85,15 +85,18 @@ create axis s/v3d allot
 : ;indices  ( mesh start - )     here swap -  cell /  swap >icount ! ;
 
 \ ---- model object ----
-class: %model
+class: %model  %actor derive
     v3d-prop pos
     v3d-prop scl
+    v3d-prop vel        \ 3D velocity (3D physics adds this to pos)
     prop tilt :fixed
     prop pan  :fixed
     redef prop roll :fixed
     prop msh  :addr     \ pointer to mesh data (vertices/indices/primtype)
     prop tex  :int
 class;
+
+public   \ TODO remove once class;/class: restores the current wordlist itself
 
 \ The following assume `this` is bound to a %model (call via draw-model).
 : texture@ ( - bmp )  tex @ ;   \ 0 = untextured; bmpid->ALLEGRO_BITMAP* is a TODO

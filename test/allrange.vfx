@@ -1,0 +1,93 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/3d/model.vfx
+import %supershow%/3d/render.vfx
+import %supershow%/3d/cube.vfx
+import %supershow%/3d/arwing.vfx
+public
+
+0 value the-ship
+
+\ allrange port -- fly a ship around a randomized cuboid city with a chase camera.
+\ Stage 2+3: controllable ship (placeholder cube mesh) + chase camera. No control
+\ smoothing yet (deferred), and the ship mesh is a stand-in for the arwing.
+\ Tune the control rates / camera offset / angle signs to taste.
+
+\ ===== city =====
+: genlevel ( - )
+    100 for
+        cube-mesh *model {
+            50 50 50 scl s>v3                 \ uniform scale 50
+            4 rnd 90 * >p pan !               \ random quarter-turn
+            50 500 between                    \ random height h
+            dup s>f scl v3d.y sf!             \ scl.y = h (tall building)
+            -4000 4000 between swap
+            -4000 4000 between  pos s>v3       \ pos = (x, h, z); base on y=0
+        }
+    loop ;
+
+\ ===== ship =====
+\ Controls run inside the ship's act>, so `this` = ship and bare props apply.
+: ?lr ( - )                         \ bank + turn from left/right (or A/D)
+    <left> held?  <A> held? or if   45. roll !   2. pan +!  exit then
+    <right> held? <D> held? or if  -45. roll !  -2. pan +!  exit then
+    0. roll ! ;
+
+: ?ud ( - )                         \ pitch from up/down (or W/S)
+    <up> held?    <W> held? or if  -30. tilt !  exit then
+    <down> held?  <S> held? or if   30. tilt !  exit then
+    0. tilt ! ;
+
+: propel ( - )                      \ 3D velocity from the ship's heading
+    pan @ negate 90. - 10. vec       \ ( vx. vz. ) horizontal from pan
+    p>f vel v3d.z sf!
+    p>f vel v3d.x sf!
+    tilt @ 90. - 10. vec drop         \ ( vy. ) vertical from tilt
+    p>f vel v3d.y sf! ;
+
+: ship-physics ( - )  physics>  vel 3@ pos 3+! ;   \ separate word so act> can also install
+
+class: %ship  %model derive  class;
+public   \ TODO remove once class;/class: restores the current wordlist itself
+%ship :: start ( - )
+    ship-physics
+    act>  propel ?lr ?ud ;
+
+\ ===== orbit camera (ported from 3dpack/cam.f + allrange.f's cam draw) =====
+variable orbita  80 orbita !        \ orbit angle offset (degrees)
+variable orbith  50 orbith !        \ camera height above the ship
+
+\ Helpers operate on `this`; an `obj` arg is read with -> (field) / { } (scope).
+\ Orbit math is in fixed-point (positions fit 16.16); pos is float at the boundary.
+: posxz@ ( - x. z. )  pos v3d.x sf@ f>p   pos v3d.z sf@ f>p ;
+: posxz! ( x. z. - )  p>f pos v3d.z sf!   p>f pos v3d.x sf! ;
+: tilt-towards ( obj dist. - n. )
+    >r  -> pos v3d.y sf@ f>p   pos v3d.y sf@ f>p  -  r> swap  angof ;
+: pan-towards ( obj - n. )
+    { posxz@ }  posxz@  2-  swap negate swap  angof 90. + ;
+: orbitted ( obj ang. dist. - x. z. )
+    vec  rot  { posxz@ }  2+ ;
+: situate ( obj ang. dist. - )  orbitted posxz! ;
+
+\ this = camera; orbit/aim it relative to the-ship, matching allrange.f
+: cam-follow ( - )
+    the-ship -> pos v3d.y sf@  orbith @ s>f f+  pos v3d.y sf!     \ height above ship
+    the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate
+    the-ship pan-towards pan !
+    the-ship 200. tilt-towards tilt ! ;
+
+class: %camera  %model derive  class;
+public   \ TODO remove once class;/class: restores the current wordlist itself
+%camera :: start ( - )  act>  cam-follow ;
+
+\ ===== main =====
+: main ( - )
+    just
+    %ship spawn to the-ship
+    arwing-mesh the-ship /model               \ the ship
+    the-ship { 0 0 0 pos s>v3  10 10 10 scl s>v3 }
+    %camera spawn to thecam
+    genlevel
+    show> step render-scene ;                \ step = actor logic; render-scene = draw
+
+main

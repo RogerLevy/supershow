@@ -1,0 +1,41 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/3d/model.vfx
+import allegro5
+reexport [model]    \ render's API is built on the model pack; expose it to importers
+public
+
+\ Stage-based 3D renderer: draws the %model actors on the stage, depth-sorted
+\ back-to-front (we don't rely on a depth buffer). Reuses the same sorted-actors>
+\ machinery SPRITES uses, keyed on distance from the camera.
+
+\ ---- camera ----
+create campos s/v3d allot      \ camera world position, mirrored here for the sort
+0 value thecam                 \ the camera %model (set by the program)
+
+\ Build camt as the INVERSE of the camera's world placement (this = camera).
+: camera-transform ( - )
+    camt al_identity_transform
+    camt  pos v3d.x sf@ fnegate  pos v3d.y sf@ fnegate  pos v3d.z sf@ fnegate
+        al_translate_transform_3d
+    camt 0e 0e 1e  roll @ p>f deg>rad fnegate  al_rotate_transform_3d
+    camt 0e 1e 0e  pan  @ p>f deg>rad fnegate  al_rotate_transform_3d
+    camt 1e 0e 0e  tilt @ p>f deg>rad fnegate  al_rotate_transform_3d ;
+
+: update-camera ( - )
+    thecam ?dup -exit
+    { camera-transform  pos 3@ campos 3! } ;
+
+\ ---- spawning ----
+: between ( lo hi - n )  over - 1+ rnd + ;
+: *model ( mesh - model )  %model one  dup >r /model  r> ;
+
+\ ---- depth-sorted draw ----
+\ key = distance from camera, inverted so the farthest model sorts first
+: depth-key ( actor - n )
+    -> pos campos v3dist  0 65535 clamp  65535 swap - ;
+
+: draw-models ( - )  ['] depth-key sorted-actors> ~model ;
+
+: render-scene ( - )
+    cls  3d  update-camera  draw-models ;

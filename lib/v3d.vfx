@@ -66,3 +66,11 @@ public
 
 \ --- accumulate a triple into the vector at addr ---
 : 3+!  ( x y z addr - )  dup >r 3@ 3+ r> 3! ;
+
+\ --- distance between two vectors, as an integer (for depth sorting) ---
+: v3dist  ( a b - n )
+    {: a b :}
+    a v3d.x sf@ b v3d.x sf@ f-  fdup f*
+    a v3d.y sf@ b v3d.y sf@ f-  fdup f*  f+
+    a v3d.z sf@ b v3d.z sf@ f-  fdup f*  f+
+    fsqrt f>s ;
