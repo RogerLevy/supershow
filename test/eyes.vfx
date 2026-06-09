@@ -25,8 +25,8 @@ private
     lid @ to n
     at@ to cy to cx
     $c8a080ff rgba8
-    cx 15 - cy 15 - at      30. n >p rectf
-    cx 15 - cy 15 n - + at  30. n >p rectf ;
+    cx 15 -`  cy 15 -`     at  30. n >p rectf
+    cx 15 -`  cy 15 + n -` at  30. n >p rectf ;
 
 \ Owner-relative positioning: eyeball.x = owner.x + lx, eyeball.y = owner.y + ly
 \ If eyeballs needed to drift locally (e.g., float), you'd swap lx/ly with x/y
@@ -49,16 +49,21 @@ private
     \     else    lid @ 0>  if -2 lid +! then
     \     then ;
 
-: target-pos ( - x. y. )
+2variable laggard
+
+: target ( - x. y. )
     <lmb> held? if mouse 2>p else cursor -> x 2@ then ;
 
-: irisxy  target-pos  x 2@ 2- angof  target-pos  x 2@ dist 10. min  vec ;
+: lag  laggard 2@ target 0.3 2plerp laggard 2! ;
+
+: iris ( - x. y. ) 
+    laggard 2@  x 2@ 2- angof  laggard 2@  x 2@ dist 10. min  vec ;
 
 %eyeball :: draw ( - )
     0 batch>
     15 color  15. circf
     at@p
-    clr @ rgba8  irisxy +atp  5. circf
+    clr @ rgba8  iris +atp  5. circf
     0 color  3. circf
     atp
     ~lids ;
@@ -104,21 +109,24 @@ class: %cursor  %actor derive class;
 
     -30 30 at  %actor spawn to controller
     160 120 at  %cursor spawn to cursor
-
-    %eyeball one { ['] blink-1? kxt !  $ffff55ff clr !   64.  12. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-2? kxt !  $ffff55ff clr !  320.  12. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-3? kxt !  $0000ffff clr !  160.  96. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-4? kxt !  $0000ffff clr !  224.  96. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-5? kxt !  $00aa00ff clr !  128. 160. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-6? kxt !  $00aa00ff clr !  256. 160. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-7? kxt !  $ff8000ff clr !   64.  64. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-8? kxt !  $ff8000ff clr !   64. 128. lx 2!  controller owner !  this start }
-    %eyeball one { ['] blink-9? kxt !  $ff8000ff clr !   32.  96. lx 2!  controller owner !  this start }
+    
+    %eyeball one { ['] blink-1? kxt !   $ffff55ff clr !   64.  12. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-2? kxt !   $ffff55ff clr !  320.  12. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-3? kxt !   $0000ffff clr !  160.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-4? kxt !   $0000ffff clr !  224.  96. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-5? kxt !   $00aa00ff clr !  128. 160. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-6? kxt !   $00aa00ff clr !  256. 160. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-7? kxt !   $ff8000ff clr !   64.  64. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-8? kxt !   $ff8000ff clr !   64. 128. lx 2!  controller owner !  this start }
+    %eyeball one { ['] blink-9? kxt !   $ff8000ff clr !   32.  96. lx 2!  controller owner !  this start }
     %eyeball one { ['] blink-10? kxt !  $ff8000ff clr !   96.  96. lx 2!  controller owner !  this start }
     %eyeball one { ['] blink-11? kxt !  $55ff55ff clr !  320.  64. lx 2!  controller owner !  this start }
     %eyeball one { ['] blink-12? kxt !  $5555ffff clr !  320. 128. lx 2!  controller owner !  this start }
     %eyeball one { ['] blink-13? kxt !  $ff55ffff clr !  288.  96. lx 2!  controller owner !  this start }
     %eyeball one { ['] blink-14? kxt !  $ff5555ff clr !  352.  96. lx 2!  controller owner !  this start }
+
+    work> step lag
+    show> sprites
 ;
 
 public
