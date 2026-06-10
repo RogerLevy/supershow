@@ -5,7 +5,7 @@ import %supershow%/3d/render.vfx
 import %supershow%/3d/cube.vfx
 import %supershow%/3d/arwing.vfx
 import %supershow%/3d/grid.vfx
-public
+private
 
 0 value the-ship
 0 value the-grid
@@ -51,7 +51,8 @@ public
 : ship-physics ( - )  physics>  vel 3@ pos 3+! ;   \ separate word so act> can also install
 
 class: %ship  %model derive  class;
-public   \ TODO remove once class;/class: restores the current wordlist itself
+private   \ TODO remove once class;/class: restores the current wordlist itself
+
 %ship :: start ( - )
     ship-physics
     tilt 0.075 ['] linear  smooth
@@ -67,12 +68,16 @@ variable orbith  50 orbith !        \ camera height above the ship
 \ Orbit math is in fixed-point (positions fit 16.16); pos is float at the boundary.
 : posxz@ ( - x. z. )  pos v3d.x sf@ f>p   pos v3d.z sf@ f>p ;
 : posxz! ( x. z. - )  p>f pos v3d.z sf!   p>f pos v3d.x sf! ;
+
 : tilt-towards ( obj dist. - n. )
     >r  -> pos v3d.y sf@ f>p   pos v3d.y sf@ f>p  -  r> swap  angof ;
+
 : pan-towards ( obj - n. )
     { posxz@ }  posxz@  2-  swap negate swap  angof 90. + ;
+
 : orbitted ( obj ang. dist. - x. z. )
     vec  rot  { posxz@ }  2+ ;
+
 : situate ( obj ang. dist. - )  orbitted posxz! ;
 
 \ this = camera; orbit/aim relative to the-ship, matching allrange.f
@@ -86,7 +91,8 @@ variable orbith  50 orbith !        \ camera height above the ship
     the-ship 200. tilt-towards tilt toward ;
 
 class: %camera  %model derive  class;
-public   \ TODO remove once class;/class: restores the current wordlist itself
+private   \ TODO remove once class;/class: restores the current wordlist itself
+
 %camera :: start ( - )
     pan  0.06 ['] angular smooth
     tilt 0.06 ['] linear  smooth
@@ -100,7 +106,7 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
 \ sort -- a scene-spanning floor can't be point-sorted. Drawn first as background.
 : setup-grid ( - )
     %grid make to the-grid
-    grid-mesh the-grid /model
+    grid-mesh the-grid >msh !
     the-grid {
         gridsize gridsize gridsize scl s>v3   \ scale the unit grid up (cell = gridsize)
         90. tilt !                            \ lay it flat (XY -> XZ floor)
@@ -113,11 +119,13 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
     draw-models ;
 
 \ ===== main =====
+public
+
 : main ( - )
     just
     setup-grid
     %ship spawn to the-ship
-    arwing-mesh the-ship /model               \ the ship
+    arwing-mesh the-ship >msh !               \ the ship
     the-ship { 0 0 0 pos s>v3  10 10 10 scl s>v3 }
     %camera spawn to the-cam
     genlevel

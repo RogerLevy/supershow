@@ -102,7 +102,11 @@ class: %model  %actor derive
     redef prop roll :fixed
     prop msh  :addr     \ pointer to mesh data (vertices/indices/primtype)
     prop tex  :int
+
+    template { 1 1 1 scl s>v3 }
 class;
+
+
 
 public   \ TODO remove once class;/class: restores the current wordlist itself
 
@@ -137,8 +141,3 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
 %model :: render ( - )
     msh @ -exit  modelview  this draw ;
 
-: draw-model ( model - )  { this render } ;
-
-\ set the model's mesh and give it unit scale
-: /model ( mesh model - )
-    { msh !  1 1 1 scl s>v3 } ;

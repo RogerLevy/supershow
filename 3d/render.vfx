@@ -48,14 +48,14 @@ create camt-save-buf s/transform allot
 
 \ ---- spawning ----
 : between ( lo hi - n )  over - 1+ rnd + ;
-: *model ( mesh - model )  %model one  dup >r /model  r> ;
+: *model ( mesh - model )  %model one  dup >r >msh !  r> ;
 
 \ ---- depth-sorted draw ----
-\ key = distance from camera, inverted so the farthest model sorts first.
+\ key = distance from camera
 \ non-%model actors (e.g. %smoother) sort first and aren't drawn.
 : depth-key ( actor - n )
     dup %model is? not if drop 0 exit then
-    -> pos campos v3dist  0 65535 clamp  65535 swap - ;
+    -> pos campos v3dist  0 65535 clamp  ; \ 65535 swap - ;
 
 : draw-models ( - )  ['] depth-key sorted-actors> this %model is? if this render then ;
 
