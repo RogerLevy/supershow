@@ -1,0 +1,53 @@
+module
+import %supershow%/src/supershow.vfx \ for the render/draw protocols (to override render)
+import %supershow%/3d/render.vfx     \ model3d (reexported) + camt-save/restore/wrap-camt
+import %supershow%/lib/colors.vfx
+public
+
+\ Infinite grid floor, built in the XY plane (laid flat + scaled in the demo).
+\
+\ Each line is SUBDIVIDED into short segments so a per-vertex radial alpha fade can
+\ vary ALONG the line. A full-span line can't fade from its two endpoints -- both
+\ sit at the far edge, so the whole line (even one through the center) interpolates
+\ edge-to-edge and vanishes. With segments, lines near the center stay bright and
+\ dissolve toward the rim -> a soft circular horizon (the scroll keeps the mesh
+\ centered on the camera, so it hides the finite mesh's corners). LINE_LIST.
+
+130 constant grid-half      \ extent: -grid-half..grid-half (mesh units = cells)
+10  constant grid-step      \ subdivision segment length
+26  constant grid-segs      \ (grid-half*2)/grid-step
+261 constant grid-#lines    \ grid-half*2 + 1
+0.  value gc                \ current line coordinate
+
+\ vertex at (x,y,0); alpha fades 1 -> 0 over mesh radius 45..100 (well inside
+\ grid-half so the disc stays clear of the square's edges/corners)
+|| : gv ( x. y. - )
+    2dup hypot  100. swap -  55. p/  0. 1. clamp
+    dark-green ppena!
+    0. 0 0 v, ;
+
+|| : hseg ( x. - )  dup gc gv  grid-step >p + gc gv ;            \ (x,gc)-(x+step,gc)
+|| : vseg ( y. - )  dup gc swap gv  grid-step >p + gc swap gv ;  \ (gc,y)-(gc,y+step)
+
+|| : hline ( c. - )  to gc  grid-segs for  i grid-step * grid-half - >p hseg  loop ;
+|| : vline ( c. - )  to gc  grid-segs for  i grid-step * grid-half - >p vseg  loop ;
+
+|| : grid-lines ( - )
+    grid-#lines for  i grid-half - >p  dup hline  vline  loop ;
+
+create grid-mesh  LINE_LIST mesh
+grid-mesh vertices:
+    grid-lines
+;vertices
+
+\ ---- %grid: an infinite floor -- the mesh stays fixed at the origin; the camera
+\ is what scrolls. We draw the grid with a camera transform whose XZ position is
+\ wrapped by the grid's world cell size (its scl), so it tiles seamlessly. ----
+class: %grid  %model derive  class;
+public
+
+%grid :: render ( - )
+    camt-save
+    scl v3d.x sf@ wrap-camt          \ wrap the camera by the cell size (= the grid's scl)
+    model:render                     \ inherited %model render (modelview + draw), wrapped camt
+    camt-restore ;

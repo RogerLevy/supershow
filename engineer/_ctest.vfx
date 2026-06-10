@@ -15,7 +15,6 @@
 [then]
 
 \ Redirect output to a log file so we can read it after the run.
-[undefined] filedev: [if]  include %vfxpath%\Lib\Genio\file.fth  [then]
 filedev: OutDev
 s" _ctest.log" delete-file drop          \ open-gio (OPEN_ALWAYS) won't truncate
 s" _ctest.log" r/w OutDev open-gio 2drop

@@ -22,8 +22,8 @@ public
     loop ;
 
 : setup-camera ( - )
-    %model one to thecam
-    thecam {
+    %model one to the-cam
+    the-cam {
         0 1000 4000 pos s>v3                   \ up and back
         15. tilt !  0 pan !  0 roll !          \ look down slightly
     } ;

@@ -1,9 +1,7 @@
 module [ctest]
-import %idir%/../3d/render.vfx
-import %idir%/../3d/cube.vfx
+import %idir%/../test/allrange.vfx
 public
 
-\ Compile-only check: importing the modules verifies they load (undefined words,
-\ wordlist bugs, forward refs). No spawn/draw -- those crash during command-line
-\ cold and are validated in the GUI instead.
-." render3d + cube compiled" cr
+\ Compile-only: importing allrange (main is NOT auto-called) compiles the whole
+\ chain incl. smoothing usage. No spawn/draw.
+." allrange compiled" cr

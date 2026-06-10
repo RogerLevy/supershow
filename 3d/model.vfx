@@ -38,13 +38,21 @@ create axis s/v3d allot
 0.0174532925e fconstant (deg>rad)
 : deg>rad ( f: deg - rad )  (deg>rad) f* ;
 
+\ ---- float floor / wrap (true floor, so negative coords wrap seamlessly) ----
+: ffloor ( f: x - floor )
+    fdup ftrunc  fover fover f< if 1e f- then  fswap fdrop ;
+: fwrap ( f: x m - x-floor[x/m]*m )
+    fover fover f/ ffloor f* f- ;
+
 \ ---- projection setup ----
 80 value fov
 0e fvalue focal
 0e fvalue aspect
 : 3d ( - )
     fov s>f deg>rad 2e f/ ftan to focal
-    gamew s>f gameh s>f f/ to aspect
+    \ aspect from the actual render target (the display backbuffer), so it stays
+    \ correct in fullscreen (monw x monh) instead of stretching to a fixed game ratio
+    al_get_target_bitmap dup al_get_bitmap_width s>f al_get_bitmap_height s>f f/ to aspect
     p al_identity_transform
     p 0e 0e -1e al_translate_transform_3d
     p  aspect focal f* fnegate  focal  1e
@@ -115,9 +123,8 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
     t2 camt al_compose_transform
     t2 al_use_transform ;
 
-: ~model ( - )
-    msh @ -exit
-    modelview
+\ draw the primitive -- modelview is assumed already applied (by render)
+%model :: draw ( - )
     msh @ >indices @ if
         msh @ >vertices @  0  texture@  msh @ >indices 2@  msh @ >primtype @
             al_draw_indexed_prim
@@ -126,7 +133,11 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
             al_draw_prim drop
     then ;
 
-: draw-model ( model - )  { ~model } ;
+\ 3D render entry: overrides actor:render (no 2D pen) -- just transform + draw
+%model :: render ( - )
+    msh @ -exit  modelview  this draw ;
+
+: draw-model ( model - )  { this render } ;
 
 \ set the model's mesh and give it unit scale
 : /model ( mesh model - )

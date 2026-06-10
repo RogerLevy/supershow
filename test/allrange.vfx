@@ -4,9 +4,12 @@ import %supershow%/3d/model.vfx
 import %supershow%/3d/render.vfx
 import %supershow%/3d/cube.vfx
 import %supershow%/3d/arwing.vfx
+import %supershow%/3d/grid.vfx
 public
 
 0 value the-ship
+0 value the-grid
+100 value gridsize
 
 \ allrange port -- fly a ship around a randomized cuboid city with a chase camera.
 \ Stage 2+3: controllable ship (placeholder cube mesh) + chase camera. No control
@@ -29,14 +32,14 @@ public
 \ ===== ship =====
 \ Controls run inside the ship's act>, so `this` = ship and bare props apply.
 : ?lr ( - )                         \ bank + turn from left/right (or A/D)
-    <left> held?  <A> held? or if   45. roll !   2. pan +!  exit then
-    <right> held? <D> held? or if  -45. roll !  -2. pan +!  exit then
-    0. roll ! ;
+    <left> held?  <A> held? or if   45. roll toward   2. pan +toward  exit then
+    <right> held? <D> held? or if  -45. roll toward  -2. pan +toward  exit then
+    0. roll toward ;
 
 : ?ud ( - )                         \ pitch from up/down (or W/S)
-    <up> held?    <W> held? or if  -30. tilt !  exit then
-    <down> held?  <S> held? or if   30. tilt !  exit then
-    0. tilt ! ;
+    <up> held?    <W> held? or if  -30. tilt toward  exit then
+    <down> held?  <S> held? or if   30. tilt toward  exit then
+    0. tilt toward ;
 
 : propel ( - )                      \ 3D velocity from the ship's heading
     pan @ negate 90. - 10. vec       \ ( vx. vz. ) horizontal from pan
@@ -51,6 +54,9 @@ class: %ship  %model derive  class;
 public   \ TODO remove once class;/class: restores the current wordlist itself
 %ship :: start ( - )
     ship-physics
+    tilt 0.075 ['] linear  smooth
+    pan  0.06  ['] angular smooth      \ heading wraps -> angular
+    roll 0.06  ['] linear  smooth
     act>  propel ?lr ?ud ;
 
 \ ===== orbit camera (ported from 3dpack/cam.f + allrange.f's cam draw) =====
@@ -69,25 +75,52 @@ variable orbith  50 orbith !        \ camera height above the ship
     vec  rot  { posxz@ }  2+ ;
 : situate ( obj ang. dist. - )  orbitted posxz! ;
 
-\ this = camera; orbit/aim it relative to the-ship, matching allrange.f
-: cam-follow ( - )
+\ this = camera; orbit/aim relative to the-ship, matching allrange.f
+: cam-place ( - )       \ position the camera around the ship (direct, no easing)
     the-ship -> pos v3d.y sf@  orbith @ s>f f+  pos v3d.y sf!     \ height above ship
-    the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate
-    the-ship pan-towards pan !
-    the-ship 200. tilt-towards tilt ! ;
+    the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate ;
+
+: cam-follow ( - )
+    cam-place
+    the-ship pan-towards pan toward
+    the-ship 200. tilt-towards tilt toward ;
 
 class: %camera  %model derive  class;
 public   \ TODO remove once class;/class: restores the current wordlist itself
-%camera :: start ( - )  act>  cam-follow ;
+%camera :: start ( - )
+    pan  0.06 ['] angular smooth
+    tilt 0.06 ['] linear  smooth
+    cam-place                              \ initial placement, then snap the aim so the
+    the-ship pan-towards pan snap          \ camera starts facing the ship (no startup somersault)
+    the-ship 200. tilt-towards tilt snap
+    act>  cam-follow ;
+
+\ ===== grid floor =====
+\ Off-stage (%grid make, not on the stage) so it stays out of draw-models' depth
+\ sort -- a scene-spanning floor can't be point-sorted. Drawn first as background.
+: setup-grid ( - )
+    %grid make to the-grid
+    grid-mesh the-grid /model
+    the-grid {
+        gridsize gridsize gridsize scl s>v3   \ scale the unit grid up (cell = gridsize)
+        90. tilt !                            \ lay it flat (XY -> XZ floor)
+    } ;
+
+\ ===== render: grid first (background), then the depth-sorted models =====
+: ~render ( - )
+    cls  3d  update-camera
+    the-grid render
+    draw-models ;
 
 \ ===== main =====
 : main ( - )
     just
+    setup-grid
     %ship spawn to the-ship
     arwing-mesh the-ship /model               \ the ship
     the-ship { 0 0 0 pos s>v3  10 10 10 scl s>v3 }
-    %camera spawn to thecam
+    %camera spawn to the-cam
     genlevel
-    show> step render-scene ;                \ step = actor logic; render-scene = draw
+    show> step ~render ;
 
 main

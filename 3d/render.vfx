@@ -11,31 +11,53 @@ public
 
 \ ---- camera ----
 create campos s/v3d allot      \ camera world position, mirrored here for the sort
-0 value thecam                 \ the camera %model (set by the program)
+0 value the-cam                 \ the camera %model (set by the program)
 
 \ Build camt as the INVERSE of the camera's world placement (this = camera).
-: camera-transform ( - )
-    camt al_identity_transform
-    camt  pos v3d.x sf@ fnegate  pos v3d.y sf@ fnegate  pos v3d.z sf@ fnegate
-        al_translate_transform_3d
+: camt-rotations ( - )      \ apply the inverse camera rotations to camt
     camt 0e 0e 1e  roll @ p>f deg>rad fnegate  al_rotate_transform_3d
     camt 0e 1e 0e  pan  @ p>f deg>rad fnegate  al_rotate_transform_3d
     camt 1e 0e 0e  tilt @ p>f deg>rad fnegate  al_rotate_transform_3d ;
 
+: camera-transform ( - )
+    camt al_identity_transform
+    camt  pos v3d.x sf@ fnegate  pos v3d.y sf@ fnegate  pos v3d.z sf@ fnegate
+        al_translate_transform_3d
+    camt-rotations ;
+
 : update-camera ( - )
-    thecam ?dup -exit
+    the-cam ?dup -exit
     { camera-transform  pos 3@ campos 3! } ;
+
+\ ---- camt save/restore + wrapped variant (for the infinite grid floor) ----
+create camt-save-buf s/transform allot
+: camt-save ( - )     camt camt-save-buf s/transform move ;
+: camt-restore ( - )  camt-save-buf camt s/transform move ;
+
+0e fvalue gwrap
+: wrap-camt ( f: wrap - )    \ rebuild camt from the-cam, XZ position wrapped mod wrap
+    to gwrap
+    the-cam {
+        camt al_identity_transform
+        camt  pos v3d.x sf@ gwrap fwrap fnegate
+              pos v3d.y sf@ fnegate
+              pos v3d.z sf@ gwrap fwrap fnegate
+            al_translate_transform_3d
+        camt-rotations
+    } ;
 
 \ ---- spawning ----
 : between ( lo hi - n )  over - 1+ rnd + ;
 : *model ( mesh - model )  %model one  dup >r /model  r> ;
 
 \ ---- depth-sorted draw ----
-\ key = distance from camera, inverted so the farthest model sorts first
+\ key = distance from camera, inverted so the farthest model sorts first.
+\ non-%model actors (e.g. %smoother) sort first and aren't drawn.
 : depth-key ( actor - n )
+    dup %model is? not if drop 0 exit then
     -> pos campos v3dist  0 65535 clamp  65535 swap - ;
 
-: draw-models ( - )  ['] depth-key sorted-actors> ~model ;
+: draw-models ( - )  ['] depth-key sorted-actors> this %model is? if this render then ;
 
 : render-scene ( - )
     cls  3d  update-camera  draw-models ;
