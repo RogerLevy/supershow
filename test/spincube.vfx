@@ -19,7 +19,6 @@ public
     1 1 1  thecube -> scl s>v3 ;     \ cube spans -1..+1 -- bump this to enlarge
 
 : ~render ( - )
-    cls                             \ clear color buffer (backdrop, default black)
     3d                              \ set perspective projection + clear depth
     1. thecube -> pan +!            \ spin 1 degree/frame about Y
     thecube render ;
@@ -29,3 +28,4 @@ public
     show> ~render ;
 
 main
+th

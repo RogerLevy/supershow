@@ -114,7 +114,7 @@ private   \ TODO remove once class;/class: restores the current wordlist itself
 
 \ ===== render: grid first (background), then the depth-sorted models =====
 : ~render ( - )
-    cls  3d  update-camera
+    3d  update-camera
     the-grid render
     draw-models ;
 

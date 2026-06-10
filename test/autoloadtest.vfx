@@ -26,7 +26,6 @@ variable sample-ok
 \ ---- Display ---------------------------------------------------------------
 
 : ~test
-    cls
     Habbo.ttf
     0 0 at    s" Autoload test" print
     0 20 at   s" bitmap: icons1.png" print

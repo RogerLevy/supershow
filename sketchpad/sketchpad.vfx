@@ -162,7 +162,6 @@ public
     gamew 2 / gameh 2 / at 
     show> 
         hold @ _hold ! 
-        cls
         step sprites sketchpad-overlay
         input ;
 

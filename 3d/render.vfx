@@ -60,4 +60,4 @@ create camt-save-buf s/transform allot
 : draw-models ( - )  ['] depth-key sorted-actors> this %model is? if this render then ;
 
 : render-scene ( - )
-    cls  3d  update-camera  draw-models ;
+    3d  update-camera  draw-models ;
