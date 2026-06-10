@@ -88,7 +88,27 @@ public
 : system-controls  ?quit ?w/f ?bye ;
 
 : process-input  poll pump ;
-: draw-game  cls 0 0 at 'show @ ?execute ;
+create proj2d 64 allot          \ scratch 2D ortho projection (ALLEGRO_TRANSFORM = 64 bytes)
+
+\ Reset Allegro to the 2D drawing baseline: identity model transform, default
+\ orthographic projection for the current render target, depth test off. The 3D
+\ pack (3d/model.vfx `3d`) leaves a perspective projection + depth test enabled
+\ and a model transform active; the frame loop otherwise never restores these,
+\ so hot-loading a 2D program after a 3D one would draw nothing. Re-asserting the
+\ baseline every frame means each frame starts clean; a 3D program just opts back
+\ in by calling `3d` in its own show.
+: reset-render-state ( - )
+    identity                                    \ active model transform -> identity
+    al_get_target_bitmap >r
+    proj2d al_identity_transform
+    proj2d  0e 0e -1e
+        r@ al_get_bitmap_width  s>f
+        r> al_get_bitmap_height s>f
+        1e  al_orthographic_transform
+    proj2d al_use_projection_transform
+    ALLEGRO_DEPTH_TEST 0 al_set_render_state ;
+
+: draw-game  reset-render-state cls 0 0 at 'show @ ?execute ;
 : process-tick  e{ draw-game e} ;
 : frame  
     update-delta 
