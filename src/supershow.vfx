@@ -40,6 +40,7 @@ module [supershow]
 	include task                 \ Cooperative multitasking
 	include timer
 	include sprites
+	include smoothing            \ per-actor field easing toward targets
 	include dialog
 	include udlr                 \ Movement utilities
 	include collision            \ Shape intersection primitives

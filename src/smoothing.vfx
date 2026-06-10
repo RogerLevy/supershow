@@ -1,0 +1,125 @@
+\ ============================================================================
+\ Smoothing - per-actor easing of fields toward targets, with pluggable algorithms
+\ ============================================================================
+\ Any actor can lazily attach a %smoother: a pooled, invisible actor holding up
+\ to 12 entries [offset, target, speed, algorithm-xt, state]. Each frame the
+\ smoother eases the owner's fields toward their targets.
+\
+\   start:  field-addr speed. algo-xt smooth      ( target starts at current value )
+\   act>:   val field-addr toward                 ( ease toward val )
+\           val field-addr snap                   ( set field AND target now )
+\           delta field-addr +toward              ( nudge the target )
+\
+\ Algorithm xt signature: ( cur tgt speed. state-addr - new ). cur/tgt/new are
+\ the field's raw cell; a fixed easer treats them as 16.16, a float easer would
+\ sf>f/f>sf. Only `state-addr` needs to be an address (stateful easers like stepped).
+
+public
+
+12 constant max-smoothers
+5 cells constant /sentry
+
+\ Every actor carries a smoother pointer (0 until something is smoothed).
+class: %actor
+    prop smoother :addr
+class;
+public
+
+\ ---- the smoother actor ----
+class: %smoother  %actor derive
+    prop sowner :addr                          \ the owner being smoothed
+    prop #sentries :int
+    max-smoothers /sentry * nprop sentries     \ entry array
+class;
+public
+
+\ entry field accessors ( e - a )
+|| : se.offset ( e - a )  ;
+|| : se.target ( e - a )  cell+ ;
+|| : se.speed  ( e - a )  2 cells + ;
+|| : se.algo   ( e - a )  3 cells + ;
+|| : se.state  ( e - a )  4 cells + ;
+
+\ the following assume this = smoother
+|| : sentry[ ( n - e )  /sentry * sentries + ;
+
+|| : find-sentry ( offset - e | 0 )
+    {: offset | e :}
+    #sentries @ for
+        i sentry[ to e
+        e se.offset @ offset = if e unloop exit then
+    loop  0 ;
+
+|| : +sentry ( offset target speed algo - )
+    {: offset target speed algo | e :}
+    #sentries @ max-smoothers >= if exit then   \ table full -- ignore
+    #sentries @ sentry[ to e
+    offset e se.offset !
+    target e se.target !
+    speed  e se.speed !
+    algo   e se.algo !
+    0      e se.state !
+    1 #sentries +! ;
+
+|| : ease-sentry ( e - )
+    {: e | cur-addr :}
+    sowner @ e se.offset @ +  to cur-addr
+    cur-addr @  e se.target @  e se.speed @  e se.state  e se.algo @ execute
+    cur-addr ! ;
+
+|| : ease-all ( - )
+    #sentries @ for  i sentry[ ease-sentry  loop ;
+
+%smoother :: start ( - )
+    act>  ease-all ;
+
+\ ---- owner-side API ( this = owner ) ----
+|| : ?make-smoother ( - )
+    smoother @ ?exit
+    %smoother spawn  dup smoother !
+    this swap -> sowner ! ;
+
+: smooth ( field-addr speed. algo-xt - )
+    {: fa speed algo :}
+    ?make-smoother
+    fa this -  fa @  speed algo  smoother @ { +sentry } ;
+
+: toward ( val field-addr - )
+    {: val fa :}
+    fa this -  smoother @ { find-sentry }
+    ?dup if  val swap se.target !  else drop then ;
+
+: snap ( val field-addr - )
+    {: val fa :}
+    val fa !
+    fa this -  smoother @ { find-sentry }
+    ?dup if  val swap se.target !  else drop then ;
+
+: +toward ( delta field-addr - )
+    {: delta fa :}
+    fa this -  smoother @ { find-sentry }
+    ?dup if  delta swap se.target +!  else drop then ;
+
+\ ---- free the smoother when the owner is removed ----
+|| : ?free-smoother ( - )
+    smoother @ ?dup if unload then  0 smoother ! ;
+
+%actor :: unload
+    ?free-smoother
+    actor:unload ;
+
+\ ---- algorithms ( cur tgt speed. state-addr - new ) ----
+public
+
+: linear ( cur tgt speed state - new )      \ fixed lerp toward target
+    drop  {: cur tgt speed :}
+    cur  tgt cur -  speed p*  + ;
+
+: angular ( cur tgt speed state - new )     \ linear, but wraps the delta to [-180,180]
+    drop  {: cur tgt speed :}
+    cur  tgt cur -  360. mod 540. + 360. mod 180. -  speed p*  + ;
+
+: stepped ( cur tgt speed state - new )     \ snap to target every `speed` (>i) frames
+    {: cur tgt speed state :}
+    state @ 1+ dup state !
+    speed >i 1 max mod 0= if tgt else cur then ;
