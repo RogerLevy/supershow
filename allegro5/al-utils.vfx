@@ -115,7 +115,6 @@ extern BOOL SetThreadPriority( hthread, priority );
 : additive-mode  ALLEGRO_ADD ALLEGRO_ALPHA ALLEGRO_ONE  ALLEGRO_ADD ALLEGRO_ONE ALLEGRO_ONE set-blender ;
 
 : create-display
-    ALLEGRO_SINGLE_BUFFER  1  ALLEGRO_SUGGEST al_set_new_display_option
     ALLEGRO_VSYNC  1  ALLEGRO_SUGGEST al_set_new_display_option
     ALLEGRO_DEPTH_SIZE 16  ALLEGRO_SUGGEST al_set_new_display_option
     ALLEGRO_STENCIL_SIZE 8 ALLEGRO_SUGGEST al_set_new_display_option
