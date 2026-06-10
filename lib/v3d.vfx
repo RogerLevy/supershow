@@ -1,76 +1,208 @@
 module [v3d]
 
-\ 3D vector type for the Supershow 3D pack.
+\ 3D vector type for the Supershow 3D pack (addons/3d).
 \
-\ A v3d is three contiguous 32-bit float cells: x, y, z.  Declare one as a
-\ NIBS property with `v3d-prop name` (the `:v3d` type lives in forge/nibs.vfx),
-\ or as a standalone scratch buffer with `create name s/v3d allot`.
+\ A v3d is three contiguous 32-bit float cells: x, y, z.  Storage is float (so
+\ the values go straight to Allegro/GPU and avoid the 16.16 overflow ceiling),
+\ but the everyday game-facing API speaks 16.16 fixed-point (v.x@ / v.x! ...),
+\ converting at the boundary -- precision there isn't critical for game logic.
 \
-\ Vectors live in memory.  To compute, pull the triple onto the DATA stack with
-\ `3@` -- the cells carry IEEE-float bit patterns untouched -- operate, then
-\ `3!` back.  The arithmetic words (`3+`, `3-`, `3negate`) move each component
-\ through the x87 stack two operands at a time via `sf>f`/`f>sf`, so the float
-\ stack is never more than ~2 slots deep regardless of how many vectors are in
-\ flight.  Slower than native fixed-point adds, but it sidesteps both the 16.16
-\ overflow ceiling and the x87's 8-slot depth limit.
+\ Declare one as a NIBS property with `v3d-prop name` (the `:v3d` type lives in
+\ forge/nibs.vfx), or as a standalone zeroed buffer with `v3d name`.
+\
+\ Three access flavors per component:
+\   v.x             -> field ADDRESS        (for al_* float* args)
+\   v.x@  / v.x!    -> 16.16 fixed VALUE    (game logic)
+\   3@/3! 3sf@/3sf! -> raw float-bit cells  (whole-triple moves, GPU bridge)
 
-\ TODO: optimize with SSE2 instructions
+\ TODO: Optimize with SSE2 instructions
 
 public
 
 3 cells constant s/v3d
 
-\ --- component field-address accessors ( v3d - field-addr ) ---
-\ Named v3d.x/.y/.z, NOT >x/>y/>z: the latter would silently shadow the address
-\ accessors the %xy trait defines. Use these when you need a component's address
-\ (e.g. al_transform_coordinates_3d's float* args); for values use z@/z!.
-: v3d.x  ( v3d - a )  ;
-: v3d.y  ( v3d - a )  cell+ ;
-: v3d.z  ( v3d - a )  2 cells + ;
+: v3d ( <name> - ) ( - ) 
+    create 0e sf, 0e sf, 0e sf, ;
 
-\ --- scalar access ( the cells hold float bits ) ---
-: z@  ( addr - z )  2 cells + @ ;
-: z!  ( z addr - )  2 cells + ! ;
+\ --- component field-address accessors ( v - a ) ---
+\ Named v.x/.y/.z, NOT >x/>y/>z: the latter would conflict with the address
+\ accessors the %xy trait defines.
+: v.x  ( v - a )  ; immediate
+: v.y  ( v - a )  cell+ ;
+: v.z  ( v - a )  2 cells + ;
 
 \ --- whole-triple moves (plain cell copies; float bits ride along) ---
 : 3@  ( addr - x y z )  dup @  over cell+ @  rot 2 cells + @ ;
 : 3!  ( x y z addr - )  >r  r@ 2 cells + !  r@ cell+ !  r> ! ;
 
 \ --- bridges to/from the float stack (for Allegro calls), z ends on top ---
+\ also good for doing work with float-locals
 : 3sf@  ( addr - ) ( f: - x y z )  dup sf@  dup cell+ sf@  2 cells + sf@ ;
 : 3sf!  ( addr - ) ( f: x y z - )  >r  r@ 2 cells + sf!  r@ cell+ sf!  r> sf! ;
 
-\ --- build a vector from three integers ---
-: s>v3  ( ix iy iz addr - )
-    {: ix iy iz addr :}
-    ix s>f  iy s>f  iz s>f  addr 3sf! ;
+\ ============================================================================
+\ Fixed-point component access ( values are 16.16; storage is float )
+\ ============================================================================
 
-\ --- arithmetic on triples sitting on the data stack ---
-: 3+  ( x1 y1 z1 x2 y2 z2 - x3 y3 z3 )
-    {: x1 y1 z1 x2 y2 z2 :}
-    x1 sf>f x2 sf>f f+ f>sf
-    y1 sf>f y2 sf>f f+ f>sf
-    z1 sf>f z2 sf>f f+ f>sf ;
+\ -- store ( x. v - ) --
+: v.x!    ( x. v - )  swap p>f v.x sf! ;
+: v.y!    ( y. v - )  swap p>f v.y sf! ;
+: v.z!    ( z. v - )  swap p>f v.z sf! ;
+: v.xy!   ( x. y. v - )  dup >r v.y!  r> v.x! ;
+: v.xz!   ( x. z. v - )  dup >r v.z!  r> v.x! ;
+: v.yz!   ( y. z. v - )  dup >r v.z!  r> v.y! ;
+: v.xyz!  ( x. y. z. v - )  >r  r@ v.z!  r@ v.y!  r> v.x! ;
 
-: 3-  ( x1 y1 z1 x2 y2 z2 - x3 y3 z3 )
-    {: x1 y1 z1 x2 y2 z2 :}
-    x1 sf>f x2 sf>f f- f>sf
-    y1 sf>f y2 sf>f f- f>sf
-    z1 sf>f z2 sf>f f- f>sf ;
+\ -- accumulate ( x. v - ) --
+: v.x+!   ( x. v - )  swap p>f v.x sf+! ;
+: v.y+!   ( y. v - )  swap p>f v.y sf+! ;
+: v.z+!   ( z. v - )  swap p>f v.z sf+! ;
+: v.xy+!  ( x. y. v - )  dup >r v.y+!  r> v.x+! ;
+: v.xz+!  ( x. z. v - )  dup >r v.z+!  r> v.x+! ;
+: v.yz+!  ( y. z. v - )  dup >r v.z+!  r> v.y+! ;
+: v.xyz+! ( x. y. z. v - )  >r  r@ v.z+!  r@ v.y+!  r> v.x+! ;
 
-: 3negate  ( x y z - -x -y -z )
-    {: x1 y1 z1 :}
-    x1 sf>f fnegate f>sf
-    y1 sf>f fnegate f>sf
-    z1 sf>f fnegate f>sf ;
+\ -- fetch ( v - x. ) --
+: v.x@    ( v - x. )  v.x sf@ f>p ;
+: v.y@    ( v - y. )  v.y sf@ f>p ;
+: v.z@    ( v - z. )  v.z sf@ f>p ;
+: v.xy@   ( v - x. y. )  dup v.x@ swap v.y@ ;
+: v.xz@   ( v - x. z. )  dup v.x@ swap v.z@ ;
+: v.yz@   ( v - y. z. )  dup v.y@ swap v.z@ ;
+: v.xyz@  ( v - x. y. z. )  dup v.x@ over v.y@ rot v.z@ ;
 
-\ --- accumulate a triple into the vector at addr ---
-: 3+!  ( x y z addr - )  dup >r 3@ 3+ r> 3! ;
+\ ============================================================================
+\ Circular temporary v3d pool
+\ ============================================================================
+\ Slots are padded to 16 bytes so a 64KB pool holds exactly 4096 of them and the
+\ ring pointer wraps with a single 16-bit mask (16 divides 2^16; 12 would not,
+\ straddling the seam). 16-byte alignment also primes a future SSE2 pass.
+\ Increment-only: a temp stays valid until ~4096 allocations later overwrite it;
+\ there is no free/pop (no decrement case), like the f" rotating buffer.
+
+|| 16 constant /vslot
+|| create _vpool  65536 allot
+|| variable _vp   0 _vp !
+
+|| : vtmp ( - v )  _vp @ /vslot + $FFFF and  dup _vp !  _vpool + ;
+
+\ ============================================================================
+\ Vector operations
+\ ============================================================================
+
+\ -- value fetch: clone v into a fresh scratch slot (mutable, for chaining) --
+: v@ ( v - v' )  3@ vtmp dup >r 3! r> ;
+
+\ -- mutate dest in place, return dest (chainable) --
+: vadd ( vsrc vdest - vdest )  \ dest += src
+    {: s d :}
+    d v.x sf@ s v.x sf@ f+ d v.x sf!
+    d v.y sf@ s v.y sf@ f+ d v.y sf!
+    d v.z sf@ s v.z sf@ f+ d v.z sf!  d ;
+
+: vsub ( vsrc vdest - vdest )  \ dest -= src
+    {: s d :}
+    d v.x sf@ s v.x sf@ f- d v.x sf!
+    d v.y sf@ s v.y sf@ f- d v.y sf!
+    d v.z sf@ s v.z sf@ f- d v.z sf!  d ;
+
+: vmul ( vsrc vdest - vdest )  \ dest *= src (component-wise / Hadamard)
+    {: s d :}
+    d v.x sf@ s v.x sf@ f* d v.x sf!
+    d v.y sf@ s v.y sf@ f* d v.y sf!
+    d v.z sf@ s v.z sf@ f* d v.z sf!  d ;
+
+: vnegate ( v - v )
+    {: v :}
+    v v.x sf@ fnegate v v.x sf!
+    v v.y sf@ fnegate v v.y sf!
+    v v.z sf@ fnegate v v.z sf!  v ;
+
+: vzero ( v - v )
+    {: v :}  0e v v.x sf!  0e v v.y sf!  0e v v.z sf!  v ;
+
+: vone ( v - v )
+    {: v :}  1e v v.x sf!  1e v v.y sf!  1e v v.z sf!  v ;
+
+\ -- terminal in-place forms (no return) --
+: v! ( vsrc vdest - )  3 cells move ;   \ copy src -> dest
+: v+! ( vsrc vdest - )  vadd drop ;
+: v-! ( vsrc vdest - )  vsub drop ;
+: v*! ( vsrc vdest - )  vmul drop ;
+
+\ ============================================================================
+\ Proposed additions (review / cull)
+\ ============================================================================
+
+: vdot ( a b - n. )  \ dot product (fixed; large coords can overflow 16.16)
+    {: a b :}
+    a v.x sf@ b v.x sf@ f*
+    a v.y sf@ b v.y sf@ f*  f+
+    a v.z sf@ b v.z sf@ f*  f+  f>p ;
+
+: vlensq ( v - n. )                        \ squared length (no sqrt)
+    dup vdot ;
+
+: vlen ( v - n. )                          \ length / magnitude
+    {: v :}
+    v v.x sf@ fdup f*
+    v v.y sf@ fdup f*  f+
+    v v.z sf@ fdup f*  f+  fsqrt f>p ;
+
+: vscale ( n. v - v )                      \ multiply all components by scalar
+    {: s v :}
+    s p>f
+    v v.x sf@ fover f* v v.x sf!
+    v v.y sf@ fover f* v v.y sf!
+    v v.z sf@ fover f* v v.z sf!
+    fdrop  v ;
+
+: vnormalize ( v - v )                     \ scale to unit length (zero-guarded)
+    {: v :}
+    v v.x sf@ fdup f*
+    v v.y sf@ fdup f*  f+
+    v v.z sf@ fdup f*  f+  fsqrt           ( f: len )
+    fdup 0.0001e f< if fdrop v exit then   \ ~zero vector: leave unchanged
+    v v.x sf@ fover f/ v v.x sf!
+    v v.y sf@ fover f/ v v.y sf!
+    v v.z sf@ fover f/ v v.z sf!
+    fdrop  v ;
+
+: vcross ( vsrc vdest - vdest )            \ dest = dest x src (uses a scratch slot)
+    {: s d | r :}
+    vtmp to r
+    d v.y sf@ s v.z sf@ f*  d v.z sf@ s v.y sf@ f*  f-  r v.x sf!
+    d v.z sf@ s v.x sf@ f*  d v.x sf@ s v.z sf@ f*  f-  r v.y sf!
+    d v.x sf@ s v.y sf@ f*  d v.y sf@ s v.x sf@ f*  f-  r v.z sf!
+    r 3@ d 3!  d ;
+
+: vlerp ( vsrc vdest t. - vdest )          \ dest = lerp(dest, src, t)
+    {: s d t :}
+    t p>f
+    s v.x sf@ d v.x sf@ f- fover f* d v.x sf@ f+ d v.x sf!
+    s v.y sf@ d v.y sf@ f- fover f* d v.y sf@ f+ d v.y sf!
+    s v.z sf@ d v.z sf@ f- fover f* d v.z sf@ f+ d v.z sf!
+    fdrop  d ;
 
 \ --- distance between two vectors, as an integer (for depth sorting) ---
-: v3dist  ( a b - n )
+: vdist  ( a b - n )
     {: a b :}
-    a v3d.x sf@ b v3d.x sf@ f-  fdup f*
-    a v3d.y sf@ b v3d.y sf@ f-  fdup f*  f+
-    a v3d.z sf@ b v3d.z sf@ f-  fdup f*  f+
+    a v.x sf@ b v.x sf@ f-  fdup f*
+    a v.y sf@ b v.y sf@ f-  fdup f*  f+
+    a v.z sf@ b v.z sf@ f-  fdup f*  f+
     fsqrt f>s ;
+
+
+\ ============================================================================
+\ Conveniences
+\ ============================================================================
+
+: vdup ( v - v v' ) dup v@ ;
+
+: 3p. ( x. y. z. - ) -rot 2p. p. ;
+
+: v? ( v - ) v.xyz@  3p. ;
+
+aka 3v@ v.xyz@
+
+aka 3v! v.xyz!

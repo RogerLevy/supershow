@@ -12,19 +12,21 @@ public
 : genlevel ( - )
     100 for
         cube-mesh *model {
-            50 50 50 scl s>v3                 \ uniform scale 50
+            50. 50. 50. scl v.xyz!            \ uniform scale 50
             4 rnd 90 * >p pan !               \ random quarter-turn
             50 500 between                    \ random height h
-            dup s>f scl v3d.y sf!             \ scl.y = h (tall building)
-            -4000 4000 between swap
-            -4000 4000 between  pos s>v3       \ pos = (x, h, z); base sits on y=0
+            dup >p scl v.y!                   \ scl.y = h (tall building)
+            >p                                \ h -> fixed for pos.y
+            -4000 4000 between >p swap        \ ( rx. h. )
+            -4000 4000 between >p             \ ( rx. h. rz. )
+            pos v.xyz!                         \ pos = (x, h, z); base sits on y=0
         }
     loop ;
 
 : setup-camera ( - )
     %model one to the-cam
     the-cam {
-        0 1000 4000 pos s>v3                   \ up and back
+        0. 1000. 4000. pos v.xyz!              \ up and back
         15. tilt !  0 pan !  0 roll !          \ look down slightly
     } ;
 

@@ -20,12 +20,14 @@ private
 : genlevel ( - )
     100 for
         cube-mesh *model {
-            50 50 50 scl s>v3                 \ uniform scale 50
+            50. 50. 50. scl v.xyz!            \ uniform scale 50
             4 rnd 90 * >p pan !               \ random quarter-turn
             50 500 between                    \ random height h
-            dup s>f scl v3d.y sf!             \ scl.y = h (tall building)
-            -4000 4000 between swap
-            -4000 4000 between  pos s>v3       \ pos = (x, h, z); base on y=0
+            dup >p scl v.y!                   \ scl.y = h (tall building)
+            >p                                \ h -> fixed for pos.y
+            -4000 4000 between >p swap        \ ( rx. h. )
+            -4000 4000 between >p             \ ( rx. h. rz. )
+            pos v.xyz!                         \ pos = (x, h, z); base on y=0
         }
     loop ;
 
@@ -43,12 +45,11 @@ private
 
 : propel ( - )                      \ 3D velocity from the ship's heading
     pan @ negate 90. - 10. vec       \ ( vx. vz. ) horizontal from pan
-    p>f vel v3d.z sf!
-    p>f vel v3d.x sf!
+    vel v.z!  vel v.x!
     tilt @ 90. - 10. vec drop         \ ( vy. ) vertical from tilt
-    p>f vel v3d.y sf! ;
+    vel v.y! ;
 
-: ship-physics ( - )  physics>  vel 3@ pos 3+! ;   \ separate word so act> can also install
+: ship-physics ( - )  physics>  vel pos v+! ;   \ separate word so act> can also install
 
 class: %ship  %model derive  class;
 private   \ TODO remove once class;/class: restores the current wordlist itself
@@ -66,11 +67,11 @@ variable orbith  50 orbith !        \ camera height above the ship
 
 \ Helpers operate on `this`; an `obj` arg is read with -> (field) / { } (scope).
 \ Orbit math is in fixed-point (positions fit 16.16); pos is float at the boundary.
-: posxz@ ( - x. z. )  pos v3d.x sf@ f>p   pos v3d.z sf@ f>p ;
-: posxz! ( x. z. - )  p>f pos v3d.z sf!   p>f pos v3d.x sf! ;
+: posxz@ ( - x. z. )  pos v.xz@ ;
+: posxz! ( x. z. - )  pos v.xz! ;
 
 : tilt-towards ( obj dist. - n. )
-    >r  -> pos v3d.y sf@ f>p   pos v3d.y sf@ f>p  -  r> swap  angof ;
+    >r  -> pos v.y@   pos v.y@  -  r> swap  angof ;
 
 : pan-towards ( obj - n. )
     { posxz@ }  posxz@  2-  swap negate swap  angof 90. + ;
@@ -82,7 +83,7 @@ variable orbith  50 orbith !        \ camera height above the ship
 
 \ this = camera; orbit/aim relative to the-ship, matching allrange.f
 : cam-place ( - )       \ position the camera around the ship (direct, no easing)
-    the-ship -> pos v3d.y sf@  orbith @ s>f f+  pos v3d.y sf!     \ height above ship
+    the-ship -> pos v.y@  orbith @ >p +  pos v.y!     \ height above ship
     the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate ;
 
 : cam-follow ( - )
@@ -96,8 +97,8 @@ private   \ TODO remove once class;/class: restores the current wordlist itself
 %camera :: start ( - )
     pan  0.06 ['] angular smooth
     tilt 0.06 ['] linear  smooth
-    cam-place                              \ initial placement, then snap the aim so the
-    the-ship pan-towards pan snap          \ camera starts facing the ship (no startup somersault)
+    cam-place                               \ initial placement, then snap the aim so the
+    the-ship pan-towards pan snap           \ camera starts facing the ship (no startup somersault)
     the-ship 200. tilt-towards tilt snap
     act>  cam-follow ;
 
@@ -108,8 +109,8 @@ private   \ TODO remove once class;/class: restores the current wordlist itself
     %grid make to the-grid
     grid-mesh the-grid >msh !
     the-grid {
-        gridsize gridsize gridsize scl s>v3   \ scale the unit grid up (cell = gridsize)
-        90. tilt !                            \ lay it flat (XY -> XZ floor)
+        gridsize >p dup dup scl v.xyz!      \ scale the unit grid up (cell = gridsize)
+        90. tilt !                          \ lay it flat (XY -> XZ floor)
     } ;
 
 \ ===== render: grid first (background), then the depth-sorted models =====
@@ -126,7 +127,7 @@ public
     setup-grid
     %ship spawn to the-ship
     arwing-mesh the-ship >msh !               \ the ship
-    the-ship { 0 0 0 pos s>v3  10 10 10 scl s>v3 }
+    the-ship { 0. 0. 0. pos v.xyz!  10. 10. 10. scl v.xyz! }
     %camera spawn to the-cam
     genlevel
     show> step ~render ;

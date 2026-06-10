@@ -15,8 +15,8 @@ public
 \ with VFX's console `>pos` primitive.
 : setup ( - )
     cube-mesh thecube >msh !        \ set mesh (and unit scale)
-    0 0 -6 thecube -> pos s>v3       \ 6 units in front of the camera
-    1 1 1  thecube -> scl s>v3 ;     \ cube spans -1..+1 -- bump this to enlarge
+    0. 0. -6. thecube -> pos v.xyz!  \ 6 units in front of the camera
+    1. 1. 1.  thecube -> scl v.xyz! ;     \ cube spans -1..+1 -- bump this to enlarge
 
 : ~render ( - )
     3d                              \ set perspective projection + clear depth
@@ -28,4 +28,3 @@ public
     show> ~render ;
 
 main
-th

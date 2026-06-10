@@ -48,6 +48,6 @@ public
 
 %grid :: render ( - )
     camt-save
-    scl v3d.x sf@ wrap-camt          \ wrap the camera by the cell size (= the grid's scl)
+    scl v.x sf@ wrap-camt          \ wrap the camera by the cell size (= the grid's scl)
     model:render                     \ inherited %model render (modelview + draw), wrapped camt
     camt-restore ;

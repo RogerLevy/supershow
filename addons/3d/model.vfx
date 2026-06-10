@@ -103,7 +103,7 @@ class: %model  %actor derive
     prop msh  :addr     \ pointer to mesh data (vertices/indices/primtype)
     prop tex  :int
 
-    template { 1 1 1 scl s>v3 }
+    template { 1. 1. 1. scl v.xyz! }
 class;
 
 
@@ -118,7 +118,7 @@ public   \ TODO remove once class;/class: restores the current wordlist itself
     t 0e 0e 1e  roll @ p>f deg>rad   al_rotate_transform_3d
     t 0e 1e 0e  pan  @ p>f deg>rad   al_rotate_transform_3d
     1e 0e 0e axis 3sf!
-    t  axis v3d.x  axis v3d.y  axis v3d.z  al_transform_coordinates_3d
+    t  axis v.x  axis v.y  axis v.z  al_transform_coordinates_3d
     t axis 3sf@  tilt @ p>f deg>rad  al_rotate_transform_3d
     t2 al_identity_transform
     t2 scl 3sf@ al_scale_transform_3d

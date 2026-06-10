@@ -21,13 +21,13 @@ create campos s/v3d allot      \ camera world position, mirrored here for the so
 
 : camera-transform ( - )
     camt al_identity_transform
-    camt  pos v3d.x sf@ fnegate  pos v3d.y sf@ fnegate  pos v3d.z sf@ fnegate
+    camt  pos v.x sf@ fnegate  pos v.y sf@ fnegate  pos v.z sf@ fnegate
         al_translate_transform_3d
     camt-rotations ;
 
 : update-camera ( - )
     the-cam ?dup -exit
-    { camera-transform  pos 3@ campos 3! } ;
+    { camera-transform  pos campos v! } ;
 
 \ ---- camt save/restore + wrapped variant (for the infinite grid floor) ----
 create camt-save-buf s/transform allot
@@ -39,9 +39,9 @@ create camt-save-buf s/transform allot
     to gwrap
     the-cam {
         camt al_identity_transform
-        camt  pos v3d.x sf@ gwrap fwrap fnegate
-              pos v3d.y sf@ fnegate
-              pos v3d.z sf@ gwrap fwrap fnegate
+        camt  pos v.x sf@ gwrap fwrap fnegate
+              pos v.y sf@ fnegate
+              pos v.z sf@ gwrap fwrap fnegate
             al_translate_transform_3d
         camt-rotations
     } ;
@@ -55,7 +55,7 @@ create camt-save-buf s/transform allot
 \ non-%model actors (e.g. %smoother) sort first and aren't drawn.
 : depth-key ( actor - n )
     dup %model is? not if drop 0 exit then
-    -> pos campos v3dist  0 65535 clamp  ; \ 65535 swap - ;
+    -> pos campos vdist  0 65535 clamp  ; \ 65535 swap - ;
 
 : draw-models ( - )  ['] depth-key sorted-actors> this %model is? if this render then ;
 
