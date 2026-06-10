@@ -1,8 +1,8 @@
 module
 import %supershow%/src/supershow.vfx
-import %supershow%/3d/model.vfx
-import %supershow%/3d/render.vfx
-import %supershow%/3d/cube.vfx
+import %supershow%/addons/3d/model.vfx
+import %supershow%/addons/3d/render.vfx
+import %supershow%/addons/3d/cube.vfx
 public
 
 \ Stage 1 of the allrange port: a randomized cuboid "city" viewed from a static

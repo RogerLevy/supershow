@@ -1,5 +1,5 @@
 module
-import %supershow%/3d/model.vfx
+import %supershow%/addons/3d/model.vfx
 import %supershow%/lib/colors.vfx
 public
 

@@ -4,7 +4,7 @@ module [cube]
 \ verts = 36 vertices, one color per face. Coordinates are 16.16 fixed (v, takes
 \ fixed and converts to float); size is 1.0 so the cube spans -1..+1 on each axis.
 
-import %supershow%/3d/model.vfx
+import %supershow%/addons/3d/model.vfx
 import %supershow%/lib/colors.vfx
 public
 

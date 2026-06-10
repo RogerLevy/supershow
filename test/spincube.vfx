@@ -1,7 +1,7 @@
 module
 import %supershow%/src/supershow.vfx
-import %supershow%/3d/model.vfx
-import %supershow%/3d/cube.vfx
+import %supershow%/addons/3d/model.vfx
+import %supershow%/addons/3d/cube.vfx
 public
 
 \ Minimal 3D demo: one colored cube spinning about its Y axis.

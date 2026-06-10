@@ -1,10 +1,10 @@
 module
 import %supershow%/src/supershow.vfx
-import %supershow%/3d/model.vfx
-import %supershow%/3d/render.vfx
-import %supershow%/3d/cube.vfx
-import %supershow%/3d/arwing.vfx
-import %supershow%/3d/grid.vfx
+import %supershow%/addons/3d/model.vfx
+import %supershow%/addons/3d/render.vfx
+import %supershow%/addons/3d/cube.vfx
+import %supershow%/addons/3d/arwing.vfx
+import %supershow%/addons/3d/grid.vfx
 private
 
 0 value the-ship

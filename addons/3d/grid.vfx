@@ -1,6 +1,6 @@
 module
 import %supershow%/src/supershow.vfx \ for the render/draw protocols (to override render)
-import %supershow%/3d/render.vfx     \ model3d (reexported) + camt-save/restore/wrap-camt
+import %supershow%/addons/3d/render.vfx     \ model3d (reexported) + camt-save/restore/wrap-camt
 import %supershow%/lib/colors.vfx
 public
 
