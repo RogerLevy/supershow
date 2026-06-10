@@ -78,7 +78,13 @@
       "Bash(git --no-pager log --oneline -1)",
       "Bash(git --no-pager diff --stat)",
       "Bash(git --no-pager log --oneline -8)",
-      "Bash(git --no-pager status --short)"
+      "Bash(git --no-pager status --short)",
+      "Bash(git -C \"C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow\" status)",
+      "Bash(git -C \"C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow\" diff)",
+      "Bash(git -C \"C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow\" add 3d/model.vfx 3d/render.vfx test/allrange.vfx test/spincube.vfx)",
+      "Bash(git -C C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow commit -m '@ *)",
+      "Bash(git -C \"C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow\" commit --amend -m \"3d: drop /model; unit scale via class template, mesh via >msh\" -m \"Initial unit scale now comes from the %model class template instead of a /model init word; meshes are assigned directly with \\\\`>msh !\\\\`. Removed the draw-model helper \\(callers use \\\\`render\\\\`\\). Dropped depth-key's distance inversion now that the depth buffer handles draw ordering. Made the allrange demo words private except main.\")",
+      "Bash(git -C \"C:/Users/roger/Dev/vfxland5-work/supershow-dev/supershow\" log -1 --format=\"%s%n%n%b\")"
     ],
     "deny": []
   }
