@@ -115,14 +115,15 @@ create axis s/v3d allot
 \ ---- face-normal generation (build time, once per mesh; never per frame) ----
 \ For each triangle, write the unit object-space face normal into all three of its
 \ vertices (flat shading). Handles indexed and non-indexed TRIANGLE_LIST; no-ops on
-\ any other primtype (e.g. the grid's LINE_LIST). Winding assumed CCW-outward: if a
-\ model lights inverted, swap the cross operands below.
+\ any other primtype (e.g. the grid's LINE_LIST). Assumes the standard CCW winding, so
+\ outward = (vb-va) x (vc-va) = e1 x e2. A mesh wound the other way (the cube is CW) calls
+\ flip-normals after building to negate them.
 || : nth-vtx  ( mesh n - vtx )  s/modelvertex *  swap >vertices @ + ;
 || : face-normal ( va vb vc - )
     {: va vb vc | n :}
     vb va v-                  \ e1 = vb - va  (scratch)
-    vc va v-                  \ ( e2 e1 ) -> vcross does dest x src = e1 x e2
-    swap vcross vnormalize to n
+    vc va v-                  \ e2 = vc - va  (scratch); stack ( e1 e2 )
+    swap vcross vnormalize to n   \ vcross does dest x src = e1 x e2 -> outward for CCW winding
     n va >vnormal v!
     n vb >vnormal v!
     n vc >vnormal v! ;
@@ -147,11 +148,39 @@ create axis s/v3d allot
         loop
     then ;
 
+\ Negate every vertex normal in place. For meshes wound clockwise (gen-normals assumes CCW),
+\ called once after building so their faces point outward. ( see cube.vfx )
+: flip-normals ( mesh - )
+    {: m :}
+    m >vcount @ 0 ?do  m i nth-vtx >vnormal <vnegate drop  loop ;
+
+
+\ Flat shading needs per-face vertices, but an indexed mesh shares them, so a shared vertex
+\ can only hold one face's normal (the last face wins -> wrong lighting). Expand the index
+\ buffer into a fresh non-indexed vertex array -- each index becomes its own vertex -- so every
+\ triangle owns its three. Drops the indices; ~model then draws it via the non-indexed path.
+: de-index ( mesh - )
+    {: m | iptr icount src dst :}
+    m >indices @ 0= if exit then                    \ already non-indexed
+    m >primtype @ TRIANGLE_LIST <> if exit then
+    m >indices @  to iptr
+    m >icount @   to icount
+    m >vertices @ to src
+    here to dst
+    icount 0 ?do
+        iptr i cells + @  s/modelvertex *  src +     \ source vertex for index i
+        here  s/modelvertex allot                    \ reserve the dest slot
+        s/modelvertex move
+    loop
+    dst    m >vertices !
+    icount m >vcount !
+    0      m >indices !
+    0      m >icount ! ;
 
 : vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
 : ;vertices ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
 : indices:  ( mesh - mesh start )  here  2dup swap >indices ! ;
-: ;indices  ( mesh start - )       udup  here swap -  cell /  swap >icount !   gen-normals ;
+: ;indices  ( mesh start - )       udup  here swap -  cell /  swap >icount !   dup de-index  gen-normals ;
 
 
 \ ---- model object ----

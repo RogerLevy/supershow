@@ -30,3 +30,4 @@ cube-mesh vertices:
     black   v.a, v.b, v.e,  v.b, v.f, v.e,
     white   v.c, v.g, v.d,  v.g, v.h, v.d,
 ;vertices
+cube-mesh flip-normals      \ this cube is wound clockwise; gen-normals assumes CCW
