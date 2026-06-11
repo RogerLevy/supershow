@@ -32,6 +32,7 @@ transform: p        \ projection
 transform: t        \ scratch model rotation
 transform: t2       \ scratch model compose
 transform: camt     \ camera transform (identity until a camera writes it)
+transform: modelmat \ object->world for the current model (captured by modelview, for lighting)
 create axis s/v3d allot
 
 \ ---- angle helper ----
@@ -103,7 +104,11 @@ class: %model  %actor derive
     prop msh  :addr     \ pointer to mesh data (vertices/indices/primtype)
     prop tex  :int
 
-    template { 1. 1. 1. scl v.xyz! }
+    template { 
+        1. 1. 1. scl v.xyz! 
+        : simple-motion-3d   vel pos v+! ;
+        ['] simple-motion-3d phys !
+    }
 class;
 
 \ The following assume `this` is bound to a %model (call via draw-model).
@@ -111,20 +116,22 @@ class;
 
 : modelview ( - )
     t al_identity_transform
-    t 0e 0e 1e  roll @ p>f deg>rad   al_rotate_transform_3d
-    t 0e 1e 0e  pan  @ p>f deg>rad   al_rotate_transform_3d
+    t  0e 0e 1e  roll @ p>f deg>rad   al_rotate_transform_3d
+    t  0e 1e 0e  pan  @ p>f deg>rad   al_rotate_transform_3d
     1e 0e 0e axis 3sf!
     t  axis v.x  axis v.y  axis v.z  al_transform_coordinates_3d
-    t axis 3sf@  tilt @ p>f deg>rad  al_rotate_transform_3d
+    t  axis 3sf@  tilt @ p>f deg>rad  al_rotate_transform_3d
     t2 al_identity_transform
     t2 scl 3sf@ al_scale_transform_3d
     t2 t al_compose_transform
     t2 pos 3sf@ al_translate_transform_3d
+    t2 modelmat s/transform move        \ t2 is now object->world; stash it before the camera folds in
     t2 camt al_compose_transform
     t2 al_use_transform ;
 
 \ draw the primitive -- modelview is assumed already applied (by render)
 %model :: draw ( - )
+    msh @ -exit  
     msh @ >indices @ if
         msh @ >vertices @  0  texture@  msh @ >indices 2@  msh @ >primtype @
             al_draw_indexed_prim
