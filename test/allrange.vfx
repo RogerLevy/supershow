@@ -5,7 +5,6 @@ import %supershow%/addons/3d/render.vfx
 import %supershow%/addons/3d/cube.vfx
 import %supershow%/addons/3d/arwing.vfx
 import %supershow%/addons/3d/grid.vfx
-private
 
 0 value the-ship
 0 value the-grid
@@ -24,14 +23,15 @@ private
 : genlevel ( - )
     100 for
         cube-mesh *model {
-            50. 50. 50. scl v.xyz!            \ uniform scale 50
-            4 rnd 90 * >p pan !               \ random quarter-turn
-            50 500 between                    \ random height h
-            dup >p scl v.y!                   \ scl.y = h (tall building)
-            >p                                \ h -> fixed for pos.y
-            -4000 4000 between >p swap        \ ( rx. h. )
-            -4000 4000 between >p             \ ( rx. h. rz. )
-            pos v.xyz!                         \ pos = (x, h, z); base on y=0
+            4 rnd 90. * pan !                   \ random quarter-turn
+
+            50. 50. 50. scl v.xyz!              \ uniform scale 50
+            50. 500. between                    \ random height h
+            dup scl v.y!                        \  scl.y = h (tall building)
+
+            -4000. 4000. between swap           \ ( rx. h. )
+            -4000. 4000. between                \ ( rx. h. rz. )
+            pos v.xyz!                          \ pos = (x, h, z); base on y=0
         }
     loop ;
 
@@ -49,14 +49,13 @@ private
 
 : propel ( - )                      \ 3D velocity from the ship's heading
     pan @ negate 90. - 10. vec       \ ( vx. vz. ) horizontal from pan
-    vel v.z!  vel v.x!
+    vel v.xz!
     tilt @ 90. - 10. vec drop         \ ( vy. ) vertical from tilt
     vel v.y! ;
 
 : ship-physics ( - )  physics>  vel pos v+! ;   \ separate word so act> can also install
 
 class: %ship  %model derive  class;
-private   \ TODO remove once class;/class: restores the current wordlist itself
 
 %ship :: start ( - )
     ship-physics
@@ -69,21 +68,17 @@ private   \ TODO remove once class;/class: restores the current wordlist itself
 variable orbita  80 orbita !        \ orbit angle offset (degrees)
 variable orbith  50 orbith !        \ camera height above the ship
 
-\ Helpers operate on `this`; an `obj` arg is read with -> (field) / { } (scope).
-\ Orbit math is in fixed-point (positions fit 16.16); pos is float at the boundary.
-: posxz@ ( - x. z. )  pos v.xz@ ;
-: posxz! ( x. z. - )  pos v.xz! ;
-
 : tilt-towards ( obj dist. - n. )
     >r  -> pos v.y@   pos v.y@  -  r> swap  angof ;
 
 : pan-towards ( obj - n. )
-    { posxz@ }  posxz@  2-  swap negate swap  angof 90. + ;
+    -> pos v.xz@   pos v.xz@   2-  swap negate swap  angof 90. + ;
 
 : orbitted ( obj ang. dist. - x. z. )
-    vec  rot  { posxz@ }  2+ ;
+    vec  rot  -> pos v.xz@  2+ ;
 
-: situate ( obj ang. dist. - )  orbitted posxz! ;
+: situate ( obj ang. dist. - )  
+    orbitted pos v.xz!  ;
 
 \ this = camera; orbit/aim relative to the-ship, matching allrange.f
 : cam-place ( - )       \ position the camera around the ship (direct, no easing)
@@ -96,7 +91,6 @@ variable orbith  50 orbith !        \ camera height above the ship
     the-ship 200. tilt-towards tilt toward ;
 
 class: %camera  %model derive  class;
-private   \ TODO remove once class;/class: restores the current wordlist itself
 
 %camera :: start ( - )
     pan  0.06 ['] angular smooth
