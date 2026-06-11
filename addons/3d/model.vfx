@@ -85,7 +85,7 @@ create axis s/v3d allot
 : v, ( px. py. pz. pu. pv. - )
     {: px py pz pu pv :}
     px p>f f,  py p>f f,  pz p>f f,  pu p>f f,  pv p>f f,
-    rgba@fds  >r >r >r >r  r> , r> , r> , r> , ;
+    rgba@sf  >r >r >r >r  r> , r> , r> , r> , ;
 
 : vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
 : ;vertices ( mesh start - )     here swap -  /ALLEGRO_VERTEX /  swap >vcount ! ;

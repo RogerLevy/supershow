@@ -11,25 +11,25 @@ ec-cell thickness
     thickness! ;
 
 : circ ( radius. - )
-    thickness@ p>f f>sf >r   at@f p>f rgba@fds r> al_draw_circle ;
+    thickness@ p>f f>sf >r   at@f p>f rgba@sf r> al_draw_circle ;
 
 : circf ( radius. - )
-    at@f p>f rgba@fds al_draw_filled_circle ;
+    at@f p>f rgba@sf al_draw_filled_circle ;
 
 : oval ( radiusx. radiusy. - )
-    thickness@ p>f f>sf >r   at@f 2p>f rgba@fds r> al_draw_ellipse ;
+    thickness@ p>f f>sf >r   at@f 2p>f rgba@sf r> al_draw_ellipse ;
 
 : ovalf ( radiusx. radiusy. - )
-    at@f 2p>f rgba@fds al_draw_filled_ellipse ;
+    at@f 2p>f rgba@sf al_draw_filled_ellipse ;
 
 : line ( x. y. - )
-    thickness@ p>f f>sf >r   at@f   2p>f  rgba@fds r> al_draw_line ;
+    thickness@ p>f f>sf >r   at@f   2p>f  rgba@sf r> al_draw_line ;
 
 : rect ( w. h. - )
-    thickness@ p>f f>sf >r   at@f   at@p 2+ 2p>f   rgba@fds r> al_draw_rectangle ;
+    thickness@ p>f f>sf >r   at@f   at@p 2+ 2p>f   rgba@sf r> al_draw_rectangle ;
 
 : rectf ( w. h. - )
-    at@f   at@p 2+ 2p>f   rgba@fds al_draw_filled_rectangle ;
+    at@f   at@p 2+ 2p>f   rgba@sf al_draw_filled_rectangle ;
 
 || : f>c  255e f* 0.5e f+ f>s ;
 
@@ -78,7 +78,7 @@ ec-cell ppenv
     vtxs[ 0 0 0 poly -> pg.n @ ALLEGRO_PRIM_TRIANGLE_FAN al_draw_prim drop ;
 
 : pixel ( - )
-    at@f rgba@fds al_draw_pixel ;
+    at@f rgba@sf al_draw_pixel ;
 
 || : fvertex ( f:x f:y f:u f:v a - a' )
     {: f: x f: y f: u f: v :}

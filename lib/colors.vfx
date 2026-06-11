@@ -1,7 +1,7 @@
 module [colors]
 
 \ Named color words. Each sets the current pen color via `rgba8`, so they feed
-\ both 2D drawing and the 3D vertex builder (which reads the pen via `rgba@fds`).
+\ both 2D drawing and the 3D vertex builder (which reads the pen via `rgba@sf`).
 \ Moved here from workzone/ so any project can use them.
 
 import [allegro5.utils]    \ rgba8, ppen*@/!, c>p

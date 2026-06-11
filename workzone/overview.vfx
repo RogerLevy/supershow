@@ -19,7 +19,7 @@ $40 $80 or $2 or constant OV-BMP-FLAGS  \ MIN_LINEAR | MAG_LINEAR | MIPMAP
 : ov-render ( n - )
     {: n :}
     n ov-bmp al_set_target_bitmap
-    black rgba@fds al_clear_to_color
+    black rgba@sf al_clear_to_color
     0 0 at  session ?dup if draw then
     display al_get_backbuffer al_set_target_bitmap ;
 

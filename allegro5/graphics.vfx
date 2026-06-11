@@ -15,7 +15,7 @@ ec-cell ppena \ fixed
 ec-cell ppenx \ fixed
 ec-cell ppeny \ fixed
 
-: rgba@fds
+: rgba@sf
     ppenr@ p>f f>sf
     ppeng@ p>f f>sf
     ppenb@ p>f f>sf
@@ -69,7 +69,7 @@ ec-cell ppeny \ fixed
     ?dup -exit al_destroy_bitmap ;
 
 : screen ( - )
-    rgba@fds al_clear_to_color ;
+    rgba@sf al_clear_to_color ;
 
 variable backdrop  $000000ff backdrop !
 
@@ -137,7 +137,7 @@ redef : cls ( - )
     ALLEGRO_WRITE_MASK 0 al_set_render_state
     \ Draw mask rectangle (writes 1 to stencil where drawn)
     -1 rgba8
-    at@f   at@p 2+ 2p>f   rgba@fds al_draw_filled_rectangle
+    at@f   at@p 2+ 2p>f   rgba@sf al_draw_filled_rectangle
     \ Re-enable color writes
     ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA al_set_render_state
     \ Only pass where stencil == 1
@@ -169,7 +169,7 @@ variable default-font
     a len *zbuf to zstr
     w s>f f>sf to w
     line-spacing @ s>f f>sf to lh 
-    default-font@  rgba@fds  at@f w lh 0 zstr al_draw_multiline_text 
+    default-font@  rgba@sf  at@f w lh 0 zstr al_draw_multiline_text 
     zstr free throw ;
 
 : print ( a len - )
@@ -194,7 +194,7 @@ variable default-font
 : fnt|default ( font|0 - font )   dup 0= if drop default-font@ then ;
 
 : glyph ( n font|0 - )
-    swap >r fnt|default rgba@fds at@f r> al_draw_glyph ;
+    swap >r fnt|default rgba@sf at@f r> al_draw_glyph ;
 
 : glyph+ ( n font|0 - )
     2dup glyph  fnt|default swap 0 al_get_glyph_advance 0 +at ;
