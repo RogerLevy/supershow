@@ -107,7 +107,7 @@ forth-public
 ' rec-fixed forth-recognizer +stack
 
 : _p.s
-    depth 8 min | d |
+    depth 8 min {: d :}
     d 0< -4 ?throw
     3 push-attribute
     d if ."     DS( " depth . ." ):[ " else ."     DS:[ " then

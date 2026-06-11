@@ -54,7 +54,6 @@ aka not 0=
 : $+     ( $ a n - $ ) rot dup >r append r> ;
 : ?exit  ( n - ) s" if exit then" evaluate ; immediate
 : -exit  ( n - ) s" 0= if exit then" evaluate ; immediate 
-aka | locals|
 aka cd cwd
 : 2+  ( x y x y - x' y' ) rot + >r + r> ;
 : 2-  ( x y x y - x' y' ) rot swap - >r - r> ;
@@ -191,7 +190,7 @@ include %idir%/../textmode/textmode-tools.vfx
     begin @ ?dup while dup cell+ @ execute repeat ;
 
 : _.s
-    depth 8 min | d |
+    depth 8 min {: d :}
     d 0< -4 ?throw
     3 push-attribute
     d if ."     DS( " depth . ." ):[ " else ."     DS:[ " then
@@ -206,7 +205,7 @@ include %idir%/../textmode/textmode-tools.vfx
 : .s  _.s cr ;
 
 : _f.s 
-    fdepth | d |
+    fdepth {: d :}
     d 0< -400 ?throw
     3 push-attribute
     ."     FS:[ " 
