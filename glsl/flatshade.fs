@@ -8,7 +8,8 @@ out vec4 fragColor;
 
 uniform vec3 uLightDir;       // world-space direction the light travels (directional light)
 uniform mat4 uView;           // world -> view, to project the in-plane light dir onto the screen
-uniform vec4 uBaseColor;      // global tint over the per-vertex color
+uniform vec4 uLightColor;     // the light's color -- what fully-lit surfaces tend toward
+uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead of black)
 uniform float uGradStrength;  // how much the far-from-light edge of an oblique face darkens
 uniform float uGradBright;    // how much the toward-light edge brightens ABOVE the lit color (0 = none)
 
@@ -41,6 +42,10 @@ void main() {
     }
     float shade = lambert * factor;
 
-    vec3 rgb = vColor.rgb * uBaseColor.rgb * shade;
-    fragColor = vec4(rgb, vColor.a * uBaseColor.a);
+    // shade is the lit amount: 0 -> ambient color, 1 -> light color, >1 over-bright (extrapolates
+    // past the light color). Floored at 0 so the darkest a surface gets is the ambient color, not
+    // black. The per-vertex (surface) color tints the result.
+    vec3 incident = mix(uAmbientColor.rgb, uLightColor.rgb, max(shade, 0.0));
+    vec3 rgb = vColor.rgb * incident;
+    fragColor = vec4(rgb, vColor.a * uLightColor.a);
 }
