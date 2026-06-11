@@ -539,6 +539,7 @@ redef : include
     then
     saved-sd to section-declared?
     pop-package  outer-mod to current-module ;
+
 redef : require
     getPathSpec ?idir-path
     2dup expand normalize ['] SourceFiles voc>wid search-wordlist

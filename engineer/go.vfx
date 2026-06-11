@@ -88,6 +88,7 @@ public
 : system-controls  ?quit ?w/f ?bye ;
 
 : process-input  poll pump ;
+    
 create proj2d 64 allot          \ scratch 2D ortho projection (ALLEGRO_TRANSFORM = 64 bytes)
 
 \ Reset Allegro to the 2D drawing baseline: identity model transform, default
