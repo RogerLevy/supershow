@@ -5,6 +5,8 @@ import %supershow%/addons/3d/render.vfx
 import %supershow%/addons/3d/cube.vfx
 import %supershow%/addons/3d/arwing.vfx
 import %supershow%/addons/3d/grid.vfx
+import %supershow%/addons/3d/collision3d.vfx
+
 
 0 value the-ship
 0 value the-grid
@@ -42,9 +44,9 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     \ "Lava World" settings
     \ 1e 1e 0.5e 1e          "uLightColor"   vec4!
     \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
-    4e                   "uGradStrength" float!
-    2e                   "uGradBright"   float!
-    1e                 "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
+    1e                   "uGradStrength" float!
+    1e                   "uGradGain"     float!   \ extra bright above fully-lit on oblique faces (0 = none)
+    0.2e                   "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
 
     \ depth fog (eye-space distance) -- tune start/end to the scene scale
     1500e                "uFogStart"     float!
@@ -103,12 +105,48 @@ class: %building  %model derive  class;
 
 class: %ship  %model derive  class;
 
+0 value it-pos
+variable collided
+
+: ship-point-buildings ( v - ) 
+    to it-pos
+    actives>
+        me %building is? -exit
+        it-pos
+        pos scl v-                          \ building min corner (cube spans pos - scl ..
+        pos scl v+                          \  .. pos + scl; mesh is the ±1 unit cube)
+        v-box? if collided on then ;
+
+defer ship-physics
+
+: flight
+    ship-physics
+    act>  propel ?lr ?ud ;
+
+: wobble
+    begin time 2000 * psin 20 * roll !  yield 0.75 passed? until  0 roll ! ;
+
+: test-collision
+    simple-motion-3d
+    0 task> wobble flight ;
+
+[:
+    physics>
+        vel pos v+!
+        collided off
+        pos ship-point-buildings
+        pos -90. 2.5 50. >v v+ ship-point-buildings
+        pos 90. 2.5 50.  >v v+ ship-point-buildings 
+        collided @ -exit 
+        test-collision 
+;] is ship-physics
+
 %ship :: start ( - )
     arwing-mesh msh !
     tilt 0.075 ['] linear  smooth
     pan  0.06  ['] angular smooth      \ heading wraps -> angular
-    roll 0.06  ['] linear  smooth
-    act>  propel ?lr ?ud ;
+    roll 0.06  ['] linear  smooth 
+    flight ;
 
 \ ===== orbit camera (ported from 3dpack/cam.f + allrange.f's cam draw) =====
 variable orbita  80 orbita !        \ orbit angle offset (degrees)
@@ -161,7 +199,7 @@ class: %camera  %model derive  class;
 : ~render ( - )
     3d  update-camera
     the-grid render
-    flatshade
+    \ flatshade
     draw-models ;
 
 \ ===== main =====

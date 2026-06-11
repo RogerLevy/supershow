@@ -201,6 +201,8 @@ class: %model  %actor derive
     }
 class;
 
+redef : >pos  -> pos ;
+
 \ The following assume `this` is bound to a %model (call via draw-model).
 : texture@ ( - bmp )  tex @ ;   \ 0 = untextured; bmpid->ALLEGRO_BITMAP* is a TODO
 

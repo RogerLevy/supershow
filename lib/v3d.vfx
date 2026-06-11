@@ -191,13 +191,13 @@ public
     s v.z sf@ d v.z sf@ f- fover f* d v.z sf@ f+ d v.z sf!
     fdrop  d ;
 
-\ --- distance between two vectors, as an integer (for depth sorting) ---
-: vdist  ( a b - n )
+\ --- distance between two vectors
+: vdist  ( a b - n. )
     {: a b :}
     a v.x sf@ b v.x sf@ f-  fdup f*
     a v.y sf@ b v.y sf@ f-  fdup f*  f+
     a v.z sf@ b v.z sf@ f-  fdup f*  f+
-    fsqrt f>s ;
+    fsqrt f>p ;
 
 
 \ ============================================================================
@@ -213,3 +213,5 @@ public
 aka 3v@ v.xyz@
 
 aka 3v! v.xyz!
+
+: >v ( x. y. z. - v ) vtmp dup >r 3v! r> ;
