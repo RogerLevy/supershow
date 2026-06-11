@@ -12,6 +12,10 @@ uniform vec4 uLightColor;     // the light's color -- what fully-lit surfaces te
 uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead of black)
 uniform float uGradStrength;  // how much the far-from-light edge of an oblique face darkens
 uniform float uGradBright;    // how much the toward-light edge brightens ABOVE the lit color (0 = none)
+uniform float uFogStart;      // eye-space depth (vClip.w) where fog begins
+uniform float uFogEnd;        // eye-space depth where fog reaches full strength
+uniform vec4  uFogColor;      // fog / haze color (rgb; a unused)
+uniform float uFogAmount;     // max fog strength: 0 = off, 1 = distant surfaces fully fogged
 
 void main() {
     // Per-face normal straight from the geometry (no derivatives), and the world directional light.
@@ -47,5 +51,11 @@ void main() {
     // black. The per-vertex (surface) color tints the result.
     vec3 incident = mix(uAmbientColor.rgb, uLightColor.rgb, max(shade, 0.0));
     vec3 rgb = vColor.rgb * incident;
+
+    // Depth fog: linear ramp on eye-space depth (vClip.w = view-axis distance), blending the
+    // shaded color toward uFogColor. uFogAmount caps the blend so distance can stay partly visible.
+    float fog = clamp((vClip.w - uFogStart) / (uFogEnd - uFogStart), 0.0, 1.0) * uFogAmount;
+    rgb = mix(rgb, uFogColor.rgb, fog);
+
     fragColor = vec4(rgb, vColor.a * uLightColor.a);
 }

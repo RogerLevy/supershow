@@ -42,6 +42,13 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
     4e                   "uGradStrength" float!
     4e                   "uGradBright"   float!
+
+    \ depth fog (eye-space distance) -- tune start/end to the scene scale
+    1500e                "uFogStart"     float!
+    8000e                "uFogEnd"       float!
+    0e 0e 0e 1e          "uFogColor"     vec4!
+    1e                   "uFogAmount"    float!
+
     camt                 "uView"         matrix! ;
 
 : ~flat-model ( - )
