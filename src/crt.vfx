@@ -13,7 +13,7 @@ require %idir%/shader.vfx
 || 0 value tv:bmp
 || : filter
     tv:bmp al_set_target_bitmap
-    crtea:s shade
+    crtea:s al_use_shader 0= abort" al_use_shader() error!" 
     0.025e z" curve" float!
     0.8e z" tcurve" float!
     2.6e z" sharpness" float!
@@ -32,7 +32,7 @@ continuation: crt>
     0e 0e 2e 1e 0e transform
     r> execute
     ['] filter catch
-    0 shade
+    0 al_use_shader drop
     display al_get_backbuffer al_set_target_bitmap
     throw
     m}

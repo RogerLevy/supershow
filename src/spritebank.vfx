@@ -139,13 +139,13 @@ public
     active-bank 0= if exit then
     active-bank >vptr @  active-bank >vbuf @  -  s/sbv /  to #v
     #v 0= if  0 to active-bank  exit  then
-    _sb-shader  shade
+    _sb-shader al_use_shader 0= abort" al_use_shader() error!" 
     GL_TEXTURE0 1 +  glActiveTexture
     GL_TEXTURE_2D_ARRAY  active-bank >gl-tex @  glBindTexture
     1  z" tex_array"  int!
     active-bank >vbuf @  active-bank >prim-decl @  0  0  #v
         ALLEGRO_PRIM_TRIANGLE_LIST  al_draw_prim  drop
-    0 shade
+    0 al_use_shader drop
     GL_TEXTURE0  glActiveTexture
     0 to active-bank ;
 

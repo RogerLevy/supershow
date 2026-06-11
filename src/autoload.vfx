@@ -23,7 +23,7 @@ create autoloads /list allot&erase
 
 [defined] %asset [if]
 class: %asset
-    prop data 
+    prop data  :lstring
 
     : embed ( fp len - )
         2dup lslurp data !  >autoload-path srcpath$ place ;
@@ -177,30 +177,31 @@ class: %shader
     %asset derive
     is-a %autoload
     prop handle :addr   \ ALLEGRO_SHADER*
+    prop data2 :lstring
 
-    : does-shader  does> -> handle @ shade ;
+    : shade ( shader|0 - )
+        dup if -> handle @ then 
+        al_use_shader 0= abort" al_use_shader() error!" ;
 
-    : _load ( - )
+    || : _load-shader ( - )
         \ Body: [vs-bytes + 0c][fs-bytes + 0c]
-        this @data drop
-        dup zcount nip 1 + over +
-        load-shader handle ! ;
+        data @ lcount drop  data2 @ lcount drop  load-shader handle ! ;
 
     : shader ( <name> <vs-path> <fs-path> - ) ( - )
         bl parse  bl parse  bl parse
         {: nm-a nm-n vs-a vs-n fs-a fs-n :}
-        vs-a vs-n fexists? not abort" VS file not found"
-        fs-a fs-n fexists? not abort" FS file not found"
+        vs-a vs-n fexists? not abort" Vertex shader file not found"
+        fs-a fs-n fexists? not abort" Fragment shader file not found"
         nm-a nm-n sfind nip if exit then
-        nm-a nm-n %shader asset does-shader {
-            vs-a vs-n file,  0 c,
-            fs-a fs-n file,  0 c,
-            _load
+        nm-a nm-n %shader asset {
+            vs-a vs-n lslurp 0 c, data !
+            fs-a fs-n lslurp 0 c, data2 !
+            _load-shader
         } ;
 
     :: on-startup ( - )
         this body> >name count f" Loading shader %s" .info
-        _load ;
+        _load-shader ;
 
 class;
 
