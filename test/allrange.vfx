@@ -15,14 +15,21 @@ import %supershow%/addons/3d/grid.vfx
 \ smoothing yet (deferred), and the ship mesh is a stand-in for the arwing.
 \ Tune the control rates / camera offset / angle signs to taste.
 
-\ ===== city =====
+\ Flat-shaded models hand the shader their object->world matrix (uModel) so it can
+\ put positions in world space; the 3d pack stashes it in `modelmat` during modelview.
+\ Subclasses override draw (rather than %model itself) so model:draw can delegate.
+: ~flat-model ( - )  modelmat z" uModel" matrix!  model:draw ;
 
-: *model ( mesh - model )  
-    %model one  dup >r >msh !  r> ;
+\ ===== city =====
+class: %building  %model derive  class;
+%building :: draw ( - )  ~flat-model ;
+
+: *building ( mesh - building )
+    %building one  dup >r >msh !  r> ;
 
 : genlevel ( - )
     100 for
-        cube-mesh *model {
+        cube-mesh *building {
             4 rnd 90. * pan !                   \ random quarter-turn
 
             50. 50. 50. scl v.xyz!              \ uniform scale 50
@@ -53,12 +60,12 @@ import %supershow%/addons/3d/grid.vfx
     tilt @ 90. - 10. vec drop         \ ( vy. ) vertical from tilt
     vel v.y! ;
 
-: ship-physics ( - )  physics>  vel pos v+! ;   \ separate word so act> can also install
-
 class: %ship  %model derive  class;
 
+%ship :: draw ( - )  ~flat-model ;
+
 %ship :: start ( - )
-    ship-physics
+    arwing-mesh msh !
     tilt 0.075 ['] linear  smooth
     pan  0.06  ['] angular smooth      \ heading wraps -> angular
     roll 0.06  ['] linear  smooth
@@ -111,10 +118,24 @@ class: %camera  %model derive  class;
         90. tilt !                          \ lay it flat (XY -> XZ floor)
     } ;
 
+
+\ ===== flat-shading =====
+shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
+
+\ Activate the shader and set its scene-constant uniforms. (The per-model uModel
+\ matrix is set in each model's draw -- see ~flat-model.) uLightDir is the direction
+\ the light travels in world space; uBaseColor tints the per-vertex face colors.
+: flatshade ( - )
+    flatshade.s shade                            \ flatshade.s pushes the shader object; shade activates it
+    -0.4e -0.25e -0.1e   z" uLightDir"  vec3!
+    1e 1e 1e 1e       z" uBaseColor" vec4! ;
+
 \ ===== render: grid first (background), then the depth-sorted models =====
 : ~render ( - )
     3d  update-camera
+    0 shade 
     the-grid render
+    flatshade
     draw-models ;
 
 \ ===== main =====
@@ -124,7 +145,6 @@ public
     just
     setup-grid
     %ship spawn to the-ship
-    arwing-mesh the-ship >msh !               \ the ship
     the-ship { 0. 0. 0. pos 3v!  10. 10. 10. scl 3v! }
     %camera spawn to the-cam
     genlevel
