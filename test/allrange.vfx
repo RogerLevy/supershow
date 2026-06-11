@@ -17,6 +17,10 @@ private
 \ Tune the control rates / camera offset / angle signs to taste.
 
 \ ===== city =====
+
+: *model ( mesh - model )  
+    %model one  dup >r >msh !  r> ;
+
 : genlevel ( - )
     100 for
         cube-mesh *model {
@@ -127,7 +131,7 @@ public
     setup-grid
     %ship spawn to the-ship
     arwing-mesh the-ship >msh !               \ the ship
-    the-ship { 0. 0. 0. pos v.xyz!  10. 10. 10. scl v.xyz! }
+    the-ship { 0. 0. 0. pos 3v!  10. 10. 10. scl 3v! }
     %camera spawn to the-cam
     genlevel
     show> step ~render ;

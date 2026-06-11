@@ -3,11 +3,13 @@ import %supershow%/src/supershow.vfx
 import %supershow%/addons/3d/model.vfx
 import %supershow%/addons/3d/render.vfx
 import %supershow%/addons/3d/cube.vfx
-public
 
 \ Stage 1 of the allrange port: a randomized cuboid "city" viewed from a static
 \ camera. Validates the stage-based 3D renderer + depth sort + camera transform.
 \ Tune setup-camera (pos / tilt / fov) if the city isn't framed well.
+
+: *model ( mesh - model )  
+    %model one  dup >r >msh !  r> ;
 
 : genlevel ( - )
     100 for
@@ -29,6 +31,8 @@ public
         0. 1000. 4000. pos v.xyz!              \ up and back
         15. tilt !  0 pan !  0 roll !          \ look down slightly
     } ;
+
+public
 
 : main ( - )
     just

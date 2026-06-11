@@ -17,6 +17,7 @@ continuation: batch> ( flag -- )
 : v|  $2000000 or ;
 : hv|  h| v| ;
 : named? ( xt $ - f ) >r >name count r> count >uppercase s= ; 
+: between ( lo hi - n )  over - 1 + rnd + ;
 
 : memfile@ ( a len - ALLEGRO_FILE_fp )
     0 z" r" al_open_memfile ;

@@ -4,10 +4,10 @@ module [supershow.core]
 	reexport [allegro5.utils]
 	public
 	include checks               \ Validations
+	include %idir%/../lib/mersenne.vfx  \ RNG
 	include utilities            \ Math helpers, audio, and misc utilities
 	include traits               \ Object traits
 	include asset                \ Base asset
-	include %idir%/../lib/mersenne.vfx  \ RNG
 	include node
 
 module [supershow.assets]

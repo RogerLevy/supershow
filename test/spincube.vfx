@@ -2,7 +2,6 @@ module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/3d/model.vfx
 import %supershow%/addons/3d/cube.vfx
-public
 
 \ Minimal 3D demo: one colored cube spinning about its Y axis.
 \ Validates the ported 3dpack pipeline (projection, vertex buffer, modelview,
@@ -22,6 +21,8 @@ public
     3d                              \ set perspective projection + clear depth
     1. thecube -> pan +!            \ spin 1 degree/frame about Y
     thecube render ;
+
+public
 
 : main ( - )
     setup
