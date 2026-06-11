@@ -122,18 +122,21 @@ class: %camera  %model derive  class;
 \ ===== flat-shading =====
 shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
 
-\ Activate the shader and set its scene-constant uniforms. (The per-model uModel
-\ matrix is set in each model's draw -- see ~flat-model.) uLightDir is the direction
-\ the light travels in world space; uBaseColor tints the per-vertex face colors.
+\ Activate the shader and set its uniforms. (The per-model uModel matrix is set in each
+\ model's draw -- see ~flat-model.) uLightDir is the world-space directional light (face
+\ shading, as before); uGradStrength is the artistic screen-space gradient that darkens the
+\ far-from-light side of oblique faces. uView (the camera matrix) is constant per frame.
 : flatshade ( - )
     flatshade.s shade                            \ flatshade.s pushes the shader object; shade activates it
-    -0.4e -0.25e -0.1e   z" uLightDir"  vec3!
-    1e 1e 1e 1e       z" uBaseColor" vec4! ;
+    -0.4e -0.25e -0.1e   z" uLightDir"    vec3!
+    0e 1e 1e 1e          z" uBaseColor"   vec4!
+    4e                   z" uGradStrength" float!
+    4e                 z" uGradBright"   float!
+    camt                 z" uView"        matrix! ;
 
 \ ===== render: grid first (background), then the depth-sorted models =====
 : ~render ( - )
     3d  update-camera
-    0 shade 
     the-grid render
     flatshade
     draw-models ;

@@ -9,9 +9,11 @@ uniform mat4 uModel;               // object -> world, set per model (3d pack's 
 
 out vec3 vWorldPos;                // world position; the FS derives the face normal from it
 out vec4 vColor;                   // per-vertex (per-face) color
+out vec4 vClip;                    // clip position; the FS uses xy/w as the screen (NDC) position
 
 void main() {
     vWorldPos = (uModel * al_pos).xyz;
     vColor = al_color;
     gl_Position = al_projview_matrix * al_pos;
+    vClip = gl_Position;
 }
