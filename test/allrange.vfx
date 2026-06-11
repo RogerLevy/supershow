@@ -33,15 +33,18 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     \ Pre-normalized here so the fragment shader skips a per-pixel normalize.
 
     0.829545e 0.518466e 0.207386e   z" uLightDir"     vec3!
+    \ 0.e 1e 0e   z" uLightDir"     vec3!
 
     1e 1e 1e 1e          "uLightColor"   vec4!
-    0.1e 0.05e 0e 1e     "uAmbientColor" vec4!
+    \ 0.1e 0.05e 0e 1e     "uAmbientColor" vec4!
+    0e 0e 0e 1e "uAmbientColor" vec4!
 
     \ "Lava World" settings
     \ 1e 1e 0.5e 1e          "uLightColor"   vec4!
     \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
     4e                   "uGradStrength" float!
-    4e                   "uGradBright"   float!
+    2e                   "uGradBright"   float!
+    1e                 "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
 
     \ depth fog (eye-space distance) -- tune start/end to the scene scale
     1500e                "uFogStart"     float!

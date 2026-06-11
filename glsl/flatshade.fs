@@ -12,6 +12,7 @@ uniform vec4 uLightColor;     // the light's color -- what fully-lit surfaces te
 uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead of black)
 uniform float uGradStrength;  // how much the far-from-light edge of an oblique face darkens
 uniform float uGradBright;    // how much the toward-light edge brightens ABOVE the lit color (0 = none)
+uniform float uGradCurve;     // ramp shaping: 1 = linear, <1 bends toward ambient (more dark), >1 toward lit
 uniform float uFogStart;      // eye-space depth (vClip.w) where fog begins
 uniform float uFogEnd;        // eye-space depth where fog reaches full strength
 uniform vec4  uFogColor;      // fog / haze color (rgb; a unused)
@@ -23,26 +24,31 @@ void main() {
     vec3 L = uLightDir;                              // already unit, already toward the light
     float lambert = 0.2 + 0.8 * max(0.0, dot(N, L)); // the directional light, world space, as before
 
-    // Artistic screen-space gradient. The part of L lying IN the face plane points "uphill"
-    // toward the light along the surface; its length is the face's obliqueness to the light
-    // (0 when the face faces the light -> no gradient, growing as it turns away). Project that
-    // onto the screen and ramp brightness across the fragment's display position: the side of
-    // an oblique face farther from the light darkens. Depends only on the normal, the light
-    // direction, and screen position -- never on world coordinates.
+    // Screen-space directional gradient, with AMOUNT and ANGLE deliberately separated:
+    //   AMOUNT (how strongly it shows) = the face's obliqueness to the LIGHT alone, |Lplane| =
+    //     sin(angle between N and L). Full when edge-on to the light (a top-lit building's walls),
+    //     zero when the face points straight toward or away from it (roof, underside). No camera
+    //     term, so the strength of the effect depends only on the light, never the viewpoint.
+    //   ANGLE (which way it runs on screen) = the in-plane light direction projected to the screen,
+    //     so it depends on the normal, the light AND the camera -- as intended.
+    // The ramp is across screen position (ndc): one continuous screen-space gradient that each
+    // polygon cuts out where it covers.
     vec3 Lplane = L - dot(L, N) * N;                 // light direction within the face plane
-    vec2 dir = (mat3(uView) * Lplane).xy;            // ...projected to the screen -> ramp direction
+    float oblique = clamp(length(Lplane), 0.0, 1.0); // AMOUNT: sin(angle(N,L)); light-only, no camera
+    vec2 dir = (mat3(uView) * Lplane).xy;            // ANGLE: in-plane light projected to the screen
     float dlen = length(dir);
-    // Strength rises monotonically with how far the face is turned from the light: 0 facing the
-    // light, up to 1 facing fully away. (Using |Lplane| = sin(angle) here was the bipolar version
-    // -- it peaked edge-on and fell back to 0 on away-facing polys, leaving them on plain Lambert.)
-    float turn = clamp((1.0 - dot(N, L)) * 0.5, 0.0, 1.0);
     float factor = 1.0;
     if (dlen > 1e-4) {
         vec2 ndc = vClip.xy / vClip.w;               // fragment screen position, [-1, 1]
         float awayness = clamp(0.5 - 0.5 * dot(dir / dlen, ndc), 0.0, 1.0);  // 0 toward light, 1 away
-        // Ramp from brighter-than-lit (toward the light) to darker (away). >1 pushes past target.
-        float ramp = mix(1.0 + uGradBright, 1.0 - uGradStrength, awayness);
-        factor = mix(1.0, ramp, turn);
+        awayness = pow(awayness, uGradCurve);        // bend the ramp; endpoints (0,1) stay fixed
+        // Ramp from brighter-than-lit (toward the light) to darker (away). Clamp the dark end at 0
+        // (= ambient once multiplied through): a strength > 1 would otherwise drive the ramp
+        // negative partway across the screen, and the max(shade,0) floor below flattens everything
+        // past that point into a dead unlit band. Clamped, the ramp reaches its darkest exactly at
+        // the away screen edge, so the gradient spans the whole screen.
+        float ramp = mix(1.0 + uGradBright, max(0.0, 1.0 - uGradStrength), awayness);
+        factor = mix(1.0, ramp, oblique);            // amount from light-obliqueness only
     }
     float shade = lambert * factor;
 
