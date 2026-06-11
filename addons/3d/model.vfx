@@ -46,8 +46,8 @@ create axis s/v3d allot
 
 \ ---- projection setup ----
 80 value fov
-0e fvalue focal
-0e fvalue aspect
+|| 0e fvalue focal
+|| 0e fvalue aspect
 : 3d ( - )
     fov s>f deg>rad 2e f/ ftan to focal
     \ aspect from the actual render target (the display backbuffer), so it stays
@@ -70,7 +70,7 @@ create axis s/v3d allot
 \ ---- mesh data (the vertex/index buffers; distinct from the %model object) ----
 \ layout (5 cells): vptr vcount iptr icount primtype
 \ vptr/vcount are adjacent (>vertices 2@), iptr/icount are adjacent (>indices 2@)
-: >vertices ( mesh - a )  ;
+: >vertices ( mesh - a )  ; immediate
 : >vcount   ( mesh - a )  cell+ ;
 : >indices  ( mesh - a )  2 cells + ;
 : >icount   ( mesh - a )  3 cells + ;
@@ -105,10 +105,6 @@ class: %model  %actor derive
 
     template { 1. 1. 1. scl v.xyz! }
 class;
-
-
-
-public   \ TODO remove once class;/class: restores the current wordlist itself
 
 \ The following assume `this` is bound to a %model (call via draw-model).
 : texture@ ( - bmp )  tex @ ;   \ 0 = untextured; bmpid->ALLEGRO_BITMAP* is a TODO

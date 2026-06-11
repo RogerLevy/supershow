@@ -44,7 +44,6 @@ grid-mesh vertices:
 \ is what scrolls. We draw the grid with a camera transform whose XZ position is
 \ wrapped by the grid's world cell size (its scl), so it tiles seamlessly. ----
 class: %grid  %model derive  class;
-public
 
 %grid :: render ( - )
     camt-save

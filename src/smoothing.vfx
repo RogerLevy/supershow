@@ -23,7 +23,6 @@ public
 class: %actor
     prop smoother :addr
 class;
-public
 
 \ ---- the smoother actor ----
 class: %smoother  %actor derive
@@ -31,7 +30,6 @@ class: %smoother  %actor derive
     prop #sentries :int
     max-smoothers /sentry * nprop sentries     \ entry array
 class;
-public
 
 \ entry field accessors ( e - a )
 || : se.offset ( e - a )  ;

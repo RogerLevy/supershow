@@ -169,11 +169,12 @@ continuation: who> ( - actor|0 ) ( - f )
 || : >classbase ( class - a len )
     body>name >pad count >lowercase ?-% ;
 
-|| : (actor-definition) ( class - )
-    >classbase filebase@ s= if private then ;
+\ `module` calls `private` in actor scripts so this is no longer needed:
+\ || : (actor-definition) ( class - )
+\     >classbase filebase@ s= if private then ;
 
-%actor :derive ( source-class derived-class - )
-    nip (actor-definition) ;
+\ %actor :derive ( source-class derived-class - )
+\     nip (actor-definition) ;
 
 || : hide-if-autoclass ( class - )
     \ Hide autoclass to fix LOCATE
@@ -187,8 +188,7 @@ continuation: who> ( - actor|0 ) ( - f )
     \ TODO: There's a better way: modify the class's source file string.
     \       (Hopefully there's a string pointer we can change.)
     \       This will prevent any dangling references to autoclasses.
-    dup hide-if-autoclass
-    (actor-definition) ;
+    hide-if-autoclass ;
 
 || : find-class ( a len - class | %actor )
     ?-% f" %%%s"
