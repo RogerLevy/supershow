@@ -173,6 +173,8 @@ class: %font
 
 class;
 
+0 value active-shader
+
 class: %shader
     %asset derive
     is-a %autoload
@@ -180,8 +182,10 @@ class: %shader
     prop data2 :lstring
 
     : shade ( shader|0 - )
-        dup if -> handle @ then 
-        al_use_shader 0= abort" al_use_shader() error!" ;
+        {: s :}
+        s dup if -> handle @ then 
+        al_use_shader 0= abort" al_use_shader() error!" 
+        s to active-shader ;
 
     || : _load-shader ( - )
         \ Body: [vs-bytes + 0c][fs-bytes + 0c]

@@ -78,20 +78,81 @@ create axis s/v3d allot
 : >primtype ( mesh - a )  4 cells + ;
 : mesh ( primtype - )  0 , 0 , 0 , 0 , , ;   \ use after `create name`
 
+\ ---- custom vertex format: ALLEGRO_VERTEX (x y z u v r g b a) + face normal (nx ny nz) ----
+\ The flat-shading shader needs a per-face normal but the mesh data carries none, so we
+\ append one to each vertex (the ALLEGRO_VERTEX prefix is kept intact, so uv/color stay
+\ available for the TODO textured path). The normal is left zero by `v,` and filled in at
+\ build time by `gen-normals`. It rides in al_user_attr_0 (a FLOAT_3 user attribute).
+
+/ALLEGRO_VERTEX 3 cells +  constant s/modelvertex     \ 36 + 12 = 48 bytes per vertex
+
+|| : >vnormal ( vtx - a )  36 + ;
+
+|| create mvtx-vdecl
+    ALLEGRO_PRIM_POSITION    , ALLEGRO_PRIM_FLOAT_3 ,  0 ,
+    ALLEGRO_PRIM_TEX_COORD   , ALLEGRO_PRIM_FLOAT_2 , 12 ,
+    ALLEGRO_PRIM_COLOR_ATTR  , 0                    , 20 ,
+    ALLEGRO_PRIM_USER_ATTR   , ALLEGRO_PRIM_FLOAT_3 , 0 >vnormal ,
+    0 , 0 , 0 ,
+
+|| 0 value mvtx-decl    \ ALLEGRO_VERTEX_DECL*; built lazily once the display exists
+
+|| : mvtx-decl@ ( - decl )
+    mvtx-decl ?dup ?exit
+    mvtx-vdecl s/modelvertex al_create_vertex_decl  dup to mvtx-decl ;
+
 \ ---- vertex / index builders ----
-\ A vertex is an ALLEGRO_VERTEX record: x y z u v r g b a, all floats.
-\ v, takes 16.16-fixed coords (kept small in the data files) and the current
-\ pen color (set by a color word) for the four color components.
+\ A vertex is an ALLEGRO_VERTEX record (x y z u v r g b a) plus a 3-float normal slot.
+\ v, takes 16.16-fixed coords (kept small in the data files) and the current pen color
+\ (set by a color word) for the four color components; the normal is zeroed here.
 : f, ( f: x - )  f>sf , ;
 : v, ( px. py. pz. pu. pv. - )
     {: px py pz pu pv :}
     px p>f f,  py p>f f,  pz p>f f,  pu p>f f,  pv p>f f,
-    rgba@sf  >r >r >r >r  r> , r> , r> , r> , ;
+    rgba@sf  >r >r >r >r  r> , r> , r> , r> ,
+    0e sf, 0e sf, 0e sf, ;          \ normal placeholder -- filled by gen-normals
+
+\ ---- face-normal generation (build time, once per mesh; never per frame) ----
+\ For each triangle, write the unit object-space face normal into all three of its
+\ vertices (flat shading). Handles indexed and non-indexed TRIANGLE_LIST; no-ops on
+\ any other primtype (e.g. the grid's LINE_LIST). Winding assumed CCW-outward: if a
+\ model lights inverted, swap the cross operands below.
+|| : nth-vtx  ( mesh n - vtx )  s/modelvertex *  swap >vertices @ + ;
+|| : face-normal ( va vb vc - )
+    {: va vb vc | n :}
+    vb va v-                  \ e1 = vb - va  (scratch)
+    vc va v-                  \ ( e2 e1 ) -> vcross does dest x src = e1 x e2
+    swap vcross vnormalize to n
+    n va >vnormal v!
+    n vb >vnormal v!
+    n vc >vnormal v! ;
+
+: gen-normals ( mesh - )
+    {: m | ip :}
+    m >primtype @ TRIANGLE_LIST <> if exit then
+    m >indices @ if
+        m >indices @ to ip
+        m >icount @ 3 / 0 ?do
+            m  ip i 3 * cells +           @ nth-vtx
+            m  ip i 3 * cells + cell+     @ nth-vtx
+            m  ip i 3 * cells + 2 cells + @ nth-vtx
+            face-normal
+        loop
+    else
+        m >vcount @ 3 / 0 ?do
+            m  i 3 *     nth-vtx
+            m  i 3 * 1 + nth-vtx
+            m  i 3 * 2 + nth-vtx
+            face-normal
+        loop
+    then ;
+
 
 : vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
-: ;vertices ( mesh start - )     here swap -  /ALLEGRO_VERTEX /  swap >vcount ! ;
+: ;vertices ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
 : indices:  ( mesh - mesh start )  here  2dup swap >indices ! ;
-: ;indices  ( mesh start - )     here swap -  cell /  swap >icount ! ;
+: ;indices  ( mesh start - )       udup  here swap -  cell /  swap >icount !   gen-normals ;
+
 
 \ ---- model object ----
 class: %model  %actor derive
@@ -129,16 +190,38 @@ class;
     t2 camt al_compose_transform
     t2 al_use_transform ;
 
-\ draw the primitive -- modelview is assumed already applied (by render)
-%model :: draw ( - )
-    msh @ -exit  
+\ ---- per-model uModel upload ----
+\ Goes straight to glUniformMatrix4fv rather than al_set_shader_matrix: Allegro's by-name
+\ uniform lookup + deferred-uniform bookkeeping ran ~23us/call, which at one call per model
+\ dominated the whole frame (100 models -> ~2.3ms). The direct upload is ~free.
+\ The location is cached once against the program current at first call (the flat shader, set
+\ by `shade`). That's correct while a single shader owns uModel; a second uModel-using shader
+\ would need the cache keyed per program.
+|| variable _prog
+|| 0 value uModel-loc
+|| false value uModel-cached?
+: model-matrix! ( transform - )            \ transform = object->world (modelmat)
+    uModel-cached? not if
+        init-gl-extensions
+        GL_CURRENT_PROGRAM _prog glGetIntegerv
+        z" uModel" _prog @ glGetUniformLocation  to uModel-loc
+        true to uModel-cached?
+    then
+    0 1 uModel-loc glUniformMatrix4fv ;     \ ( value transpose count location )
+
+: ~model
+    msh @ -exit
     msh @ >indices @ if
-        msh @ >vertices @  0  texture@  msh @ >indices 2@  msh @ >primtype @
-            al_draw_indexed_prim
+        msh @ >vertices @  mvtx-decl@  texture@  msh @ >indices 2@  msh @ >primtype @
+            al_draw_indexed_prim drop
     else
-        msh @ >vertices 2@  >r  0  texture@  0  r>  msh @ >primtype @
+        msh @ >vertices 2@  >r  mvtx-decl@  texture@  0  r>  msh @ >primtype @
             al_draw_prim drop
     then ;
+
+\ draw the primitive -- modelview is assumed already applied (by render)
+%model :: draw ( - )
+    ~model ;
 
 \ 3D render entry: overrides actor:render (no 2D pen) -- just transform + draw
 %model :: render ( - )

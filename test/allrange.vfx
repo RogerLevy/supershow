@@ -18,17 +18,48 @@ import %supershow%/addons/3d/grid.vfx
 \ Flat-shaded models hand the shader their object->world matrix (uModel) so it can
 \ put positions in world space; the 3d pack stashes it in `modelmat` during modelview.
 \ Subclasses override draw (rather than %model itself) so model:draw can delegate.
-: ~flat-model ( - )  modelmat z" uModel" matrix!  model:draw ;
+
+
+\ ===== flat-shading =====
+shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
+
+\ Activate the shader and set its uniforms. (The per-model uModel matrix is set in each
+\ model's draw -- see ~flat-model.) uLightDir is the world-space directional light; surfaces
+\ run from uAmbientColor (unlit) to uLightColor (lit). uGradStrength/uGradBright drive the
+\ screen-space gradient across oblique faces. uView (the camera matrix) is constant per frame.
+: flatshade ( - )
+    flatshade.s shade                            \ flatshade.s pushes the shader object; shade activates it
+    \ unit vector TOWARD the light: normalize(-travel), travel = (-0.4,-0.25,-0.1).
+    \ Pre-normalized here so the fragment shader skips a per-pixel normalize.
+
+    0.829545e 0.518466e 0.207386e   z" uLightDir"     vec3!
+
+    1e 1e 1e 1e          "uLightColor"   vec4!
+    0.1e 0.05e 0e 1e     "uAmbientColor" vec4!
+
+    \ "Lava World" settings
+    \ 1e 1e 0.5e 1e          "uLightColor"   vec4!
+    \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
+    4e                   "uGradStrength" float!
+    4e                   "uGradBright"   float!
+    camt                 "uView"         matrix! ;
+
+: ~flat-model ( - )
+    modelmat model-matrix!          \ object->world for the shader (direct glUniformMatrix4fv)
+    ~model ;
+
+%model :: draw  active-shader flatshade.s = if ~flat-model else ~model then ;
+
+%grid :: draw  active-shader  0 shade  ~model  shade ;
 
 \ ===== city =====
 class: %building  %model derive  class;
-%building :: draw ( - )  ~flat-model ;
 
 : *building ( mesh - building )
     %building one  dup >r >msh !  r> ;
 
 : genlevel ( - )
-    100 for
+    400 for
         cube-mesh *building {
             4 rnd 90. * pan !                   \ random quarter-turn
 
@@ -36,8 +67,8 @@ class: %building  %model derive  class;
             50. 500. between                    \ random height h
             dup scl v.y!                        \  scl.y = h (tall building)
 
-            -4000. 4000. between swap           \ ( rx. h. )
-            -4000. 4000. between                \ ( rx. h. rz. )
+            -6000. 6000. between swap           \ ( rx. h. )
+            -6000. 6000. between                \ ( rx. h. rz. )
             pos v.xyz!                          \ pos = (x, h, z); base on y=0
         }
     loop ;
@@ -61,8 +92,6 @@ class: %building  %model derive  class;
     vel v.y! ;
 
 class: %ship  %model derive  class;
-
-%ship :: draw ( - )  ~flat-model ;
 
 %ship :: start ( - )
     arwing-mesh msh !
@@ -117,28 +146,6 @@ class: %camera  %model derive  class;
         gridsize >p dup dup scl v.xyz!      \ scale the unit grid up (cell = gridsize)
         90. tilt !                          \ lay it flat (XY -> XZ floor)
     } ;
-
-
-\ ===== flat-shading =====
-shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
-
-\ Activate the shader and set its uniforms. (The per-model uModel matrix is set in each
-\ model's draw -- see ~flat-model.) uLightDir is the world-space directional light; surfaces
-\ run from uAmbientColor (unlit) to uLightColor (lit). uGradStrength/uGradBright drive the
-\ screen-space gradient across oblique faces. uView (the camera matrix) is constant per frame.
-: flatshade ( - )
-    flatshade.s shade                            \ flatshade.s pushes the shader object; shade activates it
-    -0.4e -0.25e -0.1e   z" uLightDir"     vec3!
-
-    1e 1e 1e 1e          z" uLightColor"   vec4!
-    0.1e 0.05e 0e 1e         z" uAmbientColor" vec4!
-
-    \ "Lava World" settings
-    \ 1e 1e 0.5e 1e          z" uLightColor"   vec4!
-    \ 0.75e 0e 0e 1e          z" uAmbientColor" vec4!
-    4e                   z" uGradStrength" float!
-    4e                   z" uGradBright"   float!
-    camt                 z" uView"         matrix! ;
 
 \ ===== render: grid first (background), then the depth-sorted models =====
 : ~render ( - )

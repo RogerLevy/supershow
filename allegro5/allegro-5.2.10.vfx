@@ -173,7 +173,7 @@ extern "C" void al_draw_filled_rectangle( float x1, float y1, float x2, float y2
 \ extern "C" al_draw_filled_triangle( );
 extern "C" void al_draw_glyph( void * font, int float-r, int float-g, int float-b, int float-a, float x, float y, int codepoint);
 \ extern "C" al_draw_indexed_buffer( );
-extern "C" void al_draw_indexed_prim( void * vtxs, void * decl, void * texture, void * indices, int num_vtx, int type );
+extern "C" int al_draw_indexed_prim( void * vtxs, void * decl, void * texture, void * indices, int num_vtx, int type );
 \ extern "C" al_draw_justified_text( );
 \ extern "C" al_draw_justified_textf( );
 \ extern "C" al_draw_justified_ustr( );

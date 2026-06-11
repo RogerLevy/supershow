@@ -24,6 +24,8 @@ extern stdcall void glPixelStorei( int pname, int param );
 0 value _pfn-glActiveTexture
 0 value _pfn-glTexImage3D
 0 value _pfn-glTexSubImage3D
+0 value _pfn-glGetUniformLocation
+0 value _pfn-glUniformMatrix4fv
 
 : glActiveTexture ( texture - )
     _pfn-glActiveTexture  1  NXCALL drop ;
@@ -34,14 +36,23 @@ extern stdcall void glPixelStorei( int pname, int param );
 : glTexSubImage3D ( data type format depth height width zoffset yoffset xoffset level target - )
     _pfn-glTexSubImage3D  11  NXCALL drop ;
 
+: glGetUniformLocation ( name program - location )
+    _pfn-glGetUniformLocation  2  NXCALL ;
+
+: glUniformMatrix4fv ( value transpose count location - )
+    _pfn-glUniformMatrix4fv  4  NXCALL drop ;
+
 : init-gl-extensions ( - )
-    z" glActiveTexture"   al_get_opengl_proc_address  to _pfn-glActiveTexture
-    z" glTexImage3D"      al_get_opengl_proc_address  to _pfn-glTexImage3D
-    z" glTexSubImage3D"   al_get_opengl_proc_address  to _pfn-glTexSubImage3D ;
+    z" glActiveTexture"      al_get_opengl_proc_address  to _pfn-glActiveTexture
+    z" glTexImage3D"         al_get_opengl_proc_address  to _pfn-glTexImage3D
+    z" glTexSubImage3D"      al_get_opengl_proc_address  to _pfn-glTexSubImage3D
+    z" glGetUniformLocation" al_get_opengl_proc_address  to _pfn-glGetUniformLocation
+    z" glUniformMatrix4fv"   al_get_opengl_proc_address  to _pfn-glUniformMatrix4fv ;
 
 \ Miscellaneous
 $0BA2 constant GL_VIEWPORT
 $1F02 constant GL_VERSION
+$8B8D constant GL_CURRENT_PROGRAM
 
 \ Texture targets
 $0DE1 constant GL_TEXTURE_2D

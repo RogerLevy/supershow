@@ -12,21 +12,21 @@ public
 || : -size  size negate ;
 
 \ eight corners (x y z u v) -- u,v unused (0)
-|| : v.a  -size  size -size 0 0 v, ;
-|| : v.b   size  size -size 0 0 v, ;
-|| : v.c  -size -size -size 0 0 v, ;
-|| : v.d   size -size -size 0 0 v, ;
-|| : v.e  -size  size  size 0 0 v, ;
-|| : v.f   size  size  size 0 0 v, ;
-|| : v.g  -size -size  size 0 0 v, ;
-|| : v.h   size -size  size 0 0 v, ;
+|| : v.a,  -size  size -size 0 0 v, ;
+|| : v.b,   size  size -size 0 0 v, ;
+|| : v.c,  -size -size -size 0 0 v, ;
+|| : v.d,   size -size -size 0 0 v, ;
+|| : v.e,  -size  size  size 0 0 v, ;
+|| : v.f,   size  size  size 0 0 v, ;
+|| : v.g,  -size -size  size 0 0 v, ;
+|| : v.h,   size -size  size 0 0 v, ;
 
 create cube-mesh  TRIANGLE_LIST mesh
 cube-mesh vertices:
-    purple  v.a v.c v.b  v.b v.c v.d
-    red     v.b v.d v.f  v.f v.d v.h
-    green   v.f v.g v.e  v.f v.h v.g
-    orange  v.e v.g v.c  v.e v.c v.a
-    black   v.a v.b v.e  v.b v.f v.e
-    white   v.c v.g v.d  v.g v.h v.d
+    purple  v.a, v.c, v.b,  v.b, v.c, v.d,
+    red     v.b, v.d, v.f,  v.f, v.d, v.h,
+    green   v.f, v.g, v.e,  v.f, v.h, v.g,
+    orange  v.e, v.g, v.c,  v.e, v.c, v.a,
+    black   v.a, v.b, v.e,  v.b, v.f, v.e,
+    white   v.c, v.g, v.d,  v.g, v.h, v.d,
 ;vertices

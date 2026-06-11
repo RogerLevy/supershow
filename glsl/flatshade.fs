@@ -1,12 +1,12 @@
 #version 300 es
-precision highp float;   // world coords reach a few thousand; highp keeps the derivatives clean
+precision mediump float;   // no world-space derivative anymore -> mediump is plenty everywhere
 
-in vec3 vWorldPos;
+flat in vec3 vNormal;      // world-space face normal, supplied per face by the vertex shader
 in vec4 vColor;
 in vec4 vClip;
 out vec4 fragColor;
 
-uniform vec3 uLightDir;       // world-space direction the light travels (directional light)
+uniform vec3 uLightDir;       // UNIT direction TOWARD the light (pre-normalized on the CPU)
 uniform mat4 uView;           // world -> view, to project the in-plane light dir onto the screen
 uniform vec4 uLightColor;     // the light's color -- what fully-lit surfaces tend toward
 uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead of black)
@@ -14,9 +14,9 @@ uniform float uGradStrength;  // how much the far-from-light edge of an oblique 
 uniform float uGradBright;    // how much the toward-light edge brightens ABOVE the lit color (0 = none)
 
 void main() {
-    // World face normal from the geometry (no per-vertex normals), and the world directional light.
-    vec3 N = normalize(cross(dFdx(vWorldPos), dFdy(vWorldPos)));
-    vec3 L = normalize(-uLightDir);                  // toward the light
+    // Per-face normal straight from the geometry (no derivatives), and the world directional light.
+    vec3 N = normalize(vNormal);                     // renormalize: soak up mat3(uModel) scale slack
+    vec3 L = uLightDir;                              // already unit, already toward the light
     float lambert = 0.2 + 0.8 * max(0.0, dot(N, L)); // the directional light, world space, as before
 
     // Artistic screen-space gradient. The part of L lying IN the face plane points "uphill"
