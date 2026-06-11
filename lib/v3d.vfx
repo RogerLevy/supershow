@@ -90,9 +90,6 @@ public
 \ Vector operations
 \ ============================================================================
 
-\ -- value fetch: clone v into a fresh scratch slot (mutable, for chaining) --
-: v@ ( v - v' )  3@ vtmp dup >r 3! r> ;
-
 \ -- mutate dest in place, return dest (chainable) --
 : vadd ( vsrc vdest - vdest )  \ dest += src
     {: s d :}
@@ -129,6 +126,9 @@ public
 : v+! ( vsrc vdest - )  vadd drop ;
 : v-! ( vsrc vdest - )  vsub drop ;
 : v*! ( vsrc vdest - )  vmul drop ;
+
+\ -- value fetch: clone v into a fresh scratch slot (mutable, for chaining) --
+: v@ ( v - v' )  vtmp dup >r v! r> ;
 
 \ ============================================================================
 \ Proposed additions (review / cull)
