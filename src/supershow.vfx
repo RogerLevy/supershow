@@ -41,6 +41,7 @@ module [supershow]
 	include timer
 	include sprites
 	include smoothing            \ per-actor field easing toward targets
+	include tween                \ time-based property tweening w/ easing functions
 	include dialog
 	include udlr                 \ Movement utilities
 	include collision            \ Shape intersection primitives

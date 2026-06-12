@@ -1,0 +1,68 @@
+public
+
+\ Easing transformers
+\  ( startval change. ratio. -- val )
+
+:noname ;
+constant EASE-IN
+
+:noname  1.0 swap - >r swap over + swap negate r> ;
+constant EASE-OUT
+
+:noname 
+    dup 0.5 < if
+        2 * swap 2 / swap
+    else
+        swap 2 / rot over + -rot swap 0.5 - 2 * [ ease-out compile, ]
+    then ;
+constant EASE-IN-OUT
+
+\ Easing functions
+\  ( startval change. ratio. -- val )
+\  all of these are "in" animations, to be transformed by the above
+\  exponential formula: c * math.pow(2, 10 * (t / d - 1)) + b;
+\  quadratic formula: c * (t /= d) * t + b
+
+|| : (overshoot) >r dup dup r@ 1.0 + p* r> - p* p* p* + ;
+
+:noname p* + ;                                           constant LINEAR     
+:noname 1.0 - 10.0 p* 2e p>f f**  f>p p* + ;             constant EXPONENTIAL
+:noname 1.0 - 20.0 p* 2e p>f f**  f>p p* + ;             constant EXPONENTIAL2
+:noname 1.0 - 40.0 p* 2e p>f f**  f>p p* + ;             constant EXPONENTIAL3
+:noname 90.0 p* 90.0 - psin 1.0 + p* + ;                 constant SINUSOID       
+:noname dup p* p* + ;                                    constant QUADRATIC  
+:noname dup p* dup p* p* + ;                             constant CUBIC      
+:noname dup p* 1.0 swap - psqrt 1.0 - p* negate + ;      constant CIRCULAR   
+:noname 1.70158 (overshoot) ;                            constant OVERSHOOT  
+
+\ Tween object
+
+class: %tween
+    %actor derive
+    prop d :xt
+    prop adr :addr
+    prop ease :int
+    prop n1
+    prop n2
+    prop dur :fixed
+    prop owner :ref %actor
+class;
+
+|| : ratio  time dur @ p/ 1. min ;     \ elapsed/duration, clamped to 1 (act> stamps the clock)
+|| : val  n1 @ n2 @ over - ratio d @ execute ease @ execute ;
+|| : ?done  time dur @ >= if me unload then ;
+|| : ?break  owner @ dup if exists? not dup if me unload then then ;
+|| : tween-act  act> ?break ?exit val adr @ ! ?done ;
+
+\ Tweening
+
+: *tween ( ease dir adr n2. len. - tween )
+    %tween one { 
+        you %actor is? if you owner ! then
+        dur ! n2 ! adr ! d ! ease !
+        adr @ @ n1 !
+        tween-act
+    me } ;
+
+: tween ( ease dir adr n2. len. - )
+    *tween drop ;
