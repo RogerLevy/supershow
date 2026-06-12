@@ -44,8 +44,8 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     \ "Lava World" settings
     \ 1e 1e 0.5e 1e          "uLightColor"   vec4!
     \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
-    1e                   "uGradStrength" float!
-    .5e                   "uGradGain"     float!   \ extra bright above fully-lit on oblique faces (0 = none)
+    .5e                   "uGradStrength" float!
+    .5e                   "uGradGain"     float!   
     .5e                   "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
 
     \ depth fog (eye-space distance) -- tune start/end to the scene scale
