@@ -143,9 +143,9 @@ defer ship-physics
 
 %ship :: start ( - )
     arwing-mesh msh !
-    tilt 0.075 ['] linear  smooth
-    pan  0.06  ['] angular smooth      \ heading wraps -> angular
-    roll 0.06  ['] linear  smooth 
+    tilt 0.075 linearly  smooth
+    pan  0.06  ang-linearly  smooth      \ heading wraps -> angular
+    roll 0.06  linearly  smooth 
     flight ;
 
 \ ===== orbit camera (ported from 3dpack/cam.f + allrange.f's cam draw) =====
@@ -177,8 +177,8 @@ variable orbith  50 orbith !        \ camera height above the ship
 class: %camera  %model derive  class;
 
 %camera :: start ( - )
-    pan  0.06 ['] angular smooth
-    tilt 0.06 ['] linear  smooth
+    pan  0.06 ang-linearly smooth
+    tilt 0.06 linearly  smooth
     cam-place                               \ initial placement, then snap the aim so the
     the-ship pan-towards pan snap           \ camera starts facing the ship (no startup somersault)
     the-ship 200. tilt-towards tilt snap

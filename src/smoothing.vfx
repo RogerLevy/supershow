@@ -109,15 +109,18 @@ class;
 \ ---- algorithms ( cur tgt speed. state-addr - new ) ----
 public
 
-: linear ( cur tgt speed state - new )      \ fixed lerp toward target
+:noname  ( cur tgt speed state - new )      \ fixed lerp toward target
     drop  {: cur tgt speed :}
-    cur  tgt cur -  speed p*  + ;
+    cur  tgt cur -  speed p*  + ;  
+constant linearly
 
-: angular ( cur tgt speed state - new )     \ linear, but wraps the delta to [-180,180]
+:noname ( cur tgt speed state - new )     \ linear, but wraps the delta to [-180,180]
     drop  {: cur tgt speed :}
-    cur  tgt cur -  360. mod 540. + 360. mod 180. -  speed p*  + ;
+    cur  tgt cur -  360. mod 540. + 360. mod 180. -  speed p*  + ;  
+constant ang-linearly
 
-: stepped ( cur tgt speed state - new )     \ snap to target every `speed` (>i) frames
+:noname ( cur tgt speed state - new )     \ snap to target every `speed` (>i) frames
     {: cur tgt speed state :}
     state @ 1+ dup state !
     speed >i 1 max mod 0= if tgt else cur then ;
+constant stepped
