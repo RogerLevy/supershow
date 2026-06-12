@@ -118,7 +118,9 @@ create axis s/v3d allot
 \ any other primtype (e.g. the grid's LINE_LIST). Assumes the standard CCW winding, so
 \ outward = (vb-va) x (vc-va) = e1 x e2. A mesh wound the other way (the cube is CW) calls
 \ flip-normals after building to negate them.
-|| : nth-vtx  ( mesh n - vtx )  s/modelvertex *  swap >vertices @ + ;
+
+: nth-vertex  ( mesh n - vtx )  s/modelvertex *  swap >vertices @ + ;
+
 || : face-normal ( va vb vc - )
     {: va vb vc | n :}
     vb va v-                  \ e1 = vb - va  (scratch)
@@ -134,16 +136,16 @@ create axis s/v3d allot
     m >indices @ if
         m >indices @ to ip
         m >icount @ 3 / 0 ?do
-            m  ip i 3 * cells +           @ nth-vtx
-            m  ip i 3 * cells + cell+     @ nth-vtx
-            m  ip i 3 * cells + 2 cells + @ nth-vtx
+            m  ip i 3 * cells +           @ nth-vertex
+            m  ip i 3 * cells + cell+     @ nth-vertex
+            m  ip i 3 * cells + 2 cells + @ nth-vertex
             face-normal
         loop
     else
         m >vcount @ 3 / 0 ?do
-            m  i 3 *     nth-vtx
-            m  i 3 * 1 + nth-vtx
-            m  i 3 * 2 + nth-vtx
+            m  i 3 *     nth-vertex
+            m  i 3 * 1 + nth-vertex
+            m  i 3 * 2 + nth-vertex
             face-normal
         loop
     then ;
@@ -152,7 +154,7 @@ create axis s/v3d allot
 \ called once after building so their faces point outward. ( see cube.vfx )
 : flip-normals ( mesh - )
     {: m :}
-    m >vcount @ 0 ?do  m i nth-vtx >vnormal <vnegate drop  loop ;
+    m >vcount @ 0 ?do  m i nth-vertex >vnormal <vnegate drop  loop ;
 
 
 \ Flat shading needs per-face vertices, but an indexed mesh shares them, so a shared vertex
@@ -160,17 +162,15 @@ create axis s/v3d allot
 \ buffer into a fresh non-indexed vertex array -- each index becomes its own vertex -- so every
 \ triangle owns its three. Drops the indices; ~model then draws it via the non-indexed path.
 : de-index ( mesh - )
-    {: m | iptr icount src dst :}
+    {: m | iptr icount dst :}
     m >indices @ 0= if exit then                    \ already non-indexed
     m >primtype @ TRIANGLE_LIST <> if exit then
     m >indices @  to iptr
     m >icount @   to icount
-    m >vertices @ to src
     here to dst
     icount 0 ?do
-        iptr i cells + @  s/modelvertex *  src +     \ source vertex for index i
-        here  s/modelvertex allot                    \ reserve the dest slot
-        s/modelvertex move
+        m  iptr i cells + @  nth-vertex              \ source vertex for index i
+        s/modelvertex move,                          \ reserve the dest slot
     loop
     dst    m >vertices !
     icount m >vcount !
@@ -181,7 +181,6 @@ create axis s/v3d allot
 : ;vertices ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
 : indices:  ( mesh - mesh start )  here  2dup swap >indices ! ;
 : ;indices  ( mesh start - )       udup  here swap -  cell /  swap >icount !   dup de-index  gen-normals ;
-
 
 \ ---- model object ----
 class: %model  %actor derive
@@ -235,7 +234,7 @@ redef : >pos  -> pos ;
     uModel-cached? not if
         init-gl-extensions
         GL_CURRENT_PROGRAM _prog glGetIntegerv
-        z" uModel" _prog @ glGetUniformLocation  to uModel-loc
+        "uModel" _prog @ glGetUniformLocation  to uModel-loc
         true to uModel-cached?
     then
     0 1 uModel-loc glUniformMatrix4fv ;     \ ( value transpose count location )
