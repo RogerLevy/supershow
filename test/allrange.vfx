@@ -45,8 +45,8 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     \ 1e 1e 0.5e 1e          "uLightColor"   vec4!
     \ 0.75e 0e 0e 1e          "uAmbientColor" vec4!
     1e                   "uGradStrength" float!
-    1e                   "uGradGain"     float!   \ extra bright above fully-lit on oblique faces (0 = none)
-    0.2e                   "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
+    .5e                   "uGradGain"     float!   \ extra bright above fully-lit on oblique faces (0 = none)
+    .5e                   "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
 
     \ depth fog (eye-space distance) -- tune start/end to the scene scale
     1500e                "uFogStart"     float!
@@ -199,7 +199,7 @@ class: %camera  %model derive  class;
 : ~render ( - )
     3d  update-camera
     the-grid render
-    \ flatshade
+    flatshade
     draw-models ;
 
 \ ===== main =====

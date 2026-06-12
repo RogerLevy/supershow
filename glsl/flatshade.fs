@@ -11,7 +11,7 @@ uniform mat4 uView;           // world -> view, to project the in-plane light di
 uniform vec4 uLightColor;     // the light's color -- what fully-lit surfaces tend toward
 uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead of black)
 uniform float uGradStrength;  // how much the far-from-light edge of an oblique face darkens
-uniform float uGradBright;    // how much the toward-light edge brightens ABOVE the lit color (0 = none)
+uniform float uGradGain;      // brighter raking light on oblique faces: bright end = 1 + this (0 = fully-lit, >0 over-bright)
 uniform float uGradCurve;     // ramp shaping: 1 = linear, <1 bends toward ambient (more dark), >1 toward lit
 uniform float uFogStart;      // eye-space depth (vClip.w) where fog begins
 uniform float uFogEnd;        // eye-space depth where fog reaches full strength
@@ -37,20 +37,28 @@ void main() {
     float oblique = clamp(length(Lplane), 0.0, 1.0); // AMOUNT: sin(angle(N,L)); light-only, no camera
     vec2 dir = (mat3(uView) * Lplane).xy;            // ANGLE: in-plane light projected to the screen
     float dlen = length(dir);
-    float factor = 1.0;
+    float shade = lambert;                           // non-oblique faces keep plain lambert
     if (dlen > 1e-4) {
         vec2 ndc = vClip.xy / vClip.w;               // fragment screen position, [-1, 1]
+        // Screen-space ramp kept LINEAR (no pow on the position). Warping the screen coordinate is
+        // what let a low uGradCurve concentrate the whole bright->dark transition into a razor-thin
+        // band at the over-bright near edge (pow's slope is unbounded at awayness 0). The curve now
+        // shapes the lit VALUE instead -- see below.
         float awayness = clamp(0.5 - 0.5 * dot(dir / dlen, ndc), 0.0, 1.0);  // 0 toward light, 1 away
-        awayness = pow(awayness, uGradCurve);        // bend the ramp; endpoints (0,1) stay fixed
-        // Ramp from brighter-than-lit (toward the light) to darker (away). Clamp the dark end at 0
-        // (= ambient once multiplied through): a strength > 1 would otherwise drive the ramp
-        // negative partway across the screen, and the max(shade,0) floor below flattens everything
-        // past that point into a dead unlit band. Clamped, the ramp reaches its darkest exactly at
-        // the away screen edge, so the gradient spans the whole screen.
-        float ramp = mix(1.0 + uGradBright, max(0.0, 1.0 - uGradStrength), awayness);
-        factor = mix(1.0, ramp, oblique);            // amount from light-obliqueness only
+        // An oblique face's lit amount ramps from (1 + uGradGain) on the toward-light side -- a
+        // brighter raking light, ABOVE fully-lit, so it can out-shine a face that fully faces the
+        // light -- down to ambient on the away side (dark end clamped at 0, reached at the away
+        // screen edge). uGradGain lifts ONLY the bright end: it stretches contrast rather than
+        // raising the floor, and it never touches non-oblique faces (oblique = 0 keeps lambert).
+        float gradShade = mix(1.0 + uGradGain, max(0.0, 1.0 - uGradStrength), awayness);
+        // uGradCurve shapes the lit value, gamma'd over the in-range [0,1] part only: <1 bends
+        // toward ambient (darker), >1 toward lit, 1 = linear. The over-bright (>1) raking part is
+        // left linear so the bright highlight always feathers smoothly across the screen -- the
+        // darkening steepness now lands in the [0,1] range (normal brightness), never as a
+        // blown-out band at the near end.
+        if (gradShade < 1.0) gradShade = pow(max(gradShade, 0.0), 1.0 / uGradCurve);
+        shade = mix(lambert, gradShade, oblique);
     }
-    float shade = lambert * factor;
 
     // shade is the lit amount: 0 -> ambient color, 1 -> light color, >1 over-bright (extrapolates
     // past the light color). Floored at 0 so the darkest a surface gets is the ambient color, not
