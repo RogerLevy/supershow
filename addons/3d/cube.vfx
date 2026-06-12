@@ -23,11 +23,11 @@ public
 
 create cube-mesh  TRIANGLE_LIST mesh
 cube-mesh vertices:
-    purple  v.a, v.c, v.b,  v.b, v.c, v.d,
-    red     v.b, v.d, v.f,  v.f, v.d, v.h,
-    green   v.f, v.g, v.e,  v.f, v.h, v.g,
-    orange  v.e, v.g, v.c,  v.e, v.c, v.a,
-    grey    v.a, v.b, v.e,  v.b, v.f, v.e,
-    grey    v.c, v.g, v.d,  v.g, v.h, v.d,
+    ( purple ) grey v.a, v.c, v.b,  v.b, v.c, v.d,
+    ( red    ) grey v.b, v.d, v.f,  v.f, v.d, v.h,
+    ( green  ) grey v.f, v.g, v.e,  v.f, v.h, v.g,
+    ( orange ) grey v.e, v.g, v.c,  v.e, v.c, v.a,
+    ( grey   ) grey v.a, v.b, v.e,  v.b, v.f, v.e,
+    ( grey   ) grey v.c, v.g, v.d,  v.g, v.h, v.d,
 ;vertices
 cube-mesh flip-normals      \ this cube is wound clockwise; gen-normals assumes CCW
