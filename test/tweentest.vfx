@@ -1,0 +1,78 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+\ Tweening test: a row of dots, one per easing function, all driven through the
+\ EASE-IN-OUT transformer. A persistent director ping-pongs them left<->right so
+\ the easing curves can be compared side by side. Tweens write straight into the
+\ `xs` cells; the renderer just draws a dot at each.
+
+\ ---- the easing functions on show (one bar each) ----
+create eases
+    LINEAR ,  QUADRATIC ,  CUBIC ,  SINUSOID ,  CIRCULAR ,  EXPONENTIAL ,  OVERSHOOT ,
+here eases - cell / constant #bars
+
+: label$ ( b - a u )
+    dup 0 = if drop s" LINEAR" exit then
+    dup 1 = if drop s" QUAD"   exit then
+    dup 2 = if drop s" CUBIC"  exit then
+    dup 3 = if drop s" SINE"   exit then
+    dup 4 = if drop s" CIRCLE" exit then
+    dup 5 = if drop s" EXPO"   exit then
+    drop s" OVER" ;
+
+\ ---- layout (pixels) ----
+70  constant trackL          \ start x of the run
+290 constant trackR          \ end x of the run
+34  constant topy            \ y of the first bar
+27  constant rowh            \ vertical spacing
+trackL >p constant homex     \ rest position (fixed)
+trackR >p constant farx      \ target position (fixed)
+
+create xs  #bars cells allot \ current x of each dot (fixed), tween targets
+
+: ~bar ( b - )
+    {: b | y :}
+    b rowh * topy +  to y
+    $383838ff rgba8                          \ guide track
+    trackL y at   trackR >p  y >p  line
+    $ffcc33ff rgba8                          \ the moving dot
+    xs b cells + @  y >p  atp   6. circf
+    $9999aaff rgba8                          \ label
+    4 y 3 - at   b label$ print ;
+
+: ~render ( - )
+    $ccccccff rgba8  70 12 at  s" TWEENING - EASE-IN-OUT" print
+    #bars 0 do  i ~bar  loop ;
+
+\ ---- driver ----
+: fire ( target. - )         \ launch every dot toward target x over 1.5s
+    {: tx :}
+    #bars 0 do
+        eases i cells + @    \ easing function
+        EASE-IN-OUT          \ transformer
+        xs i cells +         \ field to tween
+        tx                   \ target value
+        1.5                  \ duration (s)
+        tween
+    loop ;
+
+class: %director  %actor derive  class;
+
+%director :: start ( - )
+    0 task>
+        begin
+            this { farx fire }   2. wait     \ scope self -> tweens owned by the director
+            this { homex fire }  2. wait
+        again ;
+
+public
+
+: main ( - )
+    just
+    vga-8x8 default-font!
+    #bars 0 do  homex xs i cells + !  loop
+    %director spawn drop
+    show> step ~render ;
+
+main
