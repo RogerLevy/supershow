@@ -67,20 +67,22 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
 \ ===== city =====
 class: %building  %model derive  class;
 
-: *building ( mesh - building )
-    %building one  dup >r >msh !  r> ;
+: /scale
+    50. 50. 50. scl v.xyz!              \ uniform scale 50
+    50. 500. between                    \ random height h
+    scl v.y!
+;
+
+: *building ( - building )
+    %building one { cube-mesh msh !  /scale  this } ;
 
 : genlevel ( - )
     400 for
-        cube-mesh *building {
-            4 rnd 90. * pan !                   \ random quarter-turn
-
-            50. 50. 50. scl v.xyz!              \ uniform scale 50
-            50. 500. between                    \ random height h
-            dup scl v.y!                        \  scl.y = h (tall building)
-
-            -6000. 6000. between swap           \ ( rx. h. )
-            -6000. 6000. between                \ ( rx. h. rz. )
+        *building {
+            \ 4 rnd 90. * pan !                 \ random quarter-turn
+            -6000. 6000. between 
+            scl v.y@ 
+            -6000. 6000. between 
             pos v.xyz!                          \ pos = (x, h, z); base on y=0
         }
     loop ;
