@@ -4,18 +4,18 @@ public
 
 : v-box? ( vpt v1 v2 - flag )
     {: vpt v1 v2 :}
-    vpt v.x sf@  v1 v.x sf@  f>=   vpt v.x sf@  v2 v.x sf@  f<=  and \ not if 0 exit then
-    vpt v.y sf@  v1 v.y sf@  f>=   vpt v.y sf@  v2 v.y sf@  f<=  and and \ not if 0 exit then
-    vpt v.z sf@  v1 v.z sf@  f>=   vpt v.z sf@  v2 v.z sf@  f<=  and and
+    vpt v.x sf@  v1 v.x sf@  f>=   vpt v.x sf@  v2 v.x sf@  f<=  and  not if 0 exit then
+    vpt v.y sf@  v1 v.y sf@  f>=   vpt v.y sf@  v2 v.y sf@  f<=  and  not if 0 exit then
+    vpt v.z sf@  v1 v.z sf@  f>=   vpt v.z sf@  v2 v.z sf@  f<=  and
 ;
 
 \ AABB overlap: boxes touch on an axis iff A.min <= B.max AND A.max >= B.min.
 \ av1/bv1 are the min corners, av2/bv2 the max corners.
 : box-box? ( av1 av2 bv1 bv2 - flag )
     {: av1 av2 bv1 bv2 :}
-    av1 v.x sf@  bv2 v.x sf@  f<=  av2 v.x sf@  bv1 v.x sf@  f>= and
-    av1 v.y sf@  bv2 v.y sf@  f<=  av2 v.y sf@  bv1 v.y sf@  f>= and  and
-    av1 v.z sf@  bv2 v.z sf@  f<=  av2 v.z sf@  bv1 v.z sf@  f>= and  and
+    av1 v.x sf@  bv2 v.x sf@  f<=  av2 v.x sf@  bv1 v.x sf@  f>=  and  not if 0 exit then
+    av1 v.y sf@  bv2 v.y sf@  f<=  av2 v.y sf@  bv1 v.y sf@  f>=  and  not if 0 exit then
+    av1 v.z sf@  bv2 v.z sf@  f<=  av2 v.z sf@  bv1 v.z sf@  f>=  and
 ;
 
 : ball-ball? ( v1 rad1 v2 rad2 - flag )
