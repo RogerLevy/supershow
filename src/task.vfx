@@ -1,6 +1,7 @@
 \ Cooperative multitasking - translated from VFXLand4
 
 public
+fast{
 
 create task-actor-list /list allot  task-actor-list /list erase
 
@@ -16,14 +17,30 @@ class;
 %actor object host
 host value task
 
+masm: push-lframe ( - )
+    push edi
+;masm
+
+masm: pop-lframe ( - )
+    pop edi
+;masm 
+
+public
+
+\ Coroutine swap. EDI (the locals pointer, LP) points into the return
+\ stack, so it must travel with rp: push it before saving rp, pop it
+\ after loading the other context's rp. Symmetric with the resume code
+\ in `perform`'s act>.
 : yield
+    [o/f] [asm push-lframe asm]
     this dup
     sp@ task -> task.sp !
     rp@ task -> task.rp !
     host to task
     task -> task.rp @ rp!
     task -> task.sp @ sp!
-    drop to this ;
+    drop to this
+    [o/f] [asm pop-lframe asm] ;
 
 : fyield ( f:n - f:n ) \ preserves a float on the data stack
     f>sf yield sf>f ;
@@ -46,20 +63,29 @@ host value task
     swap ( xt n ) task.ds @ 1024 + !
     task.ds @ 1024 + task.sp !
     this task.ds @ 1024 + cell+ !
-    task.rs @ TASK_RSIZE + cell- cell- !
-    task.rs @ TASK_RSIZE + cell- cell- task.rp !
+    \ Return-stack frame, high -> low address (low = where rp points):
+    \   [rs-4]  = (spin)   fallback loop run after the body returns
+    \   [rs-8]  = xt       task body entry; the resume's `;` jumps here
+    \   [rs-12] = 0        EDI placeholder the resume's `pop edi` consumes
     ['] (spin) task.rs @ TASK_RSIZE + cell- !
+    0 task.rs @ TASK_RSIZE + cell- cell- cell- !
+    ( xt ) task.rs @ TASK_RSIZE + cell- cell- !
+    task.rs @ TASK_RSIZE + cell- cell- cell- task.rp !
     act>
+        [o/f] [asm push-lframe asm]
         this dup
         sp@ task -> task.sp !
         rp@ task -> task.rp !
         this to task
         task -> task.rp @ rp!
         task -> task.sp @ sp!
-        drop to this ;
+        drop to this
+        [o/f] [asm pop-lframe asm] ;
 
 continuation: task> ( n - <code;> ) ( n - ... )
     perform ;
+
+fast}
 
 || : reinit-task ( actor - )
     as>
@@ -78,3 +104,4 @@ continuation: task> ( n - <code;> ) ( n - ... )
     task.rs @ free drop  
     this reinit-task
     actor:unload ;
+
