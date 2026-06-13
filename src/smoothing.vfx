@@ -85,18 +85,18 @@ class;
 : toward ( val field-addr - )
     {: val fa :}
     fa this -  smoother @ { find-sentry }
-    ?dup if  val swap se.target !  else drop then ;
+    ?dup if  val swap se.target !  then ;
 
 : snap ( val field-addr - )
     {: val fa :}
     val fa !
     fa this -  smoother @ { find-sentry }
-    ?dup if  val swap se.target !  else drop then ;
+    ?dup if  val swap se.target !  then ;
 
 : +toward ( delta field-addr - )
     {: delta fa :}
     fa this -  smoother @ { find-sentry }
-    ?dup if  delta swap se.target +!  else drop then ;
+    ?dup if  delta swap se.target +!  then ;
 
 \ ---- free the smoother when the owner is removed ----
 || : ?free-smoother ( - )
