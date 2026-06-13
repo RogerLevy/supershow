@@ -18,7 +18,7 @@ import %supershow%/addons/3d/collision3d.vfx
 \ Tune the control rates / camera offset / angle signs to taste.
 
 \ Flat-shaded models hand the shader their object->world matrix (uModel) so it can
-\ put positions in world space; the 3d pack stashes it in `modelmat` during modelview.
+\ put positions in world space; the 3d pack stashes it in `modelmtx` during modelview.
 \ Subclasses override draw (rather than %model itself) so model:draw can delegate.
 
 
@@ -57,7 +57,7 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     camt                 "uView"         matrix! ;
 
 : ~flat-model ( - )
-    modelmat model-matrix!          \ object->world for the shader (direct glUniformMatrix4fv)
+    modelmtx model-matrix!          \ object->world for the shader (direct glUniformMatrix4fv)
     ~model ;
 
 %model :: draw  active-shader flatshade.s = if ~flat-model else ~model then ;
@@ -108,8 +108,8 @@ class: %ship  %model derive  class;
 0 value it-pos
 variable collided
 
-: ship-point-buildings ( v - ) 
-    to it-pos
+: ship-point-buildings ( x. .y .z - ) 
+    >v rel>abs to it-pos
     actives>
         me %building is? -exit
         it-pos
@@ -123,20 +123,21 @@ defer ship-physics
     ship-physics
     act>  propel ?lr ?ud ;
 
-: wobble
-    begin time 2000 * psin 20 * roll !  yield 0.75 passed? until  0 roll ! ;
+: wobble ( speed ammount dur. - ) 
+    {: spd amt dur :}
+    begin time spd * psin amt * roll !  yield dur passed? until  0 roll ! ;
 
 : test-collision
     simple-motion-3d
-    0 task> wobble flight ;
+    0 task> 2000 20 0.75 wobble flight ;
 
 [:
     physics>
         vel pos v+!
         collided off
-        pos ship-point-buildings
-        pos -90. 2.5 50. >v v+ ship-point-buildings
-        pos 90. 2.5 50.  >v v+ ship-point-buildings 
+        0 0 0      ship-point-buildings
+        -9. .25 5. ship-point-buildings
+        9. .25 5.  ship-point-buildings 
         collided @ -exit 
         test-collision 
 ;] is ship-physics

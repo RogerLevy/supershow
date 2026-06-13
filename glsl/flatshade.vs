@@ -6,7 +6,7 @@ in vec4 al_color;
 in vec4 al_user_attr_0;             // object-space face normal (filled by gen-normals)
 
 uniform mat4 al_projview_matrix;   // proj * view * model, maintained by Allegro
-uniform mat4 uModel;               // object -> world, set per model (3d pack's modelmat)
+uniform mat4 uModel;               // object -> world, set per model (3d pack's modelmtx)
 
 flat out vec3 vNormal;             // world-space face normal -- flat: constant across the face
 out vec4 vColor;                   // per-vertex (per-face) color

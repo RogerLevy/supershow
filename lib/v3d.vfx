@@ -215,3 +215,5 @@ aka 3v@ v.xyz@
 aka 3v! v.xyz!
 
 : >v ( x. y. z. - v ) vtmp dup >r 3v! r> ;
+
+: f>v ( f: x f: y f: z - v ) vtmp dup >r 3sf! r> ;
