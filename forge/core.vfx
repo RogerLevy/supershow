@@ -105,8 +105,20 @@ aka >> rshift
 : fround4 ( f: n - f: n' ) 10000e f* fround 10000e f/ ;
 : (tf.) fround4 -1 (f.) ;
 
+: creplace ( a len from-char to-char - )
+    {: a len from-char to-char :}
+    len -exit
+    a len bounds do  
+        i c@ from-char = if  to-char i c!  then  
+    #1 +loop  
+; 
+
 : screate ( name len - ) ( - a )
-    {: | name$[ 256 ] :} name$[ place name$[ $create ;
+    {: | name$[ 256 ] :}
+    name$[ place   
+    name$[ count bl '-' creplace
+    name$[ $create 
+;
 
 include %idir%/../textmode/textmode-tools.vfx
 
@@ -227,9 +239,7 @@ include %idir%/../textmode/textmode-tools.vfx
    repeat  r> 2drop ;
 
 : slashes ( a len - a len )  
-    dup -exit
-    2dup  over + swap do  i c@ '/' = if
-    '\' i c!  then  #1 +loop ; 
+    2dup '/' '\' creplace ;
 
 : -path ( a len - a len' ) slashes  '\' ending  0 max ;
 : -ext  ( a len - a len' ) 2dup '.' scan nip - ;
