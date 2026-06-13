@@ -48,6 +48,8 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     .5e                   "uGradGain"     float!   
     .5e                   "uGradCurve"    float!   \ <1 = bend toward ambient (more dark), 1 = linear
 
+    2e "uGradScale" float!
+
     \ depth fog (eye-space distance) -- tune start/end to the scene scale
     1500e                "uFogStart"     float!
     8000e                "uFogEnd"       float!
@@ -153,6 +155,14 @@ defer ship-physics
         collided @ -exit 
         test-collision 
 ;] is ship-physics
+
+%ship :: render ( - )
+    25e "uGradScale" float!  
+\    0e  "uGradGain"  float!   
+    model:render
+    2e "uGradScale" float!  
+\    .5e  "uGradGain"  float!   
+;
 
 %ship :: start ( - )
     arwing-mesh msh !
