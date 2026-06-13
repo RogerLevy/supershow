@@ -95,25 +95,29 @@ public
     {: s d :}
     d v.x sf@ s v.x sf@ f+ d v.x sf!
     d v.y sf@ s v.y sf@ f+ d v.y sf!
-    d v.z sf@ s v.z sf@ f+ d v.z sf!  d ;
+    d v.z sf@ s v.z sf@ f+ d v.z sf!  d
+;
 
 : vsub ( vsrc vdest - vdest )  \ dest -= src
     {: s d :}
     d v.x sf@ s v.x sf@ f- d v.x sf!
     d v.y sf@ s v.y sf@ f- d v.y sf!
-    d v.z sf@ s v.z sf@ f- d v.z sf!  d ;
+    d v.z sf@ s v.z sf@ f- d v.z sf!  d
+;
 
 : vmul ( vsrc vdest - vdest )  \ dest *= src (component-wise / Hadamard)
     {: s d :}
     d v.x sf@ s v.x sf@ f* d v.x sf!
     d v.y sf@ s v.y sf@ f* d v.y sf!
-    d v.z sf@ s v.z sf@ f* d v.z sf!  d ;
+    d v.z sf@ s v.z sf@ f* d v.z sf!  d
+;
 
 : <vnegate ( v - v )
     {: v :}
     v v.x sf@ fnegate v v.x sf!
     v v.y sf@ fnegate v v.y sf!
-    v v.z sf@ fnegate v v.z sf!  v ;
+    v v.z sf@ fnegate v v.z sf!  v
+;
 
 \ : vzero ( v - v )
 \     {: v :}  0e v v.x sf!  0e v v.y sf!  0e v v.z sf!  v ;
@@ -145,7 +149,8 @@ public
     {: a b :}
     a v.x sf@ b v.x sf@ f*
     a v.y sf@ b v.y sf@ f*  f+
-    a v.z sf@ b v.z sf@ f*  f+  f>p ;
+    a v.z sf@ b v.z sf@ f*  f+  f>p
+;
 
 : vlensq ( v - n. )                        \ squared length (no sqrt)
     dup vdot ;
@@ -154,7 +159,8 @@ public
     {: v :}
     v v.x sf@ fdup f*
     v v.y sf@ fdup f*  f+
-    v v.z sf@ fdup f*  f+  fsqrt f>p ;
+    v v.z sf@ fdup f*  f+  fsqrt f>p
+;
 
 : vscale ( n. v - v )                      \ multiply all components by scalar
     {: s v :}
@@ -162,7 +168,8 @@ public
     v v.x sf@ fover f* v v.x sf!
     v v.y sf@ fover f* v v.y sf!
     v v.z sf@ fover f* v v.z sf!
-    fdrop  v ;
+    fdrop  v
+;
 
 : vnormalize ( v - v )                     \ scale to unit length (zero-guarded)
     {: v :}
@@ -173,7 +180,8 @@ public
     v v.x sf@ fover f/ v v.x sf!
     v v.y sf@ fover f/ v v.y sf!
     v v.z sf@ fover f/ v v.z sf!
-    fdrop  v ;
+    fdrop  v
+;
 
 : vcross ( vsrc vdest - vdest )            \ dest = dest x src (uses a scratch slot)
     {: s d | r :}
@@ -181,7 +189,8 @@ public
     d v.y sf@ s v.z sf@ f*  d v.z sf@ s v.y sf@ f*  f-  r v.x sf!
     d v.z sf@ s v.x sf@ f*  d v.x sf@ s v.z sf@ f*  f-  r v.y sf!
     d v.x sf@ s v.y sf@ f*  d v.y sf@ s v.x sf@ f*  f-  r v.z sf!
-    r 3@ d 3!  d ;
+    r 3@ d 3!  d
+;
 
 : vlerp ( vsrc vdest t. - vdest )          \ dest = lerp(dest, src, t)
     {: s d t :}
@@ -189,7 +198,8 @@ public
     s v.x sf@ d v.x sf@ f- fover f* d v.x sf@ f+ d v.x sf!
     s v.y sf@ d v.y sf@ f- fover f* d v.y sf@ f+ d v.y sf!
     s v.z sf@ d v.z sf@ f- fover f* d v.z sf@ f+ d v.z sf!
-    fdrop  d ;
+    fdrop  d
+;
 
 \ --- distance between two vectors
 : vdist  ( a b - n. )
@@ -197,7 +207,8 @@ public
     a v.x sf@ b v.x sf@ f-  fdup f*
     a v.y sf@ b v.y sf@ f-  fdup f*  f+
     a v.z sf@ b v.z sf@ f-  fdup f*  f+
-    fsqrt f>p ;
+    fsqrt f>p
+;
 
 
 \ ============================================================================

@@ -54,11 +54,13 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
     0e 0e 0e 1e          "uFogColor"     vec4!
     1e                   "uFogAmount"    float!
 
-    camt                 "uView"         matrix! ;
+    camt                 "uView"         matrix!
+;
 
 : ~flat-model ( - )
     modelmtx model-matrix!          \ object->world for the shader (direct glUniformMatrix4fv)
-    ~model ;
+    ~model
+;
 
 %model :: draw  active-shader flatshade.s = if ~flat-model else ~model then ;
 
@@ -85,25 +87,29 @@ class: %building  %model derive  class;
             -6000. 6000. between 
             pos v.xyz!                          \ pos = (x, h, z); base on y=0
         }
-    loop ;
+    loop
+;
 
 \ ===== ship =====
 \ Controls run inside the ship's act>, so `this` = ship and bare props apply.
 : ?lr ( - )                         \ bank + turn from left/right (or A/D)
     <left> held?  <A> held? or if   45. roll toward   2. pan +toward  exit then
     <right> held? <D> held? or if  -45. roll toward  -2. pan +toward  exit then
-    0. roll toward ;
+    0. roll toward
+;
 
 : ?ud ( - )                         \ pitch from up/down (or W/S)
     <up> held?    <W> held? or if  -30. tilt toward  exit then
     <down> held?  <S> held? or if   30. tilt toward  exit then
-    0. tilt toward ;
+    0. tilt toward
+;
 
 : propel ( - )                      \ 3D velocity from the ship's heading
     pan @ negate 90. - 10. vec       \ ( vx. vz. ) horizontal from pan
     vel v.xz!
     tilt @ 90. - 10. vec drop         \ ( vy. ) vertical from tilt
-    vel v.y! ;
+    vel v.y!
+;
 
 class: %ship  %model derive  class;
 
@@ -117,21 +123,25 @@ variable collided
         it-pos
         pos scl v-                          \ building min corner (cube spans pos - scl ..
         pos scl v+                          \  .. pos + scl; mesh is the ±1 unit cube)
-        v-box? if collided on then ;
+        v-box? if collided on then
+;
 
 defer ship-physics
 
 : flight
     ship-physics
-    act>  propel ?lr ?ud ;
+    act>  propel ?lr ?ud
+;
 
 : wobble ( speed ammount dur. - ) 
     {: spd amt dur :}
-    begin time spd * psin amt * roll !  yield dur passed? until  0 roll ! ;
+    begin time spd * psin amt * roll !  yield dur passed? until  0 roll !
+;
 
 : test-collision
     simple-motion-3d
-    0 task> 2000 20 0.75 wobble flight ;
+    0 task> 2000 20 0.75 wobble flight
+;
 
 [:
     physics>
@@ -148,8 +158,9 @@ defer ship-physics
     arwing-mesh msh !
     tilt 0.075 linearly  smooth
     pan  0.06  ang-linearly  smooth      \ heading wraps -> angular
-    roll 0.06  linearly  smooth 
-    flight ;
+    roll 0.06  linearly  smooth
+    flight
+;
 
 \ ===== orbit camera (ported from 3dpack/cam.f + allrange.f's cam draw) =====
 variable orbita  80 orbita !        \ orbit angle offset (degrees)
@@ -170,12 +181,14 @@ variable orbith  50 orbith !        \ camera height above the ship
 \ this = camera; orbit/aim relative to the-ship, matching allrange.f
 : cam-place ( - )       \ position the camera around the ship (direct, no easing)
     the-ship -> pos v.y@  orbith @ >p +  pos v.y!     \ height above ship
-    the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate ;
+    the-ship  orbita @ >p  the-ship -> pan @ negate 0. +  +  200.  situate
+;
 
 : cam-follow ( - )
     cam-place
     the-ship pan-towards pan toward
-    the-ship 200. tilt-towards tilt toward ;
+    the-ship 200. tilt-towards tilt toward
+;
 
 class: %camera  %model derive  class;
 
@@ -185,7 +198,8 @@ class: %camera  %model derive  class;
     cam-place                               \ initial placement, then snap the aim so the
     the-ship pan-towards pan snap           \ camera starts facing the ship (no startup somersault)
     the-ship 200. tilt-towards tilt snap
-    act>  cam-follow ;
+    act>  cam-follow
+;
 
 \ ===== grid floor =====
 \ Off-stage (%grid make, not on the stage) so it stays out of draw-models' depth
@@ -196,14 +210,16 @@ class: %camera  %model derive  class;
     the-grid {
         gridsize >p dup dup scl v.xyz!      \ scale the unit grid up (cell = gridsize)
         90. tilt !                          \ lay it flat (XY -> XZ floor)
-    } ;
+    }
+;
 
 \ ===== render: grid first (background), then the depth-sorted models =====
 : ~render ( - )
     3d  update-camera
     the-grid render
     flatshade
-    draw-models ;
+    draw-models
+;
 
 \ ===== main =====
 public
@@ -215,6 +231,7 @@ public
     the-ship { 0. 0. 0. pos 3v!  10. 10. 10. scl 3v! }
     %camera spawn to the-cam
     genlevel
-    show> step ~render ;
+    show> step ~render
+;
 
 main

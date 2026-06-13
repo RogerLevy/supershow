@@ -60,13 +60,15 @@ create axis s/v3d allot
        aspect focal f*  focal fnegate  32768e  al_perspective_transform
     p al_use_projection_transform
     ALLEGRO_DEPTH_TEST 1 al_set_render_state
-    1e al_clear_depth_buffer ;
+    1e al_clear_depth_buffer
+;
 
 : 2d ( - )
     p al_identity_transform
     p 0e 0e -16384e  gamew s>f gameh s>f 16384e  al_orthographic_transform
     p al_use_projection_transform
-    ALLEGRO_DEPTH_TEST 0 al_set_render_state ;
+    ALLEGRO_DEPTH_TEST 0 al_set_render_state
+;
 
 \ ---- mesh data (the vertex/index buffers; distinct from the %model object) ----
 \ layout (5 cells): vptr vcount iptr icount primtype
@@ -99,7 +101,8 @@ create axis s/v3d allot
 
 || : mvtx-decl@ ( - decl )
     mvtx-decl ?dup ?exit
-    mvtx-vdecl s/modelvertex al_create_vertex_decl  dup to mvtx-decl ;
+    mvtx-vdecl s/modelvertex al_create_vertex_decl  dup to mvtx-decl
+;
 
 \ ---- vertex / index builders ----
 \ A vertex is an ALLEGRO_VERTEX record (x y z u v r g b a) plus a 3-float normal slot.
@@ -110,7 +113,8 @@ create axis s/v3d allot
     {: px py pz pu pv :}
     px p>f f,  py p>f f,  pz p>f f,  pu p>f f,  pv p>f f,
     rgba@sf  >r >r >r >r  r> , r> , r> , r> ,
-    0e sf, 0e sf, 0e sf, ;          \ normal placeholder -- filled by gen-normals
+    0e sf, 0e sf, 0e sf,          \ normal placeholder -- filled by gen-normals
+;
 
 \ ---- face-normal generation (build time, once per mesh; never per frame) ----
 \ For each triangle, write the unit object-space face normal into all three of its
@@ -128,7 +132,8 @@ create axis s/v3d allot
     swap vcross vnormalize to n   \ vcross does dest x src = e1 x e2 -> outward for CCW winding
     n va >vnormal v!
     n vb >vnormal v!
-    n vc >vnormal v! ;
+    n vc >vnormal v!
+;
 
 : gen-normals ( mesh - )
     {: m | ip :}
@@ -148,13 +153,15 @@ create axis s/v3d allot
             m  i 3 * 2 + nth-vertex
             face-normal
         loop
-    then ;
+    then
+;
 
 \ Negate every vertex normal in place. For meshes wound clockwise (gen-normals assumes CCW),
 \ called once after building so their faces point outward. ( see cube.vfx )
 : flip-normals ( mesh - )
     {: m :}
-    m >vcount @ 0 ?do  m i nth-vertex >vnormal <vnegate drop  loop ;
+    m >vcount @ 0 ?do  m i nth-vertex >vnormal <vnegate drop  loop
+;
 
 
 \ Flat shading needs per-face vertices, but an indexed mesh shares them, so a shared vertex
@@ -175,7 +182,8 @@ create axis s/v3d allot
     dst    m >vertices !
     icount m >vcount !
     0      m >indices !
-    0      m >icount ! ;
+    0      m >icount !
+;
 
 : vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
 : ;vertices ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
@@ -220,7 +228,8 @@ redef : >pos  -> pos ;
     t2 pos 3sf@ al_translate_transform_3d
     t2 modelmtx s/transform move        \ t2 is now object->world; stash it before the camera folds in
     t2 camt al_compose_transform
-    t2 al_use_transform ;
+    t2 al_use_transform
+;
 
 \ ---- per-model uModel upload ----
 \ Goes straight to glUniformMatrix4fv rather than al_set_shader_matrix: Allegro's by-name
@@ -239,7 +248,8 @@ redef : >pos  -> pos ;
         "uModel" _prog @ glGetUniformLocation  to uModel-loc
         true to uModel-cached?
     then
-    0 1 uModel-loc glUniformMatrix4fv ;     \ ( value transpose count location )
+    0 1 uModel-loc glUniformMatrix4fv          \ ( value transpose count location )
+;
 
 : ~model
     msh @ -exit
@@ -249,7 +259,8 @@ redef : >pos  -> pos ;
     else
         msh @ >vertices 2@  >r  mvtx-decl@  texture@  0  r>  msh @ >primtype @
             al_draw_prim drop
-    then ;
+    then
+;
 
 \ draw the primitive -- modelview is assumed already applied (by render)
 %model :: draw ( - )
@@ -265,4 +276,5 @@ redef : >pos  -> pos ;
     v@ {: pt :}
     modelview
     modelmtx pt dup cell+ dup cell+  al_transform_coordinates_3d
-    pt ;
+    pt
+;

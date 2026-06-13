@@ -24,7 +24,8 @@ public
 || : gv ( x. y. - )
     2dup hypot  100. swap -  55. p/  0. 1. clamp
     dark-green ppena!
-    0. 0 0 v, ;
+    0. 0 0 v,
+;
 
 || : hseg ( x. - )  dup gc gv  grid-step >p + gc gv ;            \ (x,gc)-(x+step,gc)
 || : vseg ( y. - )  dup gc swap gv  grid-step >p + gc swap gv ;  \ (gc,y)-(gc,y+step)
@@ -49,4 +50,5 @@ class: %grid  %model derive  class;
     camt-save
     scl v.x sf@ wrap-camt          \ wrap the camera by the cell size (= the grid's scl)
     model:render                     \ inherited %model render (modelview + draw), wrapped camt
-    camt-restore ;
+    camt-restore
+;

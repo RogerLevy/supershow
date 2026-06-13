@@ -88,7 +88,10 @@
       "Bash(git diff *)",
       "Bash(Get-Content .git/_model.patch)",
       "Bash(awk 'NR<=4{print; next} /^@@ /{inhunk=\\($0 ~ /^@@ -85,/\\)} inhunk{print}')",
-      "Bash(git apply *)"
+      "Bash(git apply *)",
+      "Bash(git *)",
+      "Bash(ls \"C:\\\\Users\\\\roger\\\\Dev\\\\VfxForth\\\\Kernel\\\\Common\")",
+      "Bash(ls \"C:\\\\Users\\\\roger\\\\Dev\\\\VfxForth\\\\VfxBase\")"
     ],
     "deny": []
   }
