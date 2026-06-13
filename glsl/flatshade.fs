@@ -4,6 +4,8 @@ precision mediump float;   // no world-space derivative anymore -> mediump is pl
 flat in vec3 vNormal;      // world-space face normal, supplied per face by the vertex shader
 in vec4 vColor;
 in vec4 vClip;
+flat in vec2 vCenter;      // the object's screen-space center (NDC): the gradient's anchor
+flat in float vCenterDepth; // the object center's view-space depth (clip w): closeness to camera
 out vec4 fragColor;
 
 uniform vec3 uLightDir;       // UNIT direction TOWARD the light (pre-normalized on the CPU)
@@ -13,6 +15,7 @@ uniform vec4 uAmbientColor;   // the unlit color surfaces tend toward (instead o
 uniform float uGradStrength;  // how much the far-from-light edge of an oblique face darkens
 uniform float uGradGain;      // brighter raking light on oblique faces: bright end = 1 + this (0 = fully-lit, >0 over-bright)
 uniform float uGradCurve;     // ramp shaping: 1 = linear, <1 bends toward ambient (more dark), >1 toward lit
+uniform float uGradScale;     // gradient spread: scales the (depth-compensated) distance from the object center
 uniform float uFogStart;      // eye-space depth (vClip.w) where fog begins
 uniform float uFogEnd;        // eye-space depth where fog reaches full strength
 uniform vec4  uFogColor;      // fog / haze color (rgb; a unused)
@@ -22,7 +25,8 @@ void main() {
     // Per-face normal straight from the geometry (no derivatives), and the world directional light.
     vec3 N = normalize(vNormal);                     // renormalize: soak up mat3(uModel) scale slack
     vec3 L = uLightDir;                              // already unit, already toward the light
-    float lambert = 0.2 + 0.8 * max(0.0, dot(N, L)); // the directional light, world space, as before
+    float ndl = dot(N, L);                           // cosine of the angle between face normal and light
+    float lambert = 0.2 + 0.8 * max(0.0, ndl);       // the directional light, world space, as before
 
     // Screen-space directional gradient, with AMOUNT and ANGLE deliberately separated:
     //   AMOUNT (how strongly it shows) = the face's obliqueness to the LIGHT alone, |Lplane| =
@@ -40,11 +44,20 @@ void main() {
     float shade = lambert;                           // non-oblique faces keep plain lambert
     if (dlen > 1e-4) {
         vec2 ndc = vClip.xy / vClip.w;               // fragment screen position, [-1, 1]
+        // Gradient coordinate is measured from the object's screen-space center (offset) and scaled
+        // by uGradScale (spread): the ramp rides with each object and its rate is tunable, instead
+        // of being one fixed ramp across the whole screen. The depth term cancels perspective
+        // (apparent size ~ 1/depth) so the gradient keeps a constant size relative to the model at
+        // any distance -- but as a RATIO against GRAD_REF_DEPTH, so raw world units don't blow the
+        // scale up (which collapsed the ramp to a hard edge). At depth == GRAD_REF_DEPTH the depth
+        // term is 1 and uGradScale behaves like a plain screen-space scale.
+        const float GRAD_REF_DEPTH = 1000.0;         // baseline view distance; uGradScale tunes around it
+        vec2 g = (ndc - vCenter) * (uGradScale * vCenterDepth / GRAD_REF_DEPTH);
         // Screen-space ramp kept LINEAR (no pow on the position). Warping the screen coordinate is
         // what let a low uGradCurve concentrate the whole bright->dark transition into a razor-thin
         // band at the over-bright near edge (pow's slope is unbounded at awayness 0). The curve now
         // shapes the lit VALUE instead -- see below.
-        float awayness = clamp(0.5 - 0.5 * dot(dir / dlen, ndc), 0.0, 1.0);  // 0 toward light, 1 away
+        float awayness = clamp(0.5 - 0.5 * dot(dir / dlen, g), 0.0, 1.0);  // 0 toward light, 1 away
         // An oblique face's lit amount ramps from (1 + uGradGain) on the toward-light side -- a
         // brighter raking light, ABOVE fully-lit, so it can out-shine a face that fully faces the
         // light -- down to ambient on the away side (dark end clamped at 0, reached at the away
@@ -59,6 +72,13 @@ void main() {
         if (gradShade < 1.0) gradShade = pow(max(gradShade, 0.0), 1.0 / uGradCurve);
         shade = mix(lambert, gradShade, oblique);
     }
+
+    // Faces that point AWAY from the light (not merely oblique to it) get pulled darker, the amount
+    // scaled by uGradStrength -- the same knob that darkens the away-edge of oblique faces, so the
+    // two darkenings stay proportional. backness is 0 at grazing (where the gradient peaks) and 1
+    // when the face fully faces away, so it hands off from the gradient without double-darkening.
+    float backness = max(0.0, -ndl);
+    shade *= (1.0 - uGradStrength * backness);
 
     // shade is the lit amount: 0 -> ambient color, 1 -> light color, >1 over-bright (extrapolates
     // past the light color). Floored at 0 so the darkest a surface gets is the ambient color, not
