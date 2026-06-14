@@ -209,6 +209,28 @@ class: %shader
 
 class;
 
+[defined] parse-json [if]
+class: %jsonfile
+    %asset derive
+    is-a %autoload
+    is-a %loadable
+    prop json :addr
+
+    : _load-json ( - )
+        this @data parse-json json ! ;
+
+    :: on-startup ( - )
+        this body> >name count f" Loading JSON %s" .info
+        _load-json ;
+class;
+
+: JSONFILE ( <path> - ) ( - jsonfile )
+    bl parse
+    2dup fexists? not abort" File not found"
+    2dup -path sfind nip if 2drop exit then
+    2dup -path %jsonfile asset { embed _load-json } ;
+[then]
+
 [defined] %tilemap [if]
 class: %tilemap
     is-a %autoload

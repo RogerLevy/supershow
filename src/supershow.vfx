@@ -54,5 +54,6 @@ module [supershow]
 	include mode                 \ Game modes w/ separate logic and rendering
 	include tweak                \ Persistent variable control	
 	\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
-	include autoload    
-	include runtime    
+	include autoload
+	include level                \ JSON level loader (tilemap layers + scene actors)
+	include runtime

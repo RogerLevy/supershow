@@ -1,0 +1,47 @@
+\ JSON level loader demo — scrolling 2-layer level + spawned actors.
+\ Arrow keys scroll the camera (clamped to level bounds). The level is declared
+\ as an embedded, auto-loading JSONFILE asset; build-level turns its cjson into
+\ named layer tilemaps (level01-bg / level01-fg) and reset spawns its actors.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+bitmap %idir%/dat/gfx/greyzebes.png
+greyzebes.png 16 16 tileset-from the-tileset
+
+JSONFILE %idir%/dat/levels/level01.json
+
+0 value the-level
+0 value camx        \ camera origin (fixed pixels)
+0 value camy
+
+class: %blip  %actor derive  class;
+
+%blip :: draw ( - )
+    0 batch> $ff3030ff rgba8  6. circf ;
+
+: scroll ( - )
+    <right> held? if  4. +to camx  then
+    <left>  held? if  -4. +to camx  then
+    <down>  held? if  4. +to camy  then
+    <up>    held? if  -4. +to camy  then
+    the-level camx camy clamp-cam  to camy to camx
+;
+
+: think ( - )  step  scroll ;
+
+: ~render ( - )
+    the-level camx camy ~level
+    camx camy ~actors
+;
+
+: main ( - )
+    the-level 0= if
+        level01.json -> json @ build-level to the-level
+    then
+    the-level reset
+    show> think ~render
+;
+
+main

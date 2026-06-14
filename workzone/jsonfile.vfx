@@ -4,6 +4,9 @@ REQUIRE %supershow%/cjson/cjson.vfx
 
 public
 
+\ %jsonfile / JSONFILE were promoted into the engine (src/autoload.vfx). Define
+\ here only if the engine layer isn't already present.
+[undefined] %jsonfile [if]
 class: %jsonfile
     %asset derive
     is-a %autoload
@@ -21,3 +24,4 @@ class;
 
 : JSONFILE ( <path> - )
     bl parse 2dup -path %jsonfile ASSET { embed _load-json } ;
+[then]

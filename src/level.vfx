@@ -1,0 +1,189 @@
+\ =============================================================================
+\ JSON level loader
+\   - tile-grid string codec (custom token format)
+\   - %level: named layer tilemaps built from a resident cjson "master"
+\   - build / enter (instantiate) / start-level / reset / draw
+\ A level's "actors" array is a scene actors array (see scene.vfx) — objects
+\ are reused as-is; the only new data is the tilemap layers.
+\ =============================================================================
+
+module [supershow]
+
+private
+
+\ ---- tile-grid string codec --------------------------------------------------
+\ Whitespace-separated cell tokens:
+\   "_"            -> empty cell ($FFFFFFFF)
+\   [h][v]<index>  -> optional X-flip (bit 24), optional Y-flip (bit 25),
+\                     then a decimal tileset index in the low 24 bits.
+\ This matches the runtime cell layout the renderer reads (src/tilemap.vfx).
+
+0 value dst        \ fill destination (cell address)
+0 value room       \ cells remaining in the target tilemap
+0 value sp         \ scan pointer
+0 value se         \ scan end
+
+: str>n ( a u - n )  0 0 2swap >number 2drop drop ;
+
+: write-cell ( cell - )
+    room 0= if drop exit then
+    dst !  dst cell+ to dst  room 1 - to room
+;
+
+: skip-ws ( - )
+    begin
+        sp se < if sp c@ bl <= else 0 then
+    while
+        sp 1 + to sp
+    repeat
+;
+
+: tok-end ( - addr )
+    sp begin
+        dup se < if dup c@ bl > else 0 then
+    while 1 + repeat
+;
+
+: tok>cell ( a u - cell )
+    over c@ [char] _ = if  2drop  $FFFFFFFF exit  then
+    0 >r
+    over c@ [char] h = if  r> $01000000 or >r  1 /string  then
+    dup 0> if  over c@ [char] v = if  r> $02000000 or >r  1 /string  then  then
+    str>n  r> or
+;
+
+public
+
+: string>tilemap ( a u tm - )
+    {: a u tm | tokend :}
+    tm >ta @ >data @ to dst
+    tm >w 2@ * to room
+    a to sp   a u + to se
+    begin
+        skip-ws  sp se <
+    while
+        tok-end to tokend
+        sp  tokend sp -  tok>cell  write-cell
+        tokend to sp
+    repeat
+;
+
+private
+
+: tm-pxw ( tilemap - n )  { w @  ts @ >tw @ * } ;
+: tm-pxh ( tilemap - n )  { h @  ts @ >th @ * } ;
+
+\ Create a named %tilemap (mirrors the `tilemap` defining word in autoload.vfx)
+: new-layer-tm ( cols rows a u - tilemap )
+    f" tilemap %s" evaluate   lastbody ;
+
+public
+
+trait: %layer
+    prop prx     :fixed          \ parallax
+trait;
+
+class: %tilemap
+    is-a %layer
+class;
+
+class: %level
+    32 nprop name$ :cstring
+    prop layers  :ref %array
+    prop src     :addr           \ resident cjson root (the master)
+    prop pxw     :int            \ level pixel bounds (for camera clamp)
+    prop pxh     :int
+class;
+
+private
+
+: build-layer ( lvname-a lvname-u layerj - tilemap )
+    {: la lu layerj | cols rows tm :}
+    layerj "cols" j>n to cols
+    layerj "rows" j>n to rows
+    layerj "name" j>s  la lu 2swap  f" %s-%s"   ( name-a name-u )
+    cols rows 2swap  new-layer-tm to tm
+    layerj "tileset" j>s evaluate  tm >ts !
+    layerj "parax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
+    tm
+;
+
+public
+
+: build-level ( root - level )
+    {: root | lvl layersj n mw mh :}
+    %level dmake to lvl
+    lvl {
+        root src !
+        root "name" j>s name$ place
+        root "layers" j>j to layersj
+        layersj jsize to n
+        n %int %array hmake layers !
+        n 0 ?do
+            name$ count  layersj i j>j  build-layer   ( tilemap )
+            i layers @ el!
+        loop
+        \ camera bounds: default to the largest layer's pixel extent, then let
+        \ the level override with explicit "w"/"h" (pixels), if present.
+        0 to mw  0 to mh
+        n 0 ?do
+            i layers @ el@            ( tilemap )
+            dup tm-pxw mw max to mw
+                tm-pxh mh max to mh
+        loop
+        mw pxw !  mh pxh !
+        root "w" ?j>n ?dup if pxw ! then
+        root "h" ?j>n ?dup if pxh ! then    
+    }
+    lvl
+;
+
+: layer ( level i - tilemap )  swap >layers @ el@ ;
+
+|| : refill-layer ( tilemap layerj - )  "tiles" j>s rot string>tilemap ;
+
+\ Instantiate the level: fill tilemaps from the master cjson, clear the stage,
+\ and instantiate (but do NOT start) the level's actors.
+: enter ( level - )
+    {: lvl | layersj :}
+    lvl >src @ "layers" j>j to layersj
+    layersj jsize 0 ?do
+        i lvl >layers @ el@
+        layersj i j>j
+        refill-layer
+    loop
+    just
+    lvl >src @ "actors" ?j>j ?dup if j>many then
+;
+
+: action! ( - ) actives> this start ;
+
+: reset ( level - )  enter  action! ;
+
+: clamp-cam ( level camx. camy. - camx. camy. )
+    {: lvl camx camy :}
+    camx  0  lvl >pxw @ gamew - 0 max >p  clamp
+    camy  0  lvl >pxh @ gameh - 0 max >p  clamp
+;
+
+: ~level ( level camx. camy. - )
+    {: lvl camx camy | layersj parallax :}
+    lvl >src @ "layers" j>j to layersj
+    layersj jsize 0 ?do 
+        0 0 at
+        lvl i layer >prx @ to parallax
+        camx parallax p*
+        camy parallax p*
+        gamew >p  gameh >p
+        lvl i layer  draw-view
+    loop
+;
+
+\ Draw all actors offset by the camera (so actors and tiles scroll together).
+: ~actors ( camx. camy. - )
+    {: camx camy :}
+    m{
+        camx negate p>f  camy negate p>f  1e 1e 0e  transform
+        sprites
+    m}
+;
