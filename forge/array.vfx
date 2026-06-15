@@ -96,14 +96,14 @@ trait;
     r> enough-flag !
     throw ;
 
-|| : _!each ( xt - ) ( ... val - val' ... )
+|| : _!each ( xt - ) ( ... ? - ?' ... )
     {: xt :}
     item-count @ for
         i this el@ xt you { execute } i this el!
         enough-flag @ if unloop exit then
     loop ;
 
-%iterable :: !each ( xt - )
+%iterable :: !each ( xt - ) ( ... ? - ?' ... )
     enough-flag @ >r
     enough-flag off
     ['] _!each catch
@@ -221,6 +221,12 @@ forth-public
 redef : array ( #slots element-class <name> - )
     \ Named array allocation
     %array object ;
+
+: array: ( element-class <name> - ) 
+    create array{ ;
+
+: array; ( - ) 
+    array} drop ;
 
 \ ==============================================================================
 \ Other operations
