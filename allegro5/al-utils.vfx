@@ -184,8 +184,11 @@ extern BOOL SetThreadPriority( hthread, priority );
     else s" " then
     r> al_destroy_native_file_dialog ;
 
-: save-dialog  ALLEGRO_FILECHOOSER_SAVE file-dialog ;
-: load-dialog  ALLEGRO_FILECHOOSER_FILE_MUST_EXIST file-dialog ;
+: save-dialog  ( zpath ztitle zformats - path len|0 )  
+    ALLEGRO_FILECHOOSER_SAVE file-dialog ;
+
+: load-dialog  ( zpath ztitle zformats - path len|0 )  
+    ALLEGRO_FILECHOOSER_FILE_MUST_EXIST file-dialog ;
 
 aka alqueue queue
 aka almixer mixer 
