@@ -103,6 +103,7 @@ variable last-flush-time
     logbuf logbuf# @ + swap dup logbuf# +! move ;
 
 : flush-logbuf ( - )
+    debug @ -exit
     logbuf# @ 0= if exit then
     open-log not if exit then
     logbuf logbuf# @ hlog @ write-file drop
@@ -211,6 +212,7 @@ forth-public
 
 \ Write to both console and file
 : log ( a c - )
+    debug @ not if 2drop exit then  \ debug off → logging fully disabled
     2dup type cr                    \ console first, before any f" reuse
     update-timestamp
     timestamp +logbuf               \ buffer timestamp
