@@ -401,11 +401,11 @@ variable old-dp
     create $, immediate does> count evaluate ;
 
 : indent ( n - ) 4 * spaces ;
-: cstring ( -- <name> ) create 256 allot&erase ;
+: cstring ( <name> - ) create 256 allot&erase ;
   
 cstring lastword
-: find  dup count lastword place  find ;
-: sfind  {: | name[ 256 ] :} name[ place name[ find ;
+: find  ( $ - c-addr 0 | xt 1 | xt -1 ) dup count lastword place  find ;
+: sfind ( a len - c-addr 0 | xt 1 | xt -1 ) {: | name[ 256 ] :} name[ place name[ find ;
 : save-next-word  preword count lastword place ;
 : '  save-next-word  ' ;
 : [']  save-next-word  postpone ['] ; immediate    
@@ -613,3 +613,6 @@ variable fnd-xt
 
 
 s" main" find-top >name hidename
+
+: xchg  ( addr1 addr2 -- )
+    over @ over @ swap rot ! swap ! ;
