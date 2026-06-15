@@ -9,6 +9,7 @@
 %object :: on-deserialize ( cjson - ) drop ;  \ override to read custom JSON data
 
 module [nibs]
+import [cjson]
 private
 
     0 value val-addr

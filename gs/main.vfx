@@ -11,7 +11,7 @@
 module [gs]
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
-import %idir%/editor.vfx
+import [cjson]
 import %idir%/maped.vfx
 import %idir%/tiles.vfx
 

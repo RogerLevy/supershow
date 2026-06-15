@@ -3,6 +3,7 @@ library: cjson.dll
 module [cjson]
 
 fast{
+
 private
 0
     cell field jnext   \ &cjson
@@ -15,17 +16,15 @@ private
     cell field namestring \ &zstring
 constant s/cjson
 
-forth-public
+public
 : j@n  -> valueint @ ;
 : j@f  -> valuedouble df@ ;
 : j@u  j@f f>d drop ;   \ unsigned
 : j@p  -> valuedouble df@ f>p ;
 : j@z  -> valuestring @ ;
 : j@s  -> valuestring @ zcount ;
+
 fast}
-
-
-private
 
 0 constant cJSON_Invalid
 1 constant cJSON_False
@@ -58,9 +57,8 @@ extern: void * STDCALL _cJSON_CreateNumber@8( double num );
 extern: void * STDCALL _cJSON_CreateString@4( char * zstr );
 extern: char * STDCALL _cJSON_SetValuestring@8( void * item, char * zstr );
 
-forth-public
+public
 : destroy-json ( cjson - ) _cJSON_Delete@4 ;
-private
 : new-object ( - cjson ) _cJSON_CreateObject@0 ;
 : new-array ( - cjson ) _cJSON_CreateArray@0 ;
 : new-number ( f:n - item ) _cJSON_CreateNumber@8 ;
@@ -112,12 +110,10 @@ private
     cjson zkey ?get-item
     ?dup 0= if zkey f" JSON key '%z' not found!" -1 -rot .abort then ;
 
-forth-public
-
 : .json ( cjson - )
     serialize-cjson udup type cjson-free ;
 
-\ Builder API (prefixed aliases for use without also cjson>>)
+\ Builder API
 aka cjson-new-object  new-object
 aka cjson-new-array   new-array
 aka cjson-new-string  new-string
