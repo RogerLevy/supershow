@@ -56,6 +56,7 @@ extern: void * STDCALL _cJSON_CreateArray@0();
 extern: bool STDCALL _cJSON_AddItemToArray@8( void * array, void * item );
 extern: void * STDCALL _cJSON_CreateNumber@8( double num );
 extern: void * STDCALL _cJSON_CreateString@4( char * zstr );
+extern: char * STDCALL _cJSON_SetValuestring@8( void * item, char * zstr );
 
 forth-public
 : destroy-json ( cjson - ) _cJSON_Delete@4 ;
@@ -144,6 +145,9 @@ aka j>j get-item
 : ?j>z ( json key - z$|0 )    ?get-item dup -exit j@z ;
 \ no ?J>S , too complicated
 
+\ In-place overwrite of a string item's value (copies zstr internally).
+: jset-string ( item zstr - ) _cJSON_SetValuestring@8 drop ;
+
 : jsize ( jarray - n ) _cJSON_GetArraySize@4 ;
 : jcount ( jarray - array-json n ) dup _cJSON_GetArraySize@4 ;
 
@@ -181,11 +185,15 @@ aka j>j get-item
 : parse-json ( a len - cjson ) 
     _cJSON_ParseWithLength@8 ;
 
-: save-json ( json path len - )
+: write-json ( json path len - )   \ serialize to disk WITHOUT freeing the tree
     {: json path len :}
-    json serialize-cjson 
-        udup path len fwrite 
-        cjson-free
+    json serialize-cjson
+        udup path len fwrite
+        cjson-free ;
+
+: save-json ( json path len - )   \ write to disk, then free the tree
+    {: json path len :}
+    json path len write-json
     json destroy-json ;
 
 : serjson ( path len xt - ) ( cjson - ) 

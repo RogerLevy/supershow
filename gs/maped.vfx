@@ -1,0 +1,81 @@
+\ GreySplatter — paint screen.
+\ Draws the level under the camera, a ghost of the brush at the cursor, the
+\ marquee, and an info line; polls input for painting / eyedrop / pan / marquee
+\ / clipboard / layer + flip controls.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+import %idir%/editor.vfx
+
+public
+
+\ ---- input -------------------------------------------------------------------
+
+0 value pan-lastx
+0 value pan-lasty
+0 value panning?
+
+\ Pan on Space + LMB drag (matches the original's Space+drag). Returns true
+\ when it handled the gesture, so the caller can stop. Initialises the anchor
+\ on the first frame of the drag so there's no jump.
+: try-pan ( - flag )
+    {: | mx my :}
+    <SPACE> held? <lmb> held? and 0= if  0 to panning?  0 exit  then
+    mouse to my to mx
+    panning? not if  mx to pan-lastx  my to pan-lasty  -1 to panning?  then
+    pan-lastx mx -  >p  +to camx
+    pan-lasty my -  >p  +to camy
+    mx to pan-lastx  my to pan-lasty
+    clamp-camera  -1 ;
+
+: ?layer-keys ( - )
+    <1> pressed? if 0 set-layer then
+    <2> pressed? if 1 set-layer then
+    <3> pressed? if 2 set-layer then
+    <4> pressed? if 3 set-layer then ;
+
+: maped-input ( - )
+    ctrl? if
+        <S> pressed? if save-current then
+        <C> pressed? if copy-sel then
+        <X> pressed? if copy-sel erase-sel then
+        <E> pressed? if erase-sel then
+        exit
+    then
+    shift? if  do-marquee exit  then
+    try-pan ?exit
+    ?layer-keys
+    <E> pressed? if empty-brush then
+    <H> pressed? if $01000000 brush-xor then
+    <V> pressed? if $02000000 brush-xor then
+    <lmb> held?  if  mouse-cell active-layer paint  then
+    <rmb> held?  if  mouse-cell active-layer tile@ load-brush-1  then ;
+
+\ ---- draw --------------------------------------------------------------------
+
+: ~brush-ghost ( - )
+    shift? ?exit
+    active-tileset the-brush >ts !
+    mouse-cell cell-screen-xy atp
+    the-brush draw ;
+
+: ~selection ( - )
+    15 color
+    sel-col sel-row cell-screen-xy atp
+    sel-cols tilew * >p  sel-rows tileh * >p  rect ;
+
+: ~info ( - )
+    vga-8x8 default-font!  15 color
+    0 gameh 8 - at
+    the-brush >h @  the-brush >w @  layer# 1 + f" layer %n   brush %n x %n" print ;
+
+: ~maped ( - )
+    the-level camx camy ~level
+    ~brush-ghost
+    ~selection
+    info? if ~info then ;
+
+: maped-frame ( - )  maped-input ~maped ;
+
+' maped-frame to maped-xt

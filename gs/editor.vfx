@@ -1,0 +1,145 @@
+\ GreySplatter — Supershow level editor
+\ Shared editor state, screen dispatcher, camera/mouse mapping, brush, save.
+\ See gs/main.vfx for the program entry point.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+public
+
+\ ---- state -------------------------------------------------------------------
+
+0    value the-level          \ the one open %level (v1: single level)
+0    value layer#             \ active layer index
+0    value camx               \ camera origin, fixed pixels
+0    value camy
+true value info?              \ info overlay toggle
+
+create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
+
+1 1 tilemap the-brush         \ clipboard tilemap (always >= 1x1)
+
+create lvl-path 256 allot     \ path the level was loaded from (for save)
+
+: sel-col   ( - n )  tile-sel @ ;
+: sel-row   ( - n )  tile-sel cell+ @ ;
+: sel-cols  ( - n )  tile-sel 2 cells + @ ;
+: sel-rows  ( - n )  tile-sel 3 cells + @ ;
+
+\ ---- screen dispatcher (editor-local, not mode.vfx) --------------------------
+
+0 value cur-screen            \ xt of the active screen's per-frame word
+0 value maped-xt              \ assigned by gs/maped.vfx
+0 value tiles-xt              \ assigned by gs/tiles.vfx
+
+: ->maped ( - )  maped-xt to cur-screen ;
+: ->tiles ( - )  tiles-xt to cur-screen ;
+
+: ?global-keys ( - )   \ screen-switch + info, active on every screen
+    <F1> pressed? if ->maped then
+    <F2> pressed? if ->tiles then
+    <I>  pressed? if info? not to info? then ;
+
+: editor-frame ( - )  ?global-keys  cur-screen ?execute ;
+
+\ ---- active layer / tileset accessors ----------------------------------------
+
+: active-layer    ( - tilemap )   the-level layer# layer ;
+: active-tileset  ( - tileset )   active-layer >ts @ ;
+: tilew           ( - n )         active-tileset >tw @ ;
+: tileh           ( - n )         active-tileset >th @ ;
+: layer-parallax  ( - p. )        active-layer >prx @ ;
+: layer-count     ( - n )         the-level >layers @ #items ;
+
+: set-layer ( n - )  0 max  layer-count 1 - min  to layer# ;
+
+\ ---- camera / mouse mapping --------------------------------------------------
+
+\ Screen mouse -> active-layer cell (col,row), accounting for the layer's
+\ parallax: world = mouse + cam * parallax.
+: mouse-cell ( - col row )
+    {: | px :}
+    layer-parallax to px
+    pmouse                        ( mx. my. )
+    camy px p* +                  ( mx. wy. )
+    swap  camx px p* +  swap      ( wx. wy. )
+    active-layer xy>cr ;
+
+\ Top-left screen pixel (fixed) of a cell on the active layer.
+\ cr>xy returns integer world pixels (col*tw, row*th), so promote to fixed
+\ before subtracting the fixed, parallax-scaled camera offset.
+: cell-screen-xy ( col row - x. y. )
+    {: | px :}
+    layer-parallax to px
+    active-layer cr>xy  2>p       ( wx. wy. )
+    camy px p* -                  ( wx. sy. )
+    swap  camx px p* -  swap ;    ( sx. sy. )
+
+: clamp-camera ( - )
+    the-level camx camy clamp-cam  to camy to camx ;
+
+\ ---- brush -------------------------------------------------------------------
+
+: load-brush-1 ( cell - )   \ set the brush to a single given cell
+    1 1 the-brush resize-tilemap
+    the-brush >ta @ >data @ ! ;
+
+: empty-brush ( - )  $FFFFFFFF load-brush-1 ;
+
+: brush-xor ( mask - )   \ XOR flip flags into every non-empty brush cell
+    {: mask | d n c :}
+    the-brush >ta @ >data @ to d
+    the-brush >w 2@ * to n
+    n 0 ?do
+        d i cells + @ to c
+        c $FFFFFFFF <> if  c mask xor  d i cells + !  then
+    loop ;
+
+: paint ( col row dest - )   \ stamp the brush onto a layer at a cell
+    {: col row dest :}
+    the-brush col row dest paste-tilemap ;
+
+\ ---- selection -> clipboard --------------------------------------------------
+
+: copy-sel ( - )   \ active layer's selected region -> brush
+    active-layer  sel-col sel-row  sel-cols sel-rows  the-brush  slice-tilemap ;
+
+: erase-sel ( - )   \ clear the selected region on the active layer
+    sel-rows 0 ?do
+        sel-cols 0 ?do
+            $FFFFFFFF  sel-col i +  sel-row j +  active-layer  tile!
+        loop
+    loop ;
+
+\ ---- marquee selection (over the active layer) -------------------------------
+\ Shift+drag sets the selection rect live; on release the selected region
+\ becomes the brush.
+
+-1 value sel-startc
+0  value sel-startr
+
+: do-marquee ( - )
+    {: | cc cr :}
+    shift? -exit
+    <lmb> pressed? if  mouse-cell to sel-startr to sel-startc  then
+    sel-startc 0< ?exit
+    <lmb> letgo? if  copy-sel  -1 to sel-startc  exit  then
+    <lmb> held? -exit
+    mouse-cell to cr to cc
+    sel-startc cc min  sel-startr cr min          ( left top )
+    tile-sel 2!
+    sel-startc cc - abs 1 +  sel-startr cr - abs 1 +   ( w h )
+    tile-sel 2 cells + 2! ;
+
+\ ---- open / save -------------------------------------------------------------
+
+: open-level ( path len - )
+    2dup lvl-path place
+    load-json build-level to the-level
+    the-level refill-tilemaps   \ load tile data only (no actors — editor is tiles-only)
+    0 to layer#  0 to camx  0 to camy
+    0 load-brush-1 ;
+
+: save-current ( - )
+    the-level lvl-path count save-level ;

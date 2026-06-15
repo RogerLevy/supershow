@@ -1,0 +1,33 @@
+\ GreySplatter — Supershow's level editor.
+\ Entry point: declares the project tileset, opens a level from JSON, installs
+\ the editor frame, and runs the paint screen. v1 = tile painting only.
+\
+\ Controls:
+\   F1 paint   F2 tiles   i info   Ctrl+S save
+\   maped: lmb paint  rmb eyedrop  Space+drag pan  Shift+drag marquee
+\          Ctrl+C/X/E copy/cut/erase  1..4 layer  h/v flip  e empty brush
+\   tiles: lmb/Shift-drag pick  rmb single  F1 back
+
+module [gs]
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+import %idir%/editor.vfx
+import %idir%/maped.vfx
+import %idir%/tiles.vfx
+
+bitmap %idir%/dat/gfx/greyzebes.png
+greyzebes.png 16 16 tileset-from the-tileset
+
+\ Bake the absolute level path (expand %supershow% at compile time).
+create level-path$ 256 allot
+s" %supershow%/gs/dat/levels/level01.json" expanded  level-path$ place
+
+
+: main ( - )
+    monw monh 2dup to gameh to gamew to winh to winw
+    tv off
+    level-path$ count open-level
+    ->maped
+    show> editor-frame ;
+
+main

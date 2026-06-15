@@ -104,7 +104,7 @@ private
     layerj "name" j>s  la lu 2swap  f" %s-%s"   ( name-a name-u )
     cols rows 2swap  new-layer-tm to tm
     layerj "tileset" j>s evaluate  tm >ts !
-    layerj "parax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
+    layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
     tm
 ;
 
@@ -140,11 +140,60 @@ public
 
 : layer ( level i - tilemap )  swap >layers @ el@ ;
 
+\ ---- tilemap -> token-string encoder (inverse of string>tilemap) -------------
+
+private
+
+create tok-ch 0 c,                    \ 1-byte scratch for single-char appends
+
+: lapp-ch ( char lstr - )  swap tok-ch c!  tok-ch 1 rot lappend ;
+
+0 value enc-buf                       \ cached auto-grow lstring, reused per call
+
+: cell>tok ( cell lstr - )            \ append one cell's token (no separator)
+    {: cell lstr :}
+    cell $FFFFFFFF = if  s" _" lstr lappend  exit  then
+    cell $01000000 and if  [char] h lstr lapp-ch  then
+    cell $02000000 and if  [char] v lstr lapp-ch  then
+    cell $FFFFFF and  f" %n"  lstr lappend ;
+
+public
+
+\ Encode a tilemap's cells back into the whitespace token string, returning a
+\ NUL-terminated zstring (in a reused buffer; valid until the next call).
+: tilemap>zstring ( tilemap - zstr )
+    {: tm | d n :}
+    enc-buf 0= if  s" " *lstring to enc-buf  then
+    enc-buf lclear
+    tm >ta @ >data @ to d
+    tm >w 2@ * to n
+    n 0 ?do
+        i if  bl enc-buf lapp-ch  then
+        d i cells + @  enc-buf cell>tok
+    loop
+    0 enc-buf lapp-ch                 \ NUL terminator
+    enc-buf ldata@ ;
+
+\ Overwrite each layer's "tiles" string in the level's source cjson from the
+\ live tilemaps, then write the whole document to disk. Everything the editor
+\ doesn't model (tileset names, parallax, dims, the actors array, unknown keys)
+\ is preserved untouched.
+: save-level ( level path len - )
+    {: lvl path len | layersj :}
+    lvl >src @ "layers" j>j to layersj
+    layersj jsize 0 ?do
+        lvl i layer  tilemap>zstring          ( zstr )
+        layersj i j>j  "tiles" j>j  swap       ( tiles-item zstr )
+        jset-string
+    loop
+    lvl >src @ path len write-json ;
+
 || : refill-layer ( tilemap layerj - )  "tiles" j>s rot string>tilemap ;
 
-\ Instantiate the level: fill tilemaps from the master cjson, clear the stage,
-\ and instantiate (but do NOT start) the level's actors.
-: enter ( level - )
+\ Refill the layer tilemaps from the master cjson (tile data only — no actors,
+\ no stage reset). Use this on its own when you just need the tiles loaded
+\ (e.g. an editor that doesn't instantiate the level's actors).
+: refill-tilemaps ( level - )
     {: lvl | layersj :}
     lvl >src @ "layers" j>j to layersj
     layersj jsize 0 ?do
@@ -152,6 +201,13 @@ public
         layersj i j>j
         refill-layer
     loop
+;
+
+\ Instantiate the level: fill tilemaps from the master cjson, clear the stage,
+\ and instantiate (but do NOT start) the level's actors.
+: enter ( level - )
+    {: lvl :}
+    lvl refill-tilemaps
     just
     lvl >src @ "actors" ?j>j ?dup if j>many then
 ;
