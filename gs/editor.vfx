@@ -236,7 +236,33 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 create gs-zbuf    1024 allot     \ scratch zstring for paths / bitmap evaluate
 create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
-: tileset-loaded? ( name-a name-len - flag )  
+\ ---- tilesetfile path <-> level-relative resolution --------------------------
+\ Store a tileset path relative to the level file when the PNG lives under the
+\ level's folder, so a project moves as a unit; fall back to absolute otherwise.
+
+: level-dir ( - a u )   \ directory portion of the saved level path (trailing \)
+    lvl-path$ count  2dup -path drop nip  over - ;
+
+|| : abs-path? ( a u - flag )   \ Windows drive-qualified path ("X:...")?
+    2 < if drop 0 exit then  1+ c@ [char] : = ;
+
+|| : dotdot? ( a u - flag )     \ path starts with ".." (escapes the level dir)?
+    2 < if drop 0 exit then  dup c@ [char] . =  swap 1+ c@ [char] . =  and ;
+
+: resolve-tileset ( a u - a' u' )   \ make a stored tilesetfile absolute via level-dir
+    2dup abs-path? if exit then
+    level-dir f" %s%s" normalize ;
+
+: tileset-path ( bmpid - a u )   \ level-relative when the PNG is under the level dir
+    bitmap-file {: bmp-a bmp-u | rel-a rel-u :}
+    lvl-path$ c@ 0= if  bmp-a bmp-u exit  then        \ never saved -> absolute
+    level-dir  bmp-a bmp-u  >relpath  to rel-u to rel-a
+    rel-u 0=             if  bmp-a bmp-u exit  then    \ failed (e.g. other drive)
+    rel-a rel-u abs-path? if  bmp-a bmp-u exit  then   \ came back absolute
+    rel-a rel-u dotdot?  if  bmp-a bmp-u exit  then    \ escapes the level dir
+    rel-a rel-u ;
+
+: tileset-loaded? ( name-a name-len - flag )
     sfind if >body @ %bitmap is? else drop 0 then ;
 
 \ Load a PNG and slice a square tileset (16 tiles wide) under the given name,
@@ -271,9 +297,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     {: cjson | layers buf[ 256 ] :}
     cjson "layers" j>j to layers
     layers jsize for  
-        layers i j>j "tilesetfile" ?j>z ?dup if 
-            zcount buf[ place 
-            buf[ count  layers i j>j "tileset" j>s  ensure-tileset  
+        layers i j>j "tilesetfile" ?j>z ?dup if
+            zcount resolve-tileset buf[ place
+            buf[ count  layers i j>j "tileset" j>s  ensure-tileset
         then
     loop 
 ;
@@ -393,7 +419,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     cjson-new-object to json
     tm {
         ts @ body>name            gs-zbuf zplace  gs-zbuf  "tileset"      json cjson-add-string
-        ts @ >bmp @ bitmap-file   gs-zbuf zplace  gs-zbuf  "tilesetfile"  json cjson-add-string
+        ts @ >bmp @ tileset-path  gs-zbuf zplace  gs-zbuf  "tilesetfile"  json cjson-add-string
         w @  "cols"  json cjson-add-int
         h @  "rows"  json cjson-add-int
         prx @ "parallax" json cjson-add-fixed
