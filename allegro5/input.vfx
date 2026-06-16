@@ -55,6 +55,7 @@ create mickeyx 0 , 0 , here cell- constant mickeyy
 : lmb?  ms0 ALLEGRO_MOUSE_STATE.buttons @ 1 and 0<> ;
 : rmb?  ms0 ALLEGRO_MOUSE_STATE.buttons @ 2 and 0<> ;
 : mmb?  ms0 ALLEGRO_MOUSE_STATE.buttons @ 4 and 0<> ;
+: wheel ( - n )  ms0 ALLEGRO_MOUSE_STATE.z @ ;   \ absolute wheel position
 
 : get-mouse ( - )
     \ fetch the mouse coordinates, transforming by inverse of current matrix

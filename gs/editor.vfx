@@ -231,6 +231,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
         layerj "tileset" j>s evaluate  ts !
         layerj "parallax" ?j>p dup 0= if drop 1.0 then  prx !
+        layerj "visx"   ?j>n  visx !
+        layerj "visy"   ?j>n  visy !
+        layerj "repeat" ?j>n  rpt !
         layerj "tiles" j>s  this string>tilemap
         en on
     } 
@@ -319,6 +322,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         w @  "cols"  json cjson-add-int
         h @  "rows"  json cjson-add-int
         prx @ "parallax" json cjson-add-fixed
+        visx @ "visx"   json cjson-add-int
+        visy @ "visy"   json cjson-add-int
+        rpt  @ "repeat" json cjson-add-int
         this encode-tiles  "tiles"  json cjson-add-string
     }
     json ;

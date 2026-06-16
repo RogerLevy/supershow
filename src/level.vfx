@@ -81,7 +81,10 @@ public
 
 trait: %layer
     prop prx     :fixed          \ parallax
-    prop en                      \ free-slot
+    prop en                      \ free-slot (editor pool)
+    prop vis                     \ visible (games + editor honor this)
+    prop visx    :int            \ static pixel x offset (visual only)
+    prop visy    :int            \ static pixel y offset (visual only)
 trait;
 
 class: %tilemap
@@ -106,6 +109,9 @@ private
     cols rows 2swap  new-layer-tm to tm
     layerj "tileset" j>s evaluate  tm >ts !
     layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
+    layerj "visx"   ?j>n  tm >visx !
+    layerj "visy"   ?j>n  tm >visy !
+    layerj "repeat" ?j>n  tm >rpt !
     tm >en on
     tm
 ;
@@ -222,19 +228,24 @@ public
     camy  0  lvl >pxh @ gameh - 0 max >p  clamp
 ;
 
+: draw-layer ( level i camx. camy. - )      \ draw one layer; caller decides visibility
+    {: lvl i camx camy | parallax :}
+    lvl i layer {
+        0 0 at
+        prx @ to parallax
+        camx parallax p*  visx @ >p -
+        camy parallax p*  visy @ >p -
+        gamew >p  gameh >p
+        this draw-view
+    }
+;
+
 : ~level ( level camx. camy. - )
-    {: lvl camx camy | parallax :}
+    {: lvl camx camy :}
     lvl >layers @ #items 0 ?do
-        lvl i layer {
-            en @ if
-                0 0 at
-                prx @ to parallax
-                camx parallax p*
-                camy parallax p*
-                gamew >p  gameh >p
-                this draw-view
-            then
-        }
+        lvl i layer { en @ } if
+            lvl i camx camy draw-layer
+        then
     loop
 ;
 

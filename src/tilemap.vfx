@@ -13,6 +13,7 @@ class: %tilemap
     prop ts :ref %tileset
     prop data-snapshot :addr
     prop snapshot-cells :int
+    prop rpt
 class;
 
 %tilemap :destruct
@@ -107,6 +108,21 @@ fast{
     loop
     _flush-tiles ;
 
+\ Repeating variant: span is NOT clamped to the map; each tile is positioned at
+\ its true (col,row) but its cell is fetched wrapped (umod) so the map tiles
+\ infinitely across the viewport. Used by visual-only decoration layers.
+: _draw-tiles-wrap ( sc0 sr0 sc1 sr1 - )
+    {: sc0 sr0 sc1 sr1 :}
+    sc0 sc1 >=  sr0 sr1 >= or  ?exit
+    vbuf
+    sr1 sr0 ?do
+        sc1 sc0 ?do
+            i w @ umod  j h @ umod w @ * +  ta @ slot @
+            dup $FFFFFFFF = if drop else i j rot tile-verts then
+        loop
+    loop
+    _flush-tiles ;
+
 %tilemap :: draw
     ts @ to cur-ts
     cur-ts >baseid @ to the-id
@@ -115,9 +131,28 @@ fast{
     w @ h @ _draw-tiles
     m} ;
 
+: draw-wrapped ( sx. sy. w. h. - ) \ tiles infinitely
+    {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
+    ts @ -exit
+    ts @ to cur-ts
+    cur-ts >baseid @ to the-id
+    cur-ts >tw @ to _tw   cur-ts >th @ to _th
+    sx >i _tw / 1 - to sc0                      \ no clamp; extend low edge by 1
+    sy >i _th / 1 - to sr0
+    sx >i vpw >i + 1 - _tw / 1 + to sc1
+    sy >i vph >i + 1 - _th / 1 + to sr1
+    at@p  vpw  vph  clip{
+    m{
+    at@f  sy p>f f-  fswap  sx p>f f-  fswap
+    _tw s>f  _th s>f  0e  transform
+    sc0 sr0 sc1 sr1 _draw-tiles-wrap
+    m}
+    clip} ;
+
 public
 
-%tilemap :: draw-view  \ ( sx. sy. w. h. - )
+%tilemap :: draw-view  ( sx. sy. w. h. - )
+    rpt @ if draw-wrapped exit then
     {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
     ts @ -exit
     ts @ to cur-ts
@@ -134,6 +169,7 @@ public
     sc0 sr0 sc1 sr1 _draw-tiles-view
     m}
     clip} ;
+
 
 : resize-tilemap ( new-w new-h tilemap - )
     {: new-w new-h tm | old-w old-h old-ta new-ta min-cols min-rows :}
@@ -171,11 +207,15 @@ public
 : tilemap>data ( tilemap - addr w h )
     { ta @ >data @  w @  h @ } ;
 
-: tile! ( n col row %tilemap - )
-    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot ! } ;
+\ Cell address for (col,row): wraps when the map repeats, else clamps to edges.
+: tile-addr ( col row %tilemap - addr )
+    { rpt @ if  swap w @ umod  swap h @ umod
+            else  0 0`` this dims 1 1 2-`` 2clamp  then
+      w @ * +  ta @ slot } ;
 
-: tile@ ( col row %tilemap - n )
-    { 0 0`` this dims 1 1 2-`` 2clamp   w @ * + ta @ slot @ } ;
+: tile! ( n col row %tilemap - )  tile-addr ! ;
+
+: tile@ ( col row %tilemap - n )  tile-addr @ ;
 
 : clone-tilemap ( src dest - )
     {: src dest :}
@@ -185,14 +225,15 @@ public
     src >w @ src >h @ * cells  move ;
 
 : put-tilemap ( src dest-x dest-y dest - )
-    {: src dx dy dest | dw dh dc dr :}
+    {: src dx dy dest | dw dh dc dr wrap? :}
     dest >w @ to dw   dest >h @ to dh
+    dest >rpt @ to wrap?
     src >h @ 0 do
         i dy + to dr
-        dr 0 >= dr dh < and if
+        wrap?  dr 0 >= dr dh < and  or if
             src >w @ 0 do
                 i dx + to dc
-                dc 0 >= dc dw < and if
+                wrap?  dc 0 >= dc dw < and  or if
                     i j src tile@
                     dup $FFFFFFFF <> if
                         dc dr dest tile!
@@ -203,14 +244,15 @@ public
     loop ;
 
 : paste-tilemap ( src dest-x dest-y dest - )
-    {: src dx dy dest | dw dh dc dr :}
+    {: src dx dy dest | dw dh dc dr wrap? :}
     dest >w @ to dw   dest >h @ to dh
+    dest >rpt @ to wrap?
     src >h @ 0 do
         i dy + to dr
-        dr 0 >= dr dh < and if
+        wrap?  dr 0 >= dr dh < and  or if
             src >w @ 0 do
                 i dx + to dc
-                dc 0 >= dc dw < and if
+                wrap?  dc 0 >= dc dw < and  or if
                     i j src tile@
                     dc dr dest tile!
                 then
@@ -244,9 +286,15 @@ public
     old-ta destroy
     new-ta  tm >ta ! ;
 
+\ floor(pixels / tile-size). Floors toward -inf so coords west/north of the
+\ origin land in the right cell — a truncating >i would map all of [-tw,0) to 0.
+|| : pcell ( p. tsize - cell )  65536 *  >r  s>d  r> fm/mod nip ;
+
 \ Pixel (fixed-point) coords → tile col, row
 : xy>cr ( x. y. %tilemap - col row )
-    >ts @ >tw 2@ 2/ 2>i ;
+    >ts @ >tw 2@
+    {: px py tilew tileh :}
+    px tilew pcell  py tileh pcell ;
 
 \ Tile col, row to pixel (fixed)
 : cr>xy ( col row %tilemap - x. y. )
