@@ -11,6 +11,7 @@ class: %bitmap
     is-a %_bitmap
     prop albmp
     prop touched
+    prop mtime :int          \ last-checked source-file mtime (hot-reload)
 class;
 
 %bitmap object dummy.bmp
@@ -62,6 +63,37 @@ variable next-bmp#  1 next-bmp# !
 
 : wrap-bitmap ( albmp - bitmap )
     %bitmap make { albmp ! this } ;
+
+\ ---- source-file hot-reload --------------------------------------------------
+
+\ Source-file modification time, via Allegro's fs entry (0 if unreadable).
+: file-mtime ( a n - n )
+    >zpad al_create_fs_entry dup 0= if drop 0 exit then
+    dup al_get_fs_entry_mtime swap al_destroy_fs_entry ;
+
+\ Has the bitmap's source file changed since we last looked? Records the current
+\ mtime on the %bitmap, so the first sighting just baselines (returns false) and
+\ a tileset shared by several callers reloads only once per change.
+: source-changed? ( bmpid - flag )
+    ?bmp>parent {: bmpid | bm mt prev :}
+    bmpid id>bmp to bm
+    bmpid bitmap-file file-mtime to mt
+    mt 0= if false exit then              \ unreadable -> treat as unchanged
+    bm >mtime @ to prev
+    mt bm >mtime !
+    prev 0= if false exit then            \ first sighting: baseline only
+    mt prev <> ;
+
+\ Reload the bitmap's pixels from its source file: load a fresh albmp, swap it
+\ into the parent %bitmap, free the old one.
+: reload-bitmap ( bmpid - )
+    ?bmp>parent {: bmpid | bm new old :}
+    bmpid id>bmp to bm
+    bmpid bitmap-file >zpad al_load_bitmap to new
+    new 0= ?exit
+    bm >albmp @ to old
+    new bm >albmp !
+    old al_destroy_bitmap ;
 
 : bmpwh ( bmpid - w h )
     id>albmp ?dup if dup albmpw swap albmph else 0 0 then ;

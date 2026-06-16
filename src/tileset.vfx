@@ -51,9 +51,28 @@ class;
 : update-tileset ( %tileset - )
     as>
         bmp @ -exit
-        next-bmp# @ >r   baseid @ next-bmp# ! 
+        next-bmp# @ >r   baseid @ next-bmp# !
         _slice-tileset
         r> next-bmp# ! ;
+
+\ Destroy the tileset's current sub-bitmaps (their Allegro objects). Their
+\ registry slots are about to be overwritten by a re-slice.
+: -tile-bitmaps ( %tileset - )
+    {: ts :}
+    ts >#tiles @ for
+        ts >baseid @ i +  id>albmp ?dup if al_destroy_bitmap then
+    loop ;
+
+\ Hot-reload: reload the source bitmap from disk and re-slice in place (tile
+\ bmpids are preserved by update-tileset). Embedded definition-time data is
+\ ignored; the live file on disk wins. Sub-bitmaps are freed before the parent
+\ (Allegro: children before parent). Use source-changed? to gate this.
+: reload-tileset ( %tileset - )
+    {: ts :}
+    ts >bmp @ 0= ?exit
+    ts -tile-bitmaps                 \ free old sub-bitmaps (children of old parent)
+    ts >bmp @ reload-bitmap          \ swap the parent albmp (frees the old one)
+    ts update-tileset ;              \ re-slice from the new parent
 
 : tile ( %tileset n - bmpid )
     swap -> baseid @ + ;

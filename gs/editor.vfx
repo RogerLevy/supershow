@@ -65,6 +65,24 @@ array;
 %level dmake to the-level                          \ the one persistent editor level
 the-level { slots layers ! }                       \ its layers ARE the fixed slot pool
 
+\ ---- tileset hot-reload ------------------------------------------------------
+\ Poll each enabled slot's tileset; reload + re-slice when its source file's
+\ mtime changes. The change check (source-changed?) lives on %bitmap, so a
+\ tileset shared by several slots reloads only once per change.
+
+0 value reload-timer            \ frames until the next poll
+
+: ?reload-slot ( n - )
+    {: n | tset :}
+    n slot { en @ ts @ and } 0= ?exit
+    n slot >ts @ to tset
+    tset >bmp @ source-changed? if  tset reload-tileset  then ;
+
+: ?hot-reload ( - )
+    reload-timer 0> if  -1 +to reload-timer exit  then
+    20 to reload-timer
+    max-layers for  i ?reload-slot  loop ;
+
 \ ---- screen dispatcher (editor-local, not mode.vfx) --------------------------
 
 0 value cur-screen            \ xt of the active screen's per-frame word
@@ -83,7 +101,7 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
     winw zoom @ /  dup to appw  to gamew
     winh zoom @ /  dup to apph  to gameh ;
 
-: editor-frame ( - )  fit-display  ?global-keys  blink 0> if -1 +to blink then  cur-screen ?execute ;
+: editor-frame ( - )  fit-display  ?global-keys  ?hot-reload  blink 0> if -1 +to blink then  cur-screen ?execute ;
 
 \ ---- active layer / tileset accessors ----------------------------------------
 
