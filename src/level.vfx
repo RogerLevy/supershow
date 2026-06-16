@@ -99,6 +99,10 @@ class: %level
     prop pxh     :int
 class;
 
+\ JSON int defaulting to ON (-1) when the key is absent, so layers with no "vis"
+\ key are visible. Shared by the game loader and the editor.
+: ?j>on ( layerj key - flag )  2dup ?get-item if  j>n  else  2drop -1  then ;
+
 private
 
 : build-layer ( lvname-a lvname-u layerj - tilemap )
@@ -112,6 +116,7 @@ private
     layerj "visx"   ?j>n  tm >visx !
     layerj "visy"   ?j>n  tm >visy !
     layerj "repeat" ?j>n  tm >rpt !
+    layerj "vis"    ?j>on  tm >vis !
     tm >en on
     tm
 ;
@@ -243,7 +248,7 @@ public
 : ~level ( level camx. camy. - )
     {: lvl camx camy :}
     lvl >layers @ #items 0 ?do
-        lvl i layer { en @ } if
+        lvl i layer { en @ vis @ and } if
             lvl i camx camy draw-layer
         then
     loop

@@ -10,6 +10,11 @@ public
 0    value layer#             \ active layer index
 0    value camx               \ camera origin, fixed pixels
 0    value camy
+0    value scratch-camx        \ scratch-pad camera, stashed while a normal layer is active
+0    value scratch-camy
+0    value main-camx           \ normal camera, stashed while the scratch pad is active
+0    value main-camy
+0    value blink               \ frames left in the layer-select blink
 true value info?              \ info overlay toggle
 
 create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
@@ -26,19 +31,29 @@ create lvl-path$ 256 allot     \ path the level was loaded from (for save)
 : sel-box   ( - col row w h ) tile-sel @+ swap @+ swap @+ swap @ ;
 
 \ ---- fixed layer slots -------------------------------------------------------
-\ Up to 4 statically-named layer tilemaps, created once and refilled in place.
+\ 10 statically-named layer tilemaps, created once and refilled in place. Slots
+\ 0..8 are the paintable layers; slot 9 is the hidden scratch pad (layer 10).
 \ Loading never mints level-named tilemaps, so nothing is orphaned per level.
 
-4 constant max-layers
+10 constant max-layers
+max-layers 1 - constant scratch#      \ last slot = the scratch pad (layer 10)
 save-order forth-public
 128 128 tilemap gs-level0-layer0
 128 128 tilemap gs-level0-layer1
 128 128 tilemap gs-level0-layer2
 128 128 tilemap gs-level0-layer3
+128 128 tilemap gs-level0-layer4
+128 128 tilemap gs-level0-layer5
+128 128 tilemap gs-level0-layer6
+128 128 tilemap gs-level0-layer7
+128 128 tilemap gs-level0-layer8
+128 128 tilemap gs-level0-layer9
 restore-order
 
-%int array: slots 
-    gs-level0-layer0 ,  gs-level0-layer1 ,  gs-level0-layer2 ,  gs-level0-layer3 , 
+%int array: slots
+    gs-level0-layer0 ,  gs-level0-layer1 ,  gs-level0-layer2 ,  gs-level0-layer3 ,
+    gs-level0-layer4 ,  gs-level0-layer5 ,  gs-level0-layer6 ,  gs-level0-layer7 ,
+    gs-level0-layer8 ,  gs-level0-layer9 ,
 array;
 
 : slot ( n - tilemap )  slots el@ ;
@@ -64,7 +79,7 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
     winw zoom @ /  dup to appw  to gamew
     winh zoom @ /  dup to apph  to gameh ;
 
-: editor-frame ( - )  fit-display  ?global-keys  cur-screen ?execute ;
+: editor-frame ( - )  fit-display  ?global-keys  blink 0> if -1 +to blink then  cur-screen ?execute ;
 
 \ ---- active layer / tileset accessors ----------------------------------------
 
@@ -80,7 +95,30 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 
 : resize-layer ( cols rows - )  the-layer resize-tilemap ;   \ REPL: resize active layer
 
-: set-layer ( n - )  0 max  layer-count 1 - min  to layer# ;
+: blink! ( - )  18 to blink ;       \ flash the freshly-selected layer for a moment
+
+\ Lazily create the scratch pad (slot 9) from the first real tileset, hidden.
+: first-tileset ( - tileset|0 )
+    scratch# for  i slot { en @ ts @ and } if  i slot >ts @ unloop exit  then  loop  0 ;
+
+: ensure-scratch ( - )
+    scratch# slot >en @ ?exit
+    first-tileset dup 0= if drop exit then
+    scratch# slot {
+        128 128 this resize-tilemap   ts !
+        1.0 prx !  this clear-tilemap  en on  vis off } ;
+
+\ The scratch pad keeps its own camera; swap it in/out of camx/camy on entry/exit.
+: enter-scratch ( - )  camx to main-camx  camy to main-camy  scratch-camx to camx  scratch-camy to camy ;
+: leave-scratch ( - )  camx to scratch-camx  camy to scratch-camy  main-camx to camx  main-camy to camy ;
+
+: set-layer ( n - )
+    0 max  scratch# min  {: n :}
+    n scratch# = if  ensure-scratch  scratch# slot >en @ 0= ?exit
+                else n slot >en @ 0= ?exit  then
+    layer# scratch# =  n scratch# =  <> if
+        n scratch# = if enter-scratch else leave-scratch then  then
+    n to layer#  blink! ;
 
 \ ---- camera / mouse mapping --------------------------------------------------
 
@@ -105,6 +143,22 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 : clamp-camera ( - )
     camx  gamew negate >p  the-level >pxw @ >p  clamp to camx
     camy  gameh negate >p  the-level >pxh @ >p  clamp to camy ;
+
+\ ---- editor view -------------------------------------------------------------
+
+: blink-hide? ( - flag )  blink 0>  blink 6 mod 3 <  and ;
+
+\ Draw the level for editing: on the scratch pad show only it (its own camera);
+\ otherwise show all visible layers, blinking the freshly-selected one.
+: ~world ( - )
+    layer# scratch# = if  the-level scratch# camx camy draw-layer  exit  then
+    blink-hide? if
+        the-layer >vis @ >r  the-layer >vis off
+        the-level camx camy ~level
+        r> the-layer >vis !
+    else
+        the-level camx camy ~level
+    then ;
 
 \ ---- brush -------------------------------------------------------------------
 
@@ -234,6 +288,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         layerj "visx"   ?j>n  visx !
         layerj "visy"   ?j>n  visy !
         layerj "repeat" ?j>n  rpt !
+        layerj "vis"    ?j>on  vis !
         layerj "tiles" j>s  this string>tilemap
         en on
     } 
@@ -241,26 +296,31 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
 : layer-px ( n - wpx hpx )  slot { w @ h @ this cr>xy } ;
 
-: set-bounds ( - )   \ camera bounds = largest enabled-layer extent
+: set-bounds ( - )   \ camera bounds = largest enabled paintable-layer extent
     {: | mw mh :}
     0 to mw  0 to mh
-    max-layers for
+    scratch# for
         i slot { en @ ts @ and } if  i layer-px  mh max to mh  mw max to mw  then
     loop
     the-level { mw pxw !  mh pxh ! } ;
+
+: load-scratch ( cjson - )   \ slot 9 from the separate "scratchlayer" field (hidden in games)
+    "scratchlayer" ?get-item ?dup if
+        scratch# build-layer-slot  scratch# slot >vis off
+    else
+        scratch# slot >en off
+    then ;
 
 : load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
     {: cjson | layersj n :}
     cjson the-level >src !
     cjson "layers" j>j to layersj
     layersj jsize to n
-    max-layers for
-        i n < if  
-            layersj i j>j  i build-layer-slot
-        else  
-            i slot >en off  
-        then
+    scratch# for
+        i n < if  layersj i j>j  i build-layer-slot
+        else      i slot >en off  then
     loop
+    cjson load-scratch
     set-bounds
     cjson "w" ?j>n ?dup if the-level >pxw ! then
     cjson "h" ?j>n ?dup if the-level >pxh ! then ;
@@ -274,12 +334,14 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     root preload-tilesets        \ load each layer's tileset from its "tilesetfile"
     root load-level
     0 to layer#  0 to camx  0 to camy
+    0 to scratch-camx  0 to scratch-camy  0 to main-camx  0 to main-camy
     0 load-brush-1 ;
 
 : new-from-cjson ( cjson - )   \ build from an in-memory cjson; blank the layers
     load-level
     layer-count for  i slot clear-tilemap  loop
-    0 to layer#  0 to camx  0 to camy  0 load-brush-1 ;
+    0 to layer#  0 to camx  0 to camy
+    0 to scratch-camx  0 to scratch-camy  0 to main-camx  0 to main-camy  0 load-brush-1 ;
 
 : new-level ( - )
     {: | tspath-a tspath-len tsname-a tsname-len root layers layer0 tw :}
@@ -325,6 +387,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         visx @ "visx"   json cjson-add-int
         visy @ "visy"   json cjson-add-int
         rpt  @ "repeat" json cjson-add-int
+        vis  @ "vis"    json cjson-add-int
         this encode-tiles  "tiles"  json cjson-add-string
     }
     json ;
@@ -334,10 +397,11 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     cjson-new-object to root
     cjson-new-array  to arr
     "untitled"  "name"  root cjson-add-string
-    max-layers for
+    scratch# for
         i slot >en @ if  i slot layer>json  0 arr cjson-add-item  then
     loop
     arr  "layers"  root cjson-add-array
+    scratch# slot >en @ if  scratch# slot layer>json  "scratchlayer"  root cjson-add-item  then
     root ;
 
 : save-as ( - )
@@ -355,8 +419,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 \ ---- layer management (REPL) -------------------------------------------------
 \ Layers are a fixed pool of slots; `en` marks a slot in use.
 
-: free-slot ( - n )   \ first slot with en off, or -1
-    max-layers for  i slot >en @ 0= if  i unloop exit  then  loop  -1 ;
+: free-slot ( - n )   \ first free paintable slot (excludes the scratch pad), or -1
+    scratch# for  i slot >en @ 0= if  i unloop exit  then  loop  -1 ;
 
 : add-layer ( w h - )   \ fill the first free slot with a blank layer + active tileset
     {: w h | n :}
@@ -368,13 +432,16 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         the-tileset ts !
         1.0 prx !
         this clear-tilemap
-        en on
+        en on  vis on
     }
     n to layer#
     set-bounds ;
 
 : delete-layer ( - )   \ clear the active layer and free its slot
     the-layer {  this clear-tilemap  en off  } ;
+
+: visible    ( - )  layer# scratch# < if  the-layer >vis on   then ;   \ REPL: show layer (1-9)
+: invisible  ( - )  layer# scratch# < if  the-layer >vis off  then ;   \ REPL: hide layer (1-9)
 
 : reorder ( n - )   \ move the active layer to draw-order position n
     {: n | tm :}

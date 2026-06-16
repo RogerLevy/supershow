@@ -28,7 +28,13 @@ public
     <1> pressed? if 0 set-layer then
     <2> pressed? if 1 set-layer then
     <3> pressed? if 2 set-layer then
-    <4> pressed? if 3 set-layer then ;
+    <4> pressed? if 3 set-layer then
+    <5> pressed? if 4 set-layer then
+    <6> pressed? if 5 set-layer then
+    <7> pressed? if 6 set-layer then
+    <8> pressed? if 7 set-layer then
+    <9> pressed? if 8 set-layer then
+    <`> pressed? if scratch# set-layer then ;   \ backtick = scratch pad (layer 10)
 
 : maped-input ( - )
     ctrl? if
@@ -69,14 +75,16 @@ public
 : ~info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    brushh  brushw  layer# 1 +` f" layer %n   brush %n x %n" print 
+    brushh  brushw  layer# 1 +` 
+    the-layer >vis @ if f" layer %n  " else f" (layer %n)" then
+    f" %s brush %n x %n" print 
 ;
 
 : ~border
     camx camy 2negate atp  14 color  the-level >pxw 2@ 2>p rect ;
 
 : ~maped ( - )
-    the-level camx camy ~level
+    ~world
     ~brush-ghost
     ~selection
     ~info 
