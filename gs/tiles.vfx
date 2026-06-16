@@ -1,20 +1,45 @@
 \ GreySplatter — tile picker screen.
-\ Draws the active layer's tileset sheet at the top-left; click (or shift-drag)
-\ picks tile(s) into the brush; right-click picks a single tile; F1 returns.
+\ Draws the active layer's tileset sheet at the top-left (vertically scrollable);
+\ click (or shift-drag) picks tile(s) into the brush; right-click picks a single
+\ tile. Picking returns to the paint screen. F1 also returns.
 
 public
 
 : sheet-cols ( - n )  the-tileset >bmp @ bmpw  tilew / ;
 
-: sheet-cell ( - col row )   \ mouse over the sheet (drawn at 0,0, 1:1)
-    mouse tilew tileh 2/ ;
+\ ---- vertical scroll ---------------------------------------------------------
+
+0 value pick-scroll                  \ pixel y offset into the sheet (>= 0)
+0 value wheel-prev                   \ last absolute wheel position (for delta)
+
+: sheet-pxh ( - n )  the-tileset >bmp @ bmph ;
+: sheet-rows ( - n )  sheet-pxh tileh / ;
+: scroll-max ( - n )  sheet-pxh gameh -  0 max ;
+: scroll-to ( n - )  0 scroll-max clamp to pick-scroll ;
+: wheel-delta ( - n )  wheel  dup wheel-prev -  swap to wheel-prev ;
+
+: ?scroll ( - )
+    wheel-delta ?dup if  tileh 3 * *  negate  pick-scroll +  scroll-to  then
+    <HOME> pressed? if  0 scroll-to  then
+    <END>  pressed? if  scroll-max scroll-to  then
+    <PGUP> pressed? if  pick-scroll gameh -  scroll-to  then
+    <PGDN> pressed? if  pick-scroll gameh +  scroll-to  then ;
+
+\ ---- mouse -> sheet cell -----------------------------------------------------
+
+: sheet-cell ( - col row )           \ mouse over the (scrolled) sheet
+    mouse  pick-scroll +  tilew tileh 2/ ;
+
+: in-sheet? ( - flag )               \ mouse maps inside the tileset bitmap?
+    sheet-cell
+    0 sheet-rows within?  swap
+    0 sheet-cols within?  and ;
 
 : sheet-index ( col row - n )
     sheet-cols * +
-    0 max  the-tileset >#tiles @ 1 - min 
-;
+    0 max  the-tileset >#tiles @ 1 - min ;
 
-: pick-single ( - )  sheet-cell sheet-index load-brush-1 ;
+: pick-single ( - )  sheet-cell sheet-index load-brush-1  ->maped ;
 
 \ ---- shift-drag rectangle pick -----------------------------------------------
 
@@ -31,7 +56,7 @@ public
 : pick-rect ( - )
     {: | left top w h :}
     shift? -exit
-    <lmb> pressed? if  sheet-cell to pick-startr to pick-startc  then
+    <lmb> pressed? if  in-sheet? if  sheet-cell to pick-startr to pick-startc  then  then
     pick-startc 0< ?exit
     <lmb> letgo? -exit
     pick-box to h to w to top to left
@@ -42,39 +67,54 @@ public
             i j the-brush tile!
         loop
     loop
-    -1 to pick-startc 
+    -1 to pick-startc
+    ->maped
 ;
 
 : tiles-input ( - )
+    ?scroll
     shift? if  pick-rect exit  then
-    <lmb> pressed? if pick-single then
-    <rmb> held?    if pick-single then 
+    in-sheet? -exit
+    <lmb> letgo?   if pick-single then
+    <rmb> letgo?   if pick-single then
 ;
 
 \ ---- draw --------------------------------------------------------------------
 
-: tat  tilew tileh 2* at ;
-: trect  tilew tileh 2* 2>p rect ;
+: tat  ( col row - )  tilew tileh 2*  pick-scroll -  at ;
+: trect  ( w h - )  tilew tileh 2*  2>p rect ;
+
+: ~tiles-ghost ( - )
+    in-sheet? -exit
+    <lmb> held? <rmb> held? or ?exit
+    the-tileset the-brush >ts !
+    sheet-cell tat
+    the-brush draw
+;
 
 : ~tiles-cursor ( - )
     15 color
     shift? pick-startc 0 >= and if
         pick-box  2swap tat  trect
     else
-        sheet-cell tat  1 1 trect
-    then 
+        in-sheet? -exit
+        sheet-cell tat  brushw brushh trect
+    then
 ;
- 
+
 : ~tiles-info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    sheet-cell sheet-index  f" tile %n" print 
+    in-sheet? if  sheet-cell sheet-index  else  -1  then
+    brushh brushw  the-tileset body>name
+    f" %s  brush %n x %n  tile %n" print
 ;
 
 : ~tiles ( - )
-    0 0 at  the-tileset >bmp @ put
+    0 pick-scroll negate at  the-tileset >bmp @ put
+    ~tiles-ghost
     ~tiles-cursor
-    ~tiles-info 
+    ~tiles-info
 ;
 
 : tiles-frame ( - )  tiles-input ~tiles ;
