@@ -786,11 +786,13 @@ parent-actor  10 5  from  %child spawn drop
 ### Owner-relative positioning via physics>
 
 ```forth
+\ Factor the *concept* into a private vocabulary word — `follow` is a verb with
+\ meaning, so the behavior reads as prose. (`follow` hides the arithmetic detail.)
+|| : follow  owner @ >x 2@  lx 2@ 2+  x 2! ;   \ self pos = owner's + local (lx,ly)
+
 %child :: start ( - )
     physics>
-        owner @ -exit               \ guard: skip if no owner
-        owner @ >x 2@  lx 2@  2+   \ owner.(x,y) + (lx,ly)
-        x 2! ;                      \ write to self
+        owner @ -exit  follow ;     \ no owner -> skip; else follow it
 ```
 
 ### Spawning from within an actor's act>
@@ -823,7 +825,7 @@ player.png 16 16 tileset-from player-ts
 
 ```forth
 20 15 tilemap the-map            \ 20 wide, 15 tall
-myts the-map { the-tileset ts ! }
+myts the-map >ts !               \ assign its tileset (one store — no { } needed)
 map-data >data @ count 20 the-map set-tilemap
 0 0 at  the-map draw             \ draw at pen position
 ```
