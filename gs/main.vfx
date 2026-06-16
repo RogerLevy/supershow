@@ -20,10 +20,15 @@ include %idir%/tiles.vfx
     save-current ;
 
 : main ( - )
+    s" ^ gs" evaluate  \ fixes wrong search order in turnkey
     2 user-zoom !
     tv off
-    s" %supershow%/gs/dat/levels/level01.json" open-level
+    debug @ if                                              \ dev: open a sample level
+        s" %supershow%/gs/dat/levels/level01.json" open-level
+    else                                                    \ turnkey: start a fresh level
+        new-level-or-quit
+    then
     ->maped
     show> editor-frame ;
 
-main
+debug @ [if] main [then]

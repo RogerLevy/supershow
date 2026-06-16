@@ -397,11 +397,10 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 \ ---- open / new / save -------------------------------------------------------
 
 : open-level ( path-a path-len - )
-    {: path-a path-len | root :}
-    path-a path-len lvl-path$ place
-    path-a path-len load-json to root
-    root preload-tilesets        \ load each layer's tileset from its "tilesetfile"
-    root load-level              \ load-editor (inside) restores the cameras + version
+    expand lvl-path$ place
+    lvl-path$ count load-json 
+    ( json ) dup preload-tilesets    \ load each layer's tileset from its "tilesetfile"
+        load-level                   \ load-editor (inside) restores the cameras + version
     0 to layer#  0 load-brush-1 ;
 
 : new-from-cjson ( cjson - )   \ build from an in-memory cjson; blank the layers
@@ -409,11 +408,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     layer-count for  i slot clear-tilemap  loop
     0 to layer#  0 load-brush-1 ;
 
-: new-level ( - )
-    {: | tspath-a tspath-len tsname-a tsname-len root layers layer0 tw :}
-    pick-tileset  to tsname-len to tsname-a to tspath-len to tspath-a
-    tsname-len -exit                            \ cancelled
-    tsname-a tsname-len evaluate >tw @ to tw 
+: *new-level ( tspath-a tspath-len tsname-a tsname-len - )   \ build a blank level around a chosen tileset
+    {: tspath-a tspath-len tsname-a tsname-len | root layers layer0 tw :}
+    tsname-a tsname-len evaluate >tw @ to tw
     cjson-new-object to root
     "untitled"  "tsname"  root  cjson-add-string
     cjson-new-array to layers
@@ -433,6 +430,17 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     cjson-new-array  "actors"  root  cjson-add-array
     root new-from-cjson
     lvl-path$ off ;             \ unsaved -> Ctrl+S triggers save-as
+
+: new-level ( - )
+    pick-tileset  dup 0= if 4drop exit then  *new-level ;
+
+: no-tileset. ( - )
+    z" GreySplatter" z" No tileset selected, quitting..." message-box ;
+
+\ Turnkey startup: like new-level, but a level is mandatory, so quit cleanly
+\ (with a heads-up) when the user cancels the tileset dialog.
+: new-level-or-quit ( - )
+    pick-tileset  dup 0= if no-tileset. bye then  *new-level ;
 
 : open-dialog ( - )
     0 z" Open Level" z" *.json" load-dialog
