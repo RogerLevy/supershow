@@ -36,6 +36,13 @@ public
     <9> pressed? if 8 set-layer then
     <`> pressed? if scratch# set-layer then ;   \ backtick = scratch pad (layer 10)
 
+: ?grid-move ( - )   \ arrow keys nudge the camera by one grid cell
+    <left>  pressed? if  gridw negate >p  +to camx  then
+    <right> pressed? if  gridw        >p  +to camx  then
+    <up>    pressed? if  gridh negate >p  +to camy  then
+    <down>  pressed? if  gridh        >p  +to camy  then
+    clamp-camera ;
+
 : maped-input ( - )
     ctrl? if
         shift? if  <S> pressed? if save-as then  exit  then   \ Ctrl+Shift+S = save as
@@ -49,6 +56,8 @@ public
     then
     shift? if  do-marquee exit  then
     try-pan ?exit
+    <'> pressed? if  grid? not to grid?  then   \ toggle screen grid
+    ?grid-move
     ?layer-keys
     <E> pressed? if eraser then
     <H> pressed? if fliph then
@@ -86,11 +95,34 @@ public
 : ~border
     camx camy 2negate atp  14 color  the-level >pxw 2@ 2>p rect ;
 
+\ Screen-grid overlay: vertical/horizontal lines every gridw/gridh world
+\ pixels, offset by the camera (matching ~border's -cam origin).
+: ~vgrid ( pxh - )
+    {: pxh :}
+    the-level >pxw @ gridw /  1 +  for
+        i gridw * >p camx -  dup  camy negate  atp
+        pxh >p camy -  line
+    loop ;
+
+: ~hgrid ( pxw - )
+    {: pxw :}
+    the-level >pxh @ gridh /  1 +  for
+        i gridh * >p camy -  camx negate  over  atp
+        pxw >p camx -  swap  line
+    loop ;
+
+: ~grid ( - )
+    grid? 0= ?exit
+    $ffff00a0 rgba8
+    the-level >pxh @ ~vgrid
+    the-level >pxw @ ~hgrid ;
+
 : ~maped ( - )
     ~world
     ~brush-ghost
     ~selection
-    ~info 
+    ~info
+    ~grid
     ~border
 ;
 

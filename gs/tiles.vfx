@@ -71,8 +71,14 @@ public
     ->maped
 ;
 
+: change-tileset ( - )   \ Ctrl+O: load a PNG tileset onto the current layer
+    pick-tileset
+    dup 0= if  2drop 2drop exit  then       \ dialog cancelled
+    evaluate  the-layer >ts !  2drop ;
+
 : tiles-input ( - )
     ?scroll
+    ctrl? if  <O> pressed? if change-tileset then  exit  then
     shift? if  pick-rect exit  then
     in-sheet? -exit
     <lmb> letgo?   if pick-single then

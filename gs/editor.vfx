@@ -6,9 +6,9 @@ public
 
 \ ---- state -------------------------------------------------------------------
 
-0    value the-level          \ the one open %level (v1: single level)
-0    value layer#             \ active layer index
-0    value camx               \ camera origin, fixed pixels
+0    value the-level           \ the one open %level (v1: single level)
+0    value layer#              \ active layer index
+0    value camx                \ camera origin, fixed pixels
 0    value camy
 0    value scratch-camx        \ scratch-pad camera, stashed while a normal layer is active
 0    value scratch-camy
@@ -16,11 +16,14 @@ public
 0    value main-camy
 0    value blink               \ frames left in the layer-select blink
 0    value version             \ level file version, bumped on every save
-true value info?              \ info overlay toggle
+true value info?               \ info overlay toggle
+true value grid?               \ screen-grid overlay on/off (persisted in "editor")
+320  value gridw               \ screen-grid cell size, pixels
+240  value gridh
 
 create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
 
-1 1 tilemap the-brush         \ clipboard tilemap (always >= 1x1)
+1 1 tilemap the-brush          \ clipboard tilemap (always >= 1x1)
 
 create lvl-path$ 256 allot     \ path the level was loaded from (for save)
 
@@ -338,8 +341,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         scratch# slot >en off
     then ;
 
-: load-editor ( cjson - )   \ camera positions + version from the "editor" block
+: load-editor ( cjson - )   \ camera positions + version + grid from the "editor" block
     {: cjson | ej :}
+    320 to gridw  240 to gridh         \ grid defaults
     cjson "editor" ?get-item to ej
     ej 0= if
         0 to version
@@ -350,7 +354,12 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     ej "camx"        ?j>n >p  dup  to camx  to main-camx
     ej "camy"        ?j>n >p  dup  to camy  to main-camy
     ej "scratchcamx" ?j>n >p       to scratch-camx
-    ej "scratchcamy" ?j>n >p       to scratch-camy ;
+    ej "scratchcamy" ?j>n >p       to scratch-camy
+    ej "grid"        ?j>j if 
+        ej "grid" ?j>n             to grid?
+    then
+    ej "gridw"       ?j>n ?dup if  to gridw  then
+    ej "gridh"       ?j>n ?dup if  to gridh  then ;
 
 : load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
     {: cjson | layersj n :}
@@ -443,6 +452,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     main-camy >i    "camy"         ej cjson-add-int
     scratch-camx >i "scratchcamx"  ej cjson-add-int
     scratch-camy >i "scratchcamy"  ej cjson-add-int
+    grid?           "grid"         ej cjson-add-int
+    gridw           "gridw"        ej cjson-add-int
+    gridh           "gridh"        ej cjson-add-int
     ej ;
 
 : *level-json ( - cjson )   \ serialize live layers; bumps version + syncs cameras
