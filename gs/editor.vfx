@@ -15,6 +15,7 @@ public
 0    value main-camx           \ normal camera, stashed while the scratch pad is active
 0    value main-camy
 0    value blink               \ frames left in the layer-select blink
+0    value version             \ level file version, bumped on every save
 true value info?              \ info overlay toggle
 
 create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
@@ -311,6 +312,20 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         scratch# slot >en off
     then ;
 
+: load-editor ( cjson - )   \ camera positions + version from the "editor" block
+    {: cjson | ej :}
+    cjson "editor" ?get-item to ej
+    ej 0= if
+        0 to version
+        0 to camx  0 to camy  0 to main-camx  0 to main-camy
+        0 to scratch-camx  0 to scratch-camy  exit
+    then
+    ej "version"     ?j>n          to version
+    ej "camx"        ?j>n >p  dup  to camx  to main-camx
+    ej "camy"        ?j>n >p  dup  to camy  to main-camy
+    ej "scratchcamx" ?j>n >p       to scratch-camx
+    ej "scratchcamy" ?j>n >p       to scratch-camy ;
+
 : load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
     {: cjson | layersj n :}
     cjson the-level >src !
@@ -321,6 +336,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         else      i slot >en off  then
     loop
     cjson load-scratch
+    cjson load-editor
     set-bounds
     cjson "w" ?j>n ?dup if the-level >pxw ! then
     cjson "h" ?j>n ?dup if the-level >pxh ! then ;
@@ -332,16 +348,13 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     path-a path-len lvl-path$ place
     path-a path-len load-json to root
     root preload-tilesets        \ load each layer's tileset from its "tilesetfile"
-    root load-level
-    0 to layer#  0 to camx  0 to camy
-    0 to scratch-camx  0 to scratch-camy  0 to main-camx  0 to main-camy
-    0 load-brush-1 ;
+    root load-level              \ load-editor (inside) restores the cameras + version
+    0 to layer#  0 load-brush-1 ;
 
 : new-from-cjson ( cjson - )   \ build from an in-memory cjson; blank the layers
     load-level
     layer-count for  i slot clear-tilemap  loop
-    0 to layer#  0 to camx  0 to camy
-    0 to scratch-camx  0 to scratch-camy  0 to main-camx  0 to main-camy  0 load-brush-1 ;
+    0 to layer#  0 load-brush-1 ;
 
 : new-level ( - )
     {: | tspath-a tspath-len tsname-a tsname-len root layers layer0 tw :}
@@ -392,8 +405,23 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     }
     json ;
 
-: *level-json ( - cjson )
+: save-cams ( - )   \ sync the inactive camera stash from the live camera
+    layer# scratch# = if  camx to scratch-camx  camy to scratch-camy
+                     else  camx to main-camx     camy to main-camy  then ;
+
+: *editor-json ( - cjson )
+    {: | ej :}
+    cjson-new-object to ej
+    version         "version"      ej cjson-add-int
+    main-camx >i    "camx"         ej cjson-add-int
+    main-camy >i    "camy"         ej cjson-add-int
+    scratch-camx >i "scratchcamx"  ej cjson-add-int
+    scratch-camy >i "scratchcamy"  ej cjson-add-int
+    ej ;
+
+: *level-json ( - cjson )   \ serialize live layers; bumps version + syncs cameras
     {: | root arr :}
+    save-cams  1 +to version
     cjson-new-object to root
     cjson-new-array  to arr
     "untitled"  "name"  root cjson-add-string
@@ -402,11 +430,16 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     loop
     arr  "layers"  root cjson-add-array
     scratch# slot >en @ if  scratch# slot layer>json  "scratchlayer"  root cjson-add-item  then
+    *editor-json  "editor"  root cjson-add-item
     root ;
+
+|| : .json? ( a u - flag )   \ does the path already end in ".json"?
+    dup 5 < if 2drop 0 exit then  + 5 -  5  s" .json"  s= ;
 
 : save-as ( - )
     0 z" Save Level As" z" *.json" save-dialog
     dup 0= if 2drop exit then
+    2dup .json? 0= if  f" %s.json"  then    \ ensure a .json extension
     lvl-path$ place
     *level-json lvl-path$ count save-json ;
 
