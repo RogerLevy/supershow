@@ -30,7 +30,7 @@ forth-public
 : fpath ( a len - a len' )    \ extract directory path (remove filename)
     slashes '\' <scan ;
 
-: fext ( a len - a' len' )    \ extract extension (including dot)
+: fext ( a len - a' len' )    \ extract extension (not including dot)
     '.' ending ;
 
 : -fext ( a len - a len' )    \ remove extension
