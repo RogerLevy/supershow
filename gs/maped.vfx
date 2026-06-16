@@ -63,7 +63,8 @@ public
     shift? ?exit
     the-tileset the-brush >ts !
     mouse-cell cell-screen-xy atp
-    the-brush draw 
+    the-brush draw
+    15 color  brushw tilew *  brushh tileh *  2>p rect
 ;
 
 : ~selection ( - )
@@ -75,9 +76,11 @@ public
 : ~info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    brushh  brushw  layer# 1 +` 
+    mouse-cell swap             \ ( row col ) -> cursor cell, col on top
+    camy >i  camx >i
+    brushh  brushw  layer# 1 +`
     the-layer >vis @ if f" layer %n  " else f" (layer %n)" then
-    f" %s brush %n x %n" print 
+    f" %s brush %n x %n  cam %n,%n  cell %n,%n" print
 ;
 
 : ~border
