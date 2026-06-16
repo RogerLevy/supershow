@@ -8,6 +8,7 @@ import array
 class: %tilemap
     is-a %drawable
     is-a %dimensional
+    is-a %iterable
     prop ta :ref %array
     prop ts :ref %tileset
     prop data-snapshot :addr
@@ -94,6 +95,7 @@ fast{
 
 : _draw-tiles-view ( sc0 sr0 sc1 sr1 - )
     {: sc0 sr0 sc1 sr1 | src :}
+    sc0 sc1 >=  sr0 sr1 >= or  ?exit   \ nothing visible (off either edge)
     vbuf
     sr1 sr0 ?do
         sc0 i w @ * + ta @ slot to src
@@ -117,7 +119,8 @@ public
 
 %tilemap :: draw-view  \ ( sx. sy. w. h. - )
     {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
-    ts  @ to cur-ts
+    ts @ -exit
+    ts @ to cur-ts
     cur-ts >baseid @ to the-id
     cur-ts >tw @ to _tw   cur-ts >th @ to _th
     sx >i _tw / 0 max to sc0
@@ -249,6 +252,16 @@ public
 : cr>xy ( col row %tilemap - x. y. )
     >ts @ >tw 2@ 2* ; 
 
+
+\ \ Pixel (fixed-point) coords → tile col, row
+\ : xy>cr ( x. y. %tilemap - col row )
+\     { ts @ if ts @ >tw 2@ 2/ 2>i else 2drop 0 0 then } ;
+
+\ \ Tile col, row to pixel (fixed)
+\ : cr>xy ( col row %tilemap - x. y. )
+\     { ts @ if >ts @ >tw 2@ 2* else 2drop 0 0 then } ; 
+
+
 : init-tilemap-renderer ( - )
     2 MB allocate throw  to vbuf
     vbuf
@@ -258,4 +271,16 @@ public
     loop drop
     vdecl-arr  s/vertex  al_create_vertex_decl  to prim-decl ;
 
+%tilemap :: each ( xt - ) ( ... ? - ... ) 
+    ta @ each ;
+
+%tilemap :: !each ( xt - ) ( ... ? - ?' ... ) 
+    ta @ !each ;
+
+%tilemap :: .items ( - )
+    ta @ .items ;
+
+
 fast}
+
+

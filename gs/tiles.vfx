@@ -2,23 +2,17 @@
 \ Draws the active layer's tileset sheet at the top-left; click (or shift-drag)
 \ picks tile(s) into the brush; right-click picks a single tile; F1 returns.
 
-module
-import %supershow%/src/supershow.vfx
-import %supershow%/addons/shapes.vfx
-import %idir%/editor.vfx
-
 public
 
-: sheet-cols ( - n )  active-tileset >bmp @ bmpw  tilew / ;
+: sheet-cols ( - n )  the-tileset >bmp @ bmpw  tilew / ;
 
 : sheet-cell ( - col row )   \ mouse over the sheet (drawn at 0,0, 1:1)
-    mouse                    ( x y )
-    tileh /                  ( x row )
-    swap tilew /  swap ;     ( col row )
+    mouse tilew tileh 2/ ;
 
 : sheet-index ( col row - n )
     sheet-cols * +
-    0 max  active-tileset >#tiles @ 1 - min ;
+    0 max  the-tileset >#tiles @ 1 - min 
+;
 
 : pick-single ( - )  sheet-cell sheet-index load-brush-1 ;
 
@@ -27,17 +21,20 @@ public
 -1 value pick-startc
 0  value pick-startr
 
+: 2abs  abs swap abs swap ;
+
+: pick-box ( - col row w h )
+    pick-startc pick-startr sheet-cell 2min``
+    pick-startc pick-startr sheet-cell 2- 2abs 1 1 2+``
+;
+
 : pick-rect ( - )
-    {: | cc cr left top w h :}
+    {: | left top w h :}
     shift? -exit
     <lmb> pressed? if  sheet-cell to pick-startr to pick-startc  then
     pick-startc 0< ?exit
     <lmb> letgo? -exit
-    sheet-cell to cr to cc
-    pick-startc cc min to left
-    pick-startr cr min to top
-    pick-startc cc - abs 1 + to w
-    pick-startr cr - abs 1 + to h
+    pick-box to h to w to top to left
     w h the-brush resize-tilemap
     h 0 do
         w 0 do
@@ -45,39 +42,40 @@ public
             i j the-brush tile!
         loop
     loop
-    -1 to pick-startc ;
+    -1 to pick-startc 
+;
 
 : tiles-input ( - )
     shift? if  pick-rect exit  then
     <lmb> pressed? if pick-single then
-    <rmb> held?    if pick-single then ;
+    <rmb> held?    if pick-single then 
+;
 
 \ ---- draw --------------------------------------------------------------------
 
-: ~tiles-cursor ( - )
-    {: | cc cr left top w h :}
-    15 color
-    sheet-cell to cr to cc
-    shift? pick-startc 0 >= and if
-        pick-startc cc min to left
-        pick-startr cr min to top
-        pick-startc cc - abs 1 + to w
-        pick-startr cr - abs 1 + to h
-    else
-        cc to left  cr to top  1 to w  1 to h
-    then
-    left tilew *  top tileh *  at
-    w tilew * >p  h tileh * >p  rect ;
+: tat  tilew tileh 2* at ;
+: trect  tilew tileh 2* 2>p rect ;
 
+: ~tiles-cursor ( - )
+    15 color
+    shift? pick-startc 0 >= and if
+        pick-box  2swap tat  trect
+    else
+        sheet-cell tat  1 1 trect
+    then 
+;
+ 
 : ~tiles-info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    sheet-cell sheet-index  f" tile %n" print ;
+    sheet-cell sheet-index  f" tile %n" print 
+;
 
 : ~tiles ( - )
-    0 0 at  active-tileset >bmp @ put
+    0 0 at  the-tileset >bmp @ put
     ~tiles-cursor
-    info? if ~tiles-info then ;
+    ~tiles-info 
+;
 
 : tiles-frame ( - )  tiles-input ~tiles ;
 

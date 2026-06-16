@@ -68,10 +68,10 @@ public
     repeat
 ;
 
-private
-
 : tm-pxw ( tilemap - n )  { w @  ts @ >tw @ * } ;
 : tm-pxh ( tilemap - n )  { h @  ts @ >th @ * } ;
+
+private
 
 \ Create a named %tilemap (mirrors the `tilemap` defining word in autoload.vfx)
 : new-layer-tm ( cols rows a u - tilemap )
@@ -81,6 +81,7 @@ public
 
 trait: %layer
     prop prx     :fixed          \ parallax
+    prop en                      \ free-slot
 trait;
 
 class: %tilemap
@@ -105,6 +106,7 @@ private
     cols rows 2swap  new-layer-tm to tm
     layerj "tileset" j>s evaluate  tm >ts !
     layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
+    tm >en on
     tm
 ;
 
@@ -144,34 +146,32 @@ public
 
 private
 
-create tok-ch 0 c,                    \ 1-byte scratch for single-char appends
-
-: lapp-ch ( char lstr - )  swap tok-ch c!  tok-ch 1 rot lappend ;
+create nul 0 c,
 
 0 value enc-buf                       \ cached auto-grow lstring, reused per call
 
 : cell>tok ( cell lstr - )            \ append one cell's token (no separator)
     {: cell lstr :}
     cell $FFFFFFFF = if  s" _" lstr lappend  exit  then
-    cell $01000000 and if  [char] h lstr lapp-ch  then
-    cell $02000000 and if  [char] v lstr lapp-ch  then
+    cell $01000000 and if  s" h" lstr lappend  then
+    cell $02000000 and if  s" v" lstr lappend  then
     cell $FFFFFF and  f" %n"  lstr lappend ;
 
 public
 
 \ Encode a tilemap's cells back into the whitespace token string, returning a
 \ NUL-terminated zstring (in a reused buffer; valid until the next call).
-: tilemap>zstring ( tilemap - zstr )
+: encode-tiles ( tilemap - zstr )
     {: tm | d n :}
     enc-buf 0= if  s" " *lstring to enc-buf  then
     enc-buf lclear
     tm >ta @ >data @ to d
     tm >w 2@ * to n
     n 0 ?do
-        i if  bl enc-buf lapp-ch  then
+        i if  s"  " enc-buf lappend  then
         d i cells + @  enc-buf cell>tok
     loop
-    0 enc-buf lapp-ch                 \ NUL terminator
+    nul 1 enc-buf lappend                 \ NUL terminator
     enc-buf ldata@ ;
 
 \ Overwrite each layer's "tiles" string in the level's source cjson from the
@@ -182,8 +182,8 @@ public
     {: lvl path len | layersj :}
     lvl >src @ "layers" j>j to layersj
     layersj jsize 0 ?do
-        lvl i layer  tilemap>zstring          ( zstr )
-        layersj i j>j  "tiles" j>j  swap       ( tiles-item zstr )
+        lvl i layer  encode-tiles              ( zstr )
+        layersj i j>j "tiles" j>j  swap        ( tiles-item zstr )
         jset-string
     loop
     lvl >src @ path len write-json ;
@@ -197,7 +197,7 @@ public
     {: lvl | layersj :}
     lvl >src @ "layers" j>j to layersj
     layersj jsize 0 ?do
-        i lvl >layers @ el@
+        lvl i layer
         layersj i j>j
         refill-layer
     loop
@@ -223,15 +223,18 @@ public
 ;
 
 : ~level ( level camx. camy. - )
-    {: lvl camx camy | layersj parallax :}
-    lvl >src @ "layers" j>j to layersj
-    layersj jsize 0 ?do 
-        0 0 at
-        lvl i layer >prx @ to parallax
-        camx parallax p*
-        camy parallax p*
-        gamew >p  gameh >p
-        lvl i layer  draw-view
+    {: lvl camx camy | parallax :}
+    lvl >layers @ #items 0 ?do
+        lvl i layer {
+            en @ if
+                0 0 at
+                prx @ to parallax
+                camx parallax p*
+                camy parallax p*
+                gamew >p  gameh >p
+                this draw-view
+            then
+        }
     loop
 ;
 

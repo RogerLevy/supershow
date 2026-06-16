@@ -2,10 +2,6 @@
 \ Shared editor state, screen dispatcher, camera/mouse mapping, brush, save.
 \ See gs/main.vfx for the program entry point.
 
-module
-import %supershow%/src/supershow.vfx
-import %supershow%/addons/shapes.vfx
-
 public
 
 \ ---- state -------------------------------------------------------------------
@@ -20,12 +16,35 @@ create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
 
 1 1 tilemap the-brush         \ clipboard tilemap (always >= 1x1)
 
-create lvl-path 256 allot     \ path the level was loaded from (for save)
+create lvl-path$ 256 allot     \ path the level was loaded from (for save)
 
-: sel-col   ( - n )  tile-sel @ ;
-: sel-row   ( - n )  tile-sel cell+ @ ;
-: sel-cols  ( - n )  tile-sel 2 cells + @ ;
-: sel-rows  ( - n )  tile-sel 3 cells + @ ;
+: selc   ( - n )  tile-sel @ ;
+: selr   ( - n )  tile-sel cell+ @ ;
+: selw   ( - n )  tile-sel 2 cells + @ ;
+: selh   ( - n )  tile-sel 3 cells + @ ;
+
+: sel-box   ( - col row w h ) tile-sel @+ swap @+ swap @+ swap @ ;
+
+\ ---- fixed layer slots -------------------------------------------------------
+\ Up to 4 statically-named layer tilemaps, created once and refilled in place.
+\ Loading never mints level-named tilemaps, so nothing is orphaned per level.
+
+4 constant max-layers
+save-order forth-public
+128 128 tilemap gs-level0-layer0
+128 128 tilemap gs-level0-layer1
+128 128 tilemap gs-level0-layer2
+128 128 tilemap gs-level0-layer3
+restore-order
+
+%int array: slots 
+    gs-level0-layer0 ,  gs-level0-layer1 ,  gs-level0-layer2 ,  gs-level0-layer3 , 
+array;
+
+: slot ( n - tilemap )  slots el@ ;
+
+%level dmake to the-level                          \ the one persistent editor level
+the-level { slots layers ! }                       \ its layers ARE the fixed slot pool
 
 \ ---- screen dispatcher (editor-local, not mode.vfx) --------------------------
 
@@ -41,43 +60,64 @@ create lvl-path 256 allot     \ path the level was loaded from (for save)
     <F2> pressed? if ->tiles then
     <I>  pressed? if info? not to info? then ;
 
-: editor-frame ( - )  ?global-keys  cur-screen ?execute ;
+\ Editor-only window policy: while fullscreen, render native (monw/monh, zoom 1);
+\ windowed keeps whatever main set up. Acts only on the fullscreen<->windowed
+\ transition, saving/restoring the full windowed config so 2x-zoom etc. survive.
+0 value fs-state
+0 value w-appw   0 value w-apph   0 value w-gamew   0 value w-gameh   2 value w-zoom
+
+: fit-display ( - )
+    fullscreen? fs-state = ?exit
+    fullscreen? to fs-state
+    fullscreen? if
+        appw to w-appw  apph to w-apph  gamew to w-gamew  gameh to w-gameh  zoom @ to w-zoom
+        monw to appw  monh to apph  monw to gamew  monh to gameh  1 zoom !
+    else
+        w-appw to appw  w-apph to apph  w-gamew to gamew  w-gameh to gameh  w-zoom zoom !
+        appw apph 0 resize-display
+    then ;
+
+: editor-frame ( - )  fit-display  ?global-keys  cur-screen ?execute ;
 
 \ ---- active layer / tileset accessors ----------------------------------------
 
-: active-layer    ( - tilemap )   the-level layer# layer ;
-: active-tileset  ( - tileset )   active-layer >ts @ ;
-: tilew           ( - n )         active-tileset >tw @ ;
-: tileh           ( - n )         active-tileset >th @ ;
-: layer-parallax  ( - p. )        active-layer >prx @ ;
+: the-layer       ( - tilemap )   the-level layer# layer ;
+: the-tileset     ( - tileset )   the-layer >ts @ ;
+: tilew           ( - n )         the-tileset >tw @ ;
+: tileh           ( - n )         the-tileset >th @ ;
+: layer-parallax  ( - n. )        the-layer >prx @ ;
+: the-layers      ( - array )     the-level >layers @ ;
 : layer-count     ( - n )         the-level >layers @ #items ;
+: brushw          ( - n )         the-brush >w @ ;
+: brushh          ( - n )         the-brush >h @ ;
+
+: resize-layer ( cols rows - )  the-layer resize-tilemap ;   \ REPL: resize active layer
 
 : set-layer ( n - )  0 max  layer-count 1 - min  to layer# ;
 
 \ ---- camera / mouse mapping --------------------------------------------------
 
-\ Screen mouse -> active-layer cell (col,row), accounting for the layer's
+: parallax+ ( x. y. - x. y. )  camx camy  layer-parallax dup  2p* 2+ ;
+: parallax- ( x. y. - x. y. )  camx camy  layer-parallax dup  2p* 2- ;
+
+\ Screen mouse -> the-layer cell (col,row), accounting for the layer's
 \ parallax: world = mouse + cam * parallax.
 : mouse-cell ( - col row )
-    {: | px :}
-    layer-parallax to px
-    pmouse                        ( mx. my. )
-    camy px p* +                  ( mx. wy. )
-    swap  camx px p* +  swap      ( wx. wy. )
-    active-layer xy>cr ;
+    pmouse parallax+  the-layer xy>cr ;
 
 \ Top-left screen pixel (fixed) of a cell on the active layer.
 \ cr>xy returns integer world pixels (col*tw, row*th), so promote to fixed
 \ before subtracting the fixed, parallax-scaled camera offset.
 : cell-screen-xy ( col row - x. y. )
-    {: | px :}
-    layer-parallax to px
-    active-layer cr>xy  2>p       ( wx. wy. )
-    camy px p* -                  ( wx. sy. )
-    swap  camx px p* -  swap ;    ( sx. sy. )
+    the-layer cr>xy  2>p  parallax- ;
 
+\ Editor camera clamp: generous bounds so the level can slide fully across the
+\ viewport in either direction (works whether the level is larger OR smaller
+\ than the viewport, so panning is never pinned). Units are logical pixels —
+\ gamew is the post-zoom logical viewport, matching camx's units.
 : clamp-camera ( - )
-    the-level camx camy clamp-cam  to camy to camx ;
+    camx  gamew negate >p  the-level >pxw @ >p  clamp to camx
+    camy  gameh negate >p  the-level >pxh @ >p  clamp to camy ;
 
 \ ---- brush -------------------------------------------------------------------
 
@@ -85,32 +125,48 @@ create lvl-path 256 allot     \ path the level was loaded from (for save)
     1 1 the-brush resize-tilemap
     the-brush >ta @ >data @ ! ;
 
-: empty-brush ( - )  $FFFFFFFF load-brush-1 ;
+: eraser ( - )  $FFFFFFFF load-brush-1 ;
 
-: brush-xor ( mask - )   \ XOR flip flags into every non-empty brush cell
-    {: mask | d n c :}
-    the-brush >ta @ >data @ to d
-    the-brush >w 2@ * to n
-    n 0 ?do
-        d i cells + @ to c
-        c $FFFFFFFF <> if  c mask xor  d i cells + !  then
-    loop ;
+\ Flip the brush: mirror cell positions AND toggle the flip flag per cell, so a
+\ multi-cell brush mirrors correctly (not just per-tile flags).
+: ?flip ( cell xor - cell' )  over $FFFFFFFF = if drop exit then  xor ;
 
-: paint ( col row dest - )   \ stamp the brush onto a layer at a cell
-    {: col row dest :}
-    the-brush col row dest paste-tilemap ;
+: brush-cell ( col row - addr )   \ address of a brush cell
+    brushw *  +  cells  the-brush >ta @ >data @ + ;
+
+: fliph ( - )
+    brushh for
+        brushw 2 / for
+            i j brush-cell`  brushw 1 - i -  j brush-cell` xchg
+        loop
+    loop
+    [: $01000000 ?flip ;] the-brush !each ;
+
+: flipv ( - )
+    brushh 2 / for
+        brushw for
+            i j brush-cell`  i  brushh 1 - j - brush-cell` xchg
+        loop
+    loop
+    [: $02000000 ?flip ;] the-brush !each ;
+
+: paint ( dest - )   \ stamp the brush; Alt = put (skip empties), else paste (all); pen = col/row    
+    >r the-brush at@ r> 
+    alt? if  put-tilemap  else  paste-tilemap  then 
+;
 
 \ ---- selection -> clipboard --------------------------------------------------
 
 : copy-sel ( - )   \ active layer's selected region -> brush
-    active-layer  sel-col sel-row  sel-cols sel-rows  the-brush  slice-tilemap ;
+    the-layer  sel-box  the-brush  slice-tilemap ;
 
 : erase-sel ( - )   \ clear the selected region on the active layer
-    sel-rows 0 ?do
-        sel-cols 0 ?do
-            $FFFFFFFF  sel-col i +  sel-row j +  active-layer  tile!
+    selh for
+        selw for
+            $FFFFFFFF  selc i +  selr j +  the-layer  tile!
         loop
-    loop ;
+    loop 
+;
 
 \ ---- marquee selection (over the active layer) -------------------------------
 \ Shift+drag sets the selection rect live; on release the selected region
@@ -120,26 +176,215 @@ create lvl-path 256 allot     \ path the level was loaded from (for save)
 0  value sel-startr
 
 : do-marquee ( - )
-    {: | cc cr :}
+    {: | col row :}
     shift? -exit
     <lmb> pressed? if  mouse-cell to sel-startr to sel-startc  then
     sel-startc 0< ?exit
     <lmb> letgo? if  copy-sel  -1 to sel-startc  exit  then
     <lmb> held? -exit
-    mouse-cell to cr to cc
-    sel-startc cc min  sel-startr cr min          ( left top )
+    mouse-cell to row to col
+    sel-startc col min  sel-startr row min          ( left top )
     tile-sel 2!
-    sel-startc cc - abs 1 +  sel-startr cr - abs 1 +   ( w h )
-    tile-sel 2 cells + 2! ;
+    sel-startc col - abs 1 +  sel-startr row - abs 1 +   ( w h )
+    tile-sel 2 cells + 2! 
+;
 
-\ ---- open / save -------------------------------------------------------------
+\ ---- runtime tileset loading -------------------------------------------------
 
-: open-level ( path len - )
-    2dup lvl-path place
-    load-json build-level to the-level
-    the-level refill-tilemaps   \ load tile data only (no actors — editor is tiles-only)
+create gs-zbuf    1024 allot     \ scratch zstring for paths / bitmap evaluate
+create gs-pathbuf  256 allot     \ picked tileset source path (counted)
+
+: tileset-loaded? ( name-a name-len - flag )  
+    sfind if >body @ %bitmap is? else drop 0 then ;
+
+\ Load a PNG and slice a square tileset (16 tiles wide) under the given name,
+\ unless a word of that name already exists.
+: ensure-tileset ( path-a path-len name-a name-len - )
+    {: path-a path-len name-a name-len | bmpid tw :}
+    name-a name-len tileset-loaded? ?exit
+    path-a path-len -path sfind nip not if 
+        path-a path-len f" bitmap %s" .evaluate              \ define "<file>.<ext>" bitmap word
+    then
+    path-a path-len -path evaluate to bmpid
+    bmpid  bmpw 16 / to tw                         \ tile size = width / 16 (square)
+    bmpid  name-a name-len -ext  tw tw  f" %n %n tileset-from %s.ts"  evaluate 
+;
+
+\ Pick a PNG via dialog; ensure its named tileset is loaded.
+\ Returns ( path-a path-len name-a name-len | 0 0 0 0 ).
+: pick-tileset ( - path-a path-len name-a name-len | 0 0 0 0 )
+    {: | path-a path-len name-a name-len :}
+    0 z" Select Tileset (16 wide)" z" *.png" load-dialog
+    dup 0= if 2drop 0 0 0 0 exit then
+    gs-pathbuf place
+    gs-pathbuf count to path-len to path-a
+    path-a path-len -path -ext to name-len to name-a
+    path-a path-len name-a name-len ensure-tileset
+    path-a path-len name-a name-len 
+;
+
+\ Load a level's tilesets from stored "tilesetfile" paths (if any). Layers
+\ without one are assumed already defined (e.g. compiled into the program).
+: preload-tilesets ( cjson - )
+    {: cjson | layers buf[ 256 ] :}
+    cjson "layers" j>j to layers
+    layers jsize for  
+        layers i j>j "tilesetfile" ?j>z ?dup if 
+            zcount buf[ place 
+            buf[ count  layers i j>j "tileset" j>s  ensure-tileset  
+        then
+    loop 
+;
+
+\ ---- build the persistent level from a cjson root (over the fixed slots) ------
+
+: build-layer-slot ( layerj n - )   \ configure + refill + enable slot n
+    {: layerj n :}
+    n slot {
+        layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
+        layerj "tileset" j>s evaluate  ts !
+        layerj "parallax" ?j>p dup 0= if drop 1.0 then  prx !
+        layerj "tiles" j>s  this string>tilemap
+        en on
+    } 
+;
+
+: layer-px ( n - wpx hpx )  slot { w @ h @ this cr>xy } ;
+
+: set-bounds ( - )   \ camera bounds = largest enabled-layer extent
+    {: | mw mh :}
+    0 to mw  0 to mh
+    max-layers for
+        i slot { en @ ts @ and } if  i layer-px  mh max to mh  mw max to mw  then
+    loop
+    the-level { mw pxw !  mh pxh ! } ;
+
+: load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
+    {: cjson | layersj n :}
+    cjson the-level >src !
+    cjson "layers" j>j to layersj
+    layersj jsize to n
+    max-layers for
+        i n < if  
+            layersj i j>j  i build-layer-slot
+        else  
+            i slot >en off  
+        then
+    loop
+    set-bounds
+    cjson "w" ?j>n ?dup if the-level >pxw ! then
+    cjson "h" ?j>n ?dup if the-level >pxh ! then ;
+
+\ ---- open / new / save -------------------------------------------------------
+
+: open-level ( path-a path-len - )
+    {: path-a path-len | root :}
+    path-a path-len lvl-path$ place
+    path-a path-len load-json to root
+    root preload-tilesets        \ load each layer's tileset from its "tilesetfile"
+    root load-level
     0 to layer#  0 to camx  0 to camy
     0 load-brush-1 ;
 
+: new-from-cjson ( cjson - )   \ build from an in-memory cjson; blank the layers
+    load-level
+    layer-count for  i slot clear-tilemap  loop
+    0 to layer#  0 to camx  0 to camy  0 load-brush-1 ;
+
+: new-level ( - )
+    {: | tspath-a tspath-len tsname-a tsname-len root layers layer0 tw :}
+    pick-tileset  to tsname-len to tsname-a to tspath-len to tspath-a
+    tsname-len -exit                            \ cancelled
+    tsname-a tsname-len evaluate >tw @ to tw
+    cjson-new-object to root
+    "untitled"  "tsname"  root  cjson-add-string
+    cjson-new-array to layers
+    cjson-new-object to layer0
+    "layer0"   "tsname"  layer0 cjson-add-string
+    tsname-a tsname-len gs-zbuf zplace  gs-zbuf  "tileset"      layer0 cjson-add-string
+    tspath-a tspath-len gs-zbuf zplace  gs-zbuf  "tilesetfile"  layer0 cjson-add-string
+    tw    "tw"    layer0 cjson-add-int
+    tw    "th"    layer0 cjson-add-int
+    128   "cols"  layer0 cjson-add-int
+    128   "rows"  layer0 cjson-add-int
+    "_"   "tiles" layer0 cjson-add-string
+    layer0  0  layers  cjson-add-item
+    layers  "layers"  root  cjson-add-array
+    cjson-new-array  "actors"  root  cjson-add-array
+    root new-from-cjson
+    lvl-path$ off ;             \ unsaved -> Ctrl+S triggers save-as
+
+: open-dialog ( - )
+    0 z" Open Level" z" *.json" load-dialog
+    dup 0= if 2drop exit then
+    gs-zbuf zplace  gs-zbuf zcount open-level ;
+
+\ ---- save (serialize the live enabled layers to a fresh cjson tree) ----------
+
+: layer>json ( tilemap - layerj )
+    {: tm | json :}
+    cjson-new-object to json
+    tm {
+        ts @ body>name            gs-zbuf zplace  gs-zbuf  "tileset"      json cjson-add-string
+        ts @ >bmp @ bitmap-file   gs-zbuf zplace  gs-zbuf  "tilesetfile"  json cjson-add-string
+        w @  "cols"  json cjson-add-int
+        h @  "rows"  json cjson-add-int
+        prx @ "parallax" json cjson-add-fixed
+        this encode-tiles  "tiles"  json cjson-add-string
+    }
+    json ;
+
+: *level-json ( - cjson )
+    {: | root arr :}
+    cjson-new-object to root
+    cjson-new-array  to arr
+    "untitled"  "name"  root cjson-add-string
+    max-layers for
+        i slot >en @ if  i slot layer>json  0 arr cjson-add-item  then
+    loop
+    arr  "layers"  root cjson-add-array
+    root ;
+
+: save-as ( - )
+    0 z" Save Level As" z" *.json" save-dialog
+    dup 0= if 2drop exit then
+    lvl-path$ place
+    *level-json lvl-path$ count save-json ;
+
+: ?save-as ( - )  
+    lvl-path$ c@ 0= if  save-as exit  then ;
+
 : save-current ( - )
-    the-level lvl-path count save-level ;
+    ?save-as   *level-json lvl-path$ count save-json ;
+
+\ ---- layer management (REPL) -------------------------------------------------
+\ Layers are a fixed pool of slots; `en` marks a slot in use.
+
+: free-slot ( - n )   \ first slot with en off, or -1
+    max-layers for  i slot >en @ 0= if  i unloop exit  then  loop  -1 ;
+
+: add-layer ( w h - )   \ fill the first free slot with a blank layer + active tileset
+    {: w h | n :}
+    the-tileset -exit              \ nothing to inherit a tileset from
+    free-slot to n
+    n 0< ?exit
+    n slot {
+        w h  this resize-tilemap
+        the-tileset ts !
+        1.0 prx !
+        this clear-tilemap
+        en on
+    }
+    n to layer#
+    set-bounds ;
+
+: delete-layer ( - )   \ clear the active layer and free its slot
+    the-layer {  this clear-tilemap  en off  } ;
+
+: reorder ( n - )   \ move the active layer to draw-order position n
+    {: n | tm :}
+    n 0 max  layer-count 1 - min to n
+    the-layer to tm
+    layer# the-layers removeat
+    tm n the-layers insertat
+    n to layer# ;

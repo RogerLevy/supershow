@@ -12,21 +12,18 @@ module [gs]
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 import [cjson]
-import %idir%/maped.vfx
-import %idir%/tiles.vfx
+include %idir%/editor.vfx
+include %idir%/maped.vfx
+include %idir%/tiles.vfx
 
-bitmap %idir%/dat/gfx/greyzebes.png
-greyzebes.png 16 16 tileset-from the-tileset
-
-\ Bake the absolute level path (expand %supershow% at compile time).
-create level-path$ 256 allot
-s" %supershow%/gs/dat/levels/level01.json" expanded  level-path$ place
-
+: save ( - )
+    save-current ;
 
 : main ( - )
-    monw monh 2dup to gameh to gamew to winh to winw
+    monw monh 2dup 2 2 2/ to gameh to gamew to winh to winw
+    2 user-zoom !
     tv off
-    level-path$ count open-level
+    s" %supershow%/gs/dat/levels/level01.json" open-level
     ->maped
     show> editor-frame ;
 

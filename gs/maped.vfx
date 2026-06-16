@@ -3,11 +3,6 @@
 \ marquee, and an info line; polls input for painting / eyedrop / pan / marquee
 \ / clipboard / layer + flip controls.
 
-module
-import %supershow%/src/supershow.vfx
-import %supershow%/addons/shapes.vfx
-import %idir%/editor.vfx
-
 public
 
 \ ---- input -------------------------------------------------------------------
@@ -37,7 +32,10 @@ public
 
 : maped-input ( - )
     ctrl? if
+        shift? if  <S> pressed? if save-as then  exit  then   \ Ctrl+Shift+S = save as
         <S> pressed? if save-current then
+        <N> pressed? if new-level then
+        <O> pressed? if open-dialog then
         <C> pressed? if copy-sel then
         <X> pressed? if copy-sel erase-sel then
         <E> pressed? if erase-sel then
@@ -46,35 +44,40 @@ public
     shift? if  do-marquee exit  then
     try-pan ?exit
     ?layer-keys
-    <E> pressed? if empty-brush then
-    <H> pressed? if $01000000 brush-xor then
-    <V> pressed? if $02000000 brush-xor then
-    <lmb> held?  if  mouse-cell active-layer paint  then
-    <rmb> held?  if  mouse-cell active-layer tile@ load-brush-1  then ;
+    <E> pressed? if eraser then
+    <H> pressed? if fliph then
+    <V> pressed? if flipv then
+    <lmb> held?  if  mouse-cell at the-layer paint  then
+    <rmb> held?  if  mouse-cell the-layer tile@ load-brush-1  then ;
 
 \ ---- draw --------------------------------------------------------------------
 
 : ~brush-ghost ( - )
     shift? ?exit
-    active-tileset the-brush >ts !
+    the-tileset the-brush >ts !
     mouse-cell cell-screen-xy atp
     the-brush draw ;
 
 : ~selection ( - )
     15 color
-    sel-col sel-row cell-screen-xy atp
-    sel-cols tilew * >p  sel-rows tileh * >p  rect ;
+    selc selr cell-screen-xy atp
+    selw tilew * >p  selh tileh * >p  rect ;
 
 : ~info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    the-brush >h @  the-brush >w @  layer# 1 + f" layer %n   brush %n x %n" print ;
+    brushh  brushw  layer# 1 +` f" layer %n   brush %n x %n" print ;
+
+: ~border
+    camx camy 2negate atp  14 color  the-level >pxw 2@ 2>p rect ;
 
 : ~maped ( - )
     the-level camx camy ~level
     ~brush-ghost
     ~selection
-    info? if ~info then ;
+    ~info 
+    ~border
+;
 
 : maped-frame ( - )  maped-input ~maped ;
 
