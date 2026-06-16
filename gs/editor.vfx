@@ -60,22 +60,9 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
     <F2> pressed? if ->tiles then
     <I>  pressed? if info? not to info? then ;
 
-\ Editor-only window policy: while fullscreen, render native (monw/monh, zoom 1);
-\ windowed keeps whatever main set up. Acts only on the fullscreen<->windowed
-\ transition, saving/restoring the full windowed config so 2x-zoom etc. survive.
-0 value fs-state
-0 value w-appw   0 value w-apph   0 value w-gamew   0 value w-gameh   2 value w-zoom
-
 : fit-display ( - )
-    fullscreen? fs-state = ?exit
-    fullscreen? to fs-state
-    fullscreen? if
-        appw to w-appw  apph to w-apph  gamew to w-gamew  gameh to w-gameh  zoom @ to w-zoom
-        monw to appw  monh to apph  monw to gamew  monh to gameh  1 zoom !
-    else
-        w-appw to appw  w-apph to apph  w-gamew to gamew  w-gameh to gameh  w-zoom zoom !
-        appw apph 0 resize-display
-    then ;
+    winw zoom @ /  dup to appw  to gamew
+    winh zoom @ /  dup to apph  to gameh ;
 
 : editor-frame ( - )  fit-display  ?global-keys  cur-screen ?execute ;
 
@@ -180,7 +167,7 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
     shift? -exit
     <lmb> pressed? if  mouse-cell to sel-startr to sel-startc  then
     sel-startc 0< ?exit
-    <lmb> letgo? if  copy-sel  -1 to sel-startc  exit  then
+    \ <lmb> letgo? if  copy-sel  -1 to sel-startc  exit  then
     <lmb> held? -exit
     mouse-cell to row to col
     sel-startc col min  sel-startr row min          ( left top )
@@ -218,7 +205,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     dup 0= if 2drop 0 0 0 0 exit then
     gs-pathbuf place
     gs-pathbuf count to path-len to path-a
-    path-a path-len -path -ext to name-len to name-a
+    path-a path-len -path -ext f" %s.ts" to name-len to name-a
     path-a path-len name-a name-len ensure-tileset
     path-a path-len name-a name-len 
 ;
@@ -295,14 +282,16 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     {: | tspath-a tspath-len tsname-a tsname-len root layers layer0 tw :}
     pick-tileset  to tsname-len to tsname-a to tspath-len to tspath-a
     tsname-len -exit                            \ cancelled
-    tsname-a tsname-len evaluate >tw @ to tw
+    tsname-a tsname-len evaluate >tw @ to tw 
     cjson-new-object to root
     "untitled"  "tsname"  root  cjson-add-string
     cjson-new-array to layers
     cjson-new-object to layer0
     "layer0"   "tsname"  layer0 cjson-add-string
-    tsname-a tsname-len gs-zbuf zplace  gs-zbuf  "tileset"      layer0 cjson-add-string
-    tspath-a tspath-len gs-zbuf zplace  gs-zbuf  "tilesetfile"  layer0 cjson-add-string
+    tsname-a tsname-len gs-zbuf zplace  
+    gs-zbuf  "tileset"      layer0 cjson-add-string
+    tspath-a tspath-len gs-zbuf zplace  
+    gs-zbuf  "tilesetfile"  layer0 cjson-add-string
     tw    "tw"    layer0 cjson-add-int
     tw    "th"    layer0 cjson-add-int
     128   "cols"  layer0 cjson-add-int

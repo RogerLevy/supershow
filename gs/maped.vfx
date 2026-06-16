@@ -48,7 +48,8 @@ public
     <H> pressed? if fliph then
     <V> pressed? if flipv then
     <lmb> held?  if  mouse-cell at the-layer paint  then
-    <rmb> held?  if  mouse-cell the-layer tile@ load-brush-1  then ;
+    <rmb> held?  if  mouse-cell the-layer tile@ load-brush-1  then 
+;
 
 \ ---- draw --------------------------------------------------------------------
 
@@ -56,17 +57,20 @@ public
     shift? ?exit
     the-tileset the-brush >ts !
     mouse-cell cell-screen-xy atp
-    the-brush draw ;
+    the-brush draw 
+;
 
 : ~selection ( - )
     15 color
     selc selr cell-screen-xy atp
-    selw tilew * >p  selh tileh * >p  rect ;
+    selw tilew * >p  selh tileh * >p  rect 
+;
 
 : ~info ( - )
     vga-8x8 default-font!  15 color
     0 gameh 8 - at
-    brushh  brushw  layer# 1 +` f" layer %n   brush %n x %n" print ;
+    brushh  brushw  layer# 1 +` f" layer %n   brush %n x %n" print 
+;
 
 : ~border
     camx camy 2negate atp  14 color  the-level >pxw 2@ 2>p rect ;

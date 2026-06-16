@@ -20,7 +20,6 @@ include %idir%/tiles.vfx
     save-current ;
 
 : main ( - )
-    monw monh 2dup 2 2 2/ to gameh to gamew to winh to winw
     2 user-zoom !
     tv off
     s" %supershow%/gs/dat/levels/level01.json" open-level
