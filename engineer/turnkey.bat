@@ -1,6 +1,5 @@
 @echo off
-
-echo DEBUG: %1
+setlocal enabledelayedexpansion
 
 if "%1"=="--help" (
     echo Usage: turnkey.bat GAMENAME [FORTH-CODE]
@@ -19,31 +18,54 @@ if "%1"=="--help" (
 
 @echo on
 set "PATH=%~dp0..\bin;%PATH%"
+
+set "baseDir=%CD%"
 set "relpath=%1"
 set "relpath=%relpath:/=\%"
 
-mkdir ..\rel\%relpath%
-mkdir ..\rel\%relpath%-debug
-del ..\rel\%relpath%\*.* /s /q
-del ..\rel\%relpath%-debug\*.* /s /q
-xcopy dat ..\rel\%relpath%\dat /i /s /q /y /e
-xcopy dat ..\rel\%relpath%-debug\dat /i /s /q /y /e
-copy %~dp0\..\bin\*.dll ..\rel\%relpath%
-copy %~dp0\..\bin\*.dll ..\rel\%relpath%-debug
+:: Absolute paths for Windows file operations (mkdir, copy, del, xcopy)
+for %%i in ("%baseDir%\..\rel\%relpath%") do set "releaseDir=%%~fi"
+for %%i in ("%baseDir%\..\rel\%relpath%-debug") do set "debugDir=%%~fi"
+
+mkdir "%releaseDir%" 2>nul
+mkdir "%debugDir%" 2>nul
+del /s /q "%releaseDir%\*.*"
+del /s /q "%debugDir%\*.*"
+xcopy dat "%releaseDir%\dat" /i /s /q /y /e
+xcopy dat "%debugDir%\dat" /i /s /q /y /e
+copy "%~dp0..\bin\*.dll" "%releaseDir%"
+copy "%~dp0..\bin\*.dll" "%debugDir%"
 (
 echo [trace]
 echo level=none
-) > ..\rel\%relpath%\allegro5.cfg
+) > "%releaseDir%\allegro5.cfg"
 
-SET saveString=%2 turnkey-mode off save-release ..\rel\%relpath%\%~n1 save-debug ..\rel\%relpath%-debug\%~n1-debug
-SET configString=debug off validations off safety off turnkey-mode on
+:: Compiler flags – keep them short
+set "configString=debug off validations off safety off turnkey-mode on"
 
+:: Relative paths for the compiler (no ".." – they are relative to the script's starting directory)
+set "releaseRel=..\rel\%relpath%\%~n1"
+set "debugRel=..\rel\%relpath%-debug\%~n1-debug"
+:: Convert backslashes to forward slashes to be extra safe in Forth
+set "releaseRel=%releaseRel:\=/%"
+set "debugRel=%debugRel:\=/%"
+
+:: Determine source file – use forward slashes for the Forth parser
 if exist %1.vfx (
-    engineer.exe %configString% include %1.vfx %saveString%
+    set "source=include %1.vfx"
+    set "source=!source:\=/!"
 ) else if exist %1\main.vfx (
-    engineer.exe %configString% ldp %1 %saveString%
+    set "source=include %1\main.vfx"
+    set "source=!source:\=/!"
 ) else if exist main.vfx (
-    engineer.exe %configString% ^^ main %saveString%
+    set "source=^^ main"
 ) else (
-    engineer.exe %configString% ^^ engineer %saveString%
+    set "source=^^ engineer"
+)
+
+:: Execute the compiler with relative output paths (and optional Forth code)
+if "%2"=="" (
+    engineer.exe %configString% %source% turnkey-mode off save-release %releaseRel% save-debug %debugRel%
+) else (
+    engineer.exe %configString% %source% %2 turnkey-mode off save-release %releaseRel% save-debug %debugRel%
 )

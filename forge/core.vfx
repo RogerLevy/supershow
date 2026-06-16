@@ -611,8 +611,8 @@ variable fnd-xt
     ;] WalkAllWords
     fnd-xt @ ;
 
-
 s" main" find-top >name hidename
+s" bitmap" find-top >name hidename
 
 : xchg  ( addr1 addr2 -- )
     over @ over @ swap rot ! swap ! ;

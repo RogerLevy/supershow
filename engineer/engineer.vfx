@@ -180,6 +180,7 @@ variable SaveChain
     SaveChain ExecChain ;
 
 redef : save  WalkSaveChain  save ;
+redef : save-exe  WalkSaveChain  save-exe ;
 
 \ =============================================================================
 \ Turnkey creation

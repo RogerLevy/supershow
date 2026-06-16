@@ -791,7 +791,7 @@ extern "C" void al_set_window_position( void * display, int x, int y );
 \ extern "C" al_set_window_title( );
 extern "C" void al_show_mouse_cursor( void * display );
 extern "C" bool al_show_native_file_dialog( void * display, void * dialog );
-\ extern "C" al_show_native_message_box( );
+extern "C" int al_show_native_message_box( void * display, char * title, char * heading, char * text, char * buttons, int flags );
 \ extern "C" al_shutdown_font_addon( );
 \ extern "C" al_shutdown_image_addon( );
 \ extern "C" al_shutdown_native_dialog_addon( );
