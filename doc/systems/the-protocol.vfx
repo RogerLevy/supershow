@@ -1,0 +1,42 @@
+\ --- The Protocol (so far) ---
+
+entity-count
+entity-mask   \ collision mask
+entity-layers \ collision layers
+entity-box
+entity-hit    \ ???
+
+
+x y           \ system position (if relevant)
+w h dims      \ system metrics (if relevant)
+
+each-cohort
+
+
+\ Already-existant protocols in Supershow - just a few examples
+
+render
+draw
+each
+
+\ --- More ideas --- 
+
+entity-attack ( base-damage id - )
+entity-effect ( zeffect amt id - )  \ for fire, emp, poison, wtc
+
+
+\ Inventory system
+
+register-item ( renderxt zname - )  \ or maybe it's not a protocol, you have to subclass the inventory and hard-code all the items at compile-time
+add-item
+take-item   
+item-count
+on-item-selected
+items
+
+    \ how to have a Secret of Mana-style ring menu and a Chrono Trigger-style management screen for the same inventory?
+    \ integrate them into the same module and expose things as 3 %system classes the client can instantiate
+    \ the inventory 
+    \ the ring menu 
+    \ the management screen - though this might actually need to part of a larger game-specific UI that imports the inventory module
+

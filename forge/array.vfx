@@ -110,7 +110,7 @@ trait;
     r> enough-flag !
     throw ;
 
-%iterable :: .items ( array - )
+%iterable :: .items ( iterable - )
     item-count @ for i this el? loop ;
 
 \ ==============================================================================

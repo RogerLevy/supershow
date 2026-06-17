@@ -1,0 +1,100 @@
+Goal: Build flatter, more self-contained game systems without sacrificing interoperability or tooling.
+
+Example structure:
+• Fixed array of background objects
+• Pool of dynamic objects (monsters, bullets, etc.)
+• Runtime manager
+
+All of the above belong exclusively to a particular scene/level/module.
+
+Now introduce a foreign system:
+• Physics module
+• Contains bouncing balls
+• Uses its own storage, update logic, and assumptions3
+
+The challenge is allowing these systems to communicate without needing to understand each other's
+internal data structures, object layouts, or file formats.
+
+Possible direction:
+Introduce one or more protocols.
+
+Entity Protocol
+• Bind entities between modules
+• Query entities 
+• Control entities
+• Exchange limited, standardized information
+• Avoid exposing implementation details
+
+
+Editor/Data Protocol
+
+Problem:
+There is currently no bridge between code and editable data.
+Simple example:
+data: 
+x , y , spriteid , attributes ,
+x , y , spriteid , attributes ,
+...
+data;
+
+Idea:
+Descriptors function similarly to Allegro vertex declarations.
+
+Instead of:
+[x, y, normal, color, uv]
+
+Use:
+[data type,
+row size,
+position offset,
+renderer XT,
+etc.]
+
+The descriptor tells tools:
+• How to display data
+• How to edit data
+• How to render data
+• How to interpret records
+
+Possible DATA: behavior:
+• Stores file and line information
+• Selecting an object in the editor jumps directly to source
+• Saving source refreshes editor
+
+Open question:
+Should editing occur inline in source code?
+
+Inline editing requires:
+• Rebuilding DATA:/DATA; blocks
+• Preserving all fields
+• Tracking source formatting
+
+Potentially fragile.
+
+Alternative:
+• Data stored in external files
+• Visual editor edits external files
+• Text editor edits source
+• Manual reload/sync
+• No hot synchronization
+
+Likely simpler.
+
+Restricted, limited-scope systems that might not use %actor are going to be good for:
+
+• environments
+• particle systems
+• rigid body systems
+• weather systems
+• visual fx
+• menus
+• inventory systems
+• minigames
+• dialogue boxes
+• UI
+
+A "zelda-like" system would manage the much looser constraints of a dynamic, %actor-based world with top-down mechanics.
+It could just use the default Stage, or create its own. 
+
+Things that need a lot of information to decide what to do should be integrated inside their own system. 
+Things like projectiles or tilemaps in the zelda-like would be considered a feature of zelda-like, not a building-block to somehow be connected in.

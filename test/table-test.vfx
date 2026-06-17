@@ -1,0 +1,99 @@
+module
+import %supershow%/src/supershow.vfx
+private
+
+0 value a
+continuation: a!>  a >r swap to a execute r> to a ;
+: a@+  a @  cell +to a ;
+
+
+trait: %editable
+    :: edit-render ( actor - ) drop ;
+trait;
+
+c: %actor strat ;  \ add strat prop
+
+\ [ x , y , strategy , ]
+3 cells descriptor: playfieldobj
+
+    :data>actor
+        a!>   a@+ a@+ at   %actor one { a@+ strat !   this } ;
+    
+    :actor>code
+        x @ >i "n," y @ >i "n," strat @ "name," ;
+
+    :edit
+        \ custom mouse controls
+        \ custom key commands
+
+        \ render the actor
+        me strat @ edit-render
+
+        \ custom widgets rendering 
+    ;
+
+descriptor;
+
+
+
+c: %playfield-type  %editable bmp hitbox 16 ;
+
+%playfield-type :: edit-render ( actor - )
+    { x 2@ 2>i at } bmp @ cput ;
+
+bitmap %idir%\dat\gfx\trees.png
+trees.png 64 64 tileset-from trees.ts
+
+create tree1 %playfield-type dmake {
+    trees.ts 0 tile bmp !
+    \ hitbox ...
+}
+
+create tree2 %playfield-type dmake {
+    trees.ts 1 tile bmp !
+    \ hitbox ...
+}
+
+: somewhere gamew rnd gameh rnd ;
+
+playfieldobj data: forest
+    somewhere 2, tree1 ,
+    somewhere 2, tree2 ,
+    somewhere 2, tree2 ,
+    somewhere 2, tree1 ,
+    somewhere 2, tree2 ,
+    somewhere 2, tree1 ,
+    somewhere 2, tree1 ,
+    somewhere 2, tree2 ,
+    somewhere 2, tree2 ,
+    somewhere 2, tree1 ,
+data;
+
+
+: ~tree ( a - )
+    a!>   a@+ a@+ at   a@+ >bmp @ cput ;
+
+\ editor render: draw each inflated actor via its strategy's edit-draw
+\ it'll look exactly the same
+: ~editor ( - )
+    [: me forest edit-update ;] each-active ;
+
+\ decode: inflate every row into a live actor on the stage
+: edit-forest ( - )
+    $808080ff backdrop !
+    just
+    forest #items for  i forest data>actor drop  loop 
+    show> ~editor ;
+
+\ encode: regenerate the source rows from the live actors
+: forest. ( - )
+    [: me forest actor>code cr ;] each-active ;
+
+public
+
+: main
+    $50e040ff backdrop !
+    show>
+        [: ~tree ;] forest each ;
+
+main

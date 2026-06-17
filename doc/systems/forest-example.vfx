@@ -1,0 +1,97 @@
+\ static "playfield" module example
+
+module [forest]
+
+\ there is no external/changeable map data in this example.
+\ this IS the playfield.
+
+\ data: tells the "visual list editor" what data is stored and where 
+\ this list is (what file, what lines)
+\ %playfieldobj is a descriptor that is either defined in this file, 
+\ or is an imported "universal static entity" descriptor.  (doesn't matter.)
+
+playfieldobj: tree1   <sprid> , x1 , y1 , x2 , y2 , 
+playfieldobj: tree2   <sprid> , x1 , y1 , x2 , y2 , 
+
+%playfieldobj data: forest.list   \ creates an wide %array called forest.list
+    0 , 0 , tree1 ,   \ tree1 and tree2 are just strategies with no state
+    0 , 0 , tree2 , 
+    0 , 0 , tree1 , 
+    0 , 0 , tree1 , 
+    0 , 0 , tree2 , 
+data;
+
+: ~forest 
+    [: a!> a@+ a@+ at a@+ draw ;] forest.list each ;
+
+\ there is only one forest playfield, but we still need an object
+\ that can plug into the system.
+\ perhaps %system in turn derives from %actor, or the other way around
+c: %forest  %system w h ;
+
+%forest :: entity-count ( - n )
+    forest.list #items ;
+
+%forest :: entity-box ( n - x1. y1. x2. y2. )
+    forest.list el@ a!> a@+ >p a@+ >p a@+ dims ;
+
+%forest :: entity-solid? ( n - flag )
+    drop true ;
+
+\ all %forest needs is to render.  
+%forest :: render
+    ~forest ;
+
+%forest manager: forest  \ this functions as an entry point.  forest gets stored in a static property of %forest
+                        \ not sure if we could just use OBJECT or if %FOREST needs to have a stored "entry point"
+    320. 240. w 2!      \ just a single screen
+manager;
+
+\ client-game.vfx:
+
+import forest      \ our playfield
+import zelda-like  \ top-down npc's with psuedo-3d physics
+
+\ zelda-like npc's have a "z" property so they can jump/fall and cast a convincing shadow on the ground
+\ but the forest doesn't have a concept of that, just a bunch of boxes, at the bases of the trees
+
+zelda-like forest connect  \ CONNECT mutually adds the systems to each other's lists of cohorts
+
+\ i suppose there are cases where one-directional registering would be needed
+forest zelda-like register \ zelda-like knows about forest, forest does not know about zelda-like
+
+: main
+    \ just singleton systems so far
+    just
+    forest load  \ adds to the list of active %system's and starts it up
+    zelda-like load
+;
+
+\ you do not have to LOAD systems to use them.
+\ maybe you just want the visuals
+
+: my-renderer
+    show> ... forest render[&animate?] ... ;
+
+
+
+\ zelda-like.vfx:
+
+%zelda-like :: start
+    physics>  
+        \ query registered system's entities and send collision events back
+        [:
+            \ move and slide npcs ...
+            [:
+                {: sys :}
+                sys entity-count for
+                    my-lyr i sys entity-mask and if
+                        i sys entity-box hit-me? if  me npc>id i sys entity-hit  then  
+                        i sys entity-box push-me-out-of
+                    then
+                loop
+            ;] each-cohort  \ only loaded-and-active systems that are registered with this system
+        ;] each-active
+;
+
+

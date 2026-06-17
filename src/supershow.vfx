@@ -48,6 +48,7 @@ module [supershow]
 	include cgrid                \ Broad-phase AABB collision grid
 	include tilecol              \ Tilemap slide collision & tile reading
 	include scene                \ JSON scene save/load
+	include table                \ Flat source-defined data tables + editor codec
 
 	\ ?
 	include border               \ TV border / ininclude 

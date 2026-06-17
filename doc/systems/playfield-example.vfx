@@ -1,0 +1,83 @@
+\ Generic reusable %playfield
+
+module [playfield]
+
+c: %playfield  %system w h solid ;
+
+%playfield :: entity-count ( - n )
+    forest.list #items ;
+
+%playfield :: entity-box ( n - x1. y1. x2. y2. )
+    forest.list el@ a!> a@+ >p a@+ >p a@+ dims ;
+
+%playfield :: entity-solid? ( n - flag )
+    drop solid @ ;  \ playfield-wide solidity; to have mixed-solidity environments, you could stack playfields.
+
+: ~playfield
+    [: a!> a@+ a@+ at a@+ draw ;] swap each ;
+
+
+\ Simplified %forest
+
+playfieldobj: tree1   <sprid> , x1 , y1 , x2 , y2 , 
+playfieldobj: tree2   <sprid> , x1 , y1 , x2 , y2 , 
+
+%playfieldobj data: forest.list 
+    0 , 0 , tree1 ,   
+    0 , 0 , tree2 , 
+    0 , 0 , tree1 , 
+    0 , 0 , tree1 , 
+    0 , 0 , tree2 , 
+data;
+
+c: %forest %playfield ;
+
+%forest :: render
+    forest.list ~playfield ;
+
+%forest manager: forest 
+    320. 240. w 2!         \ could easily be a default so we wouldn't even have to say this
+    solid on
+manager;
+
+
+\ compare:
+
+class: %tree1
+    template { 123 sprid !   x1 y1 x2 y2 hitbox 4!  solid lyr ! } 
+class;
+
+class: %tree2
+    template { 123 sprid !   x1 y1 x2 y2 hitbox 4!  solid lyr ! } 
+class;
+
+: load-forest
+    0 0 at  %tree1 one drop
+    0 0 at  %tree2 one drop
+    0 0 at  %tree1 one drop
+    0 0 at  %tree2 one drop
+    0 0 at  %tree1 one drop 
+;
+
+\ or 
+
+jsonfile levels/forest.json
+
+: load-forest
+    forest.json load-scene 
+    320. 240. playfield-bounds 2! 
+    enter-playfield-mode ;
+
+\ the code is smaller, but it's deceptive.
+\ there is a ton of possibility for runtime errors, 
+\ such as accidental mutation or deletion of trees
+\ or loading the wrong json file
+\ or using a universal editor that needs to know a lot about different trees
+\ which we have to maintain
+
+\ maybe a game where we want that exists.  but why not make 
+\ it easy to build exactly what we want right now, without
+\ having to make it work in a universal system , and very likely
+\ account for all likely contingencies?  (small code now, but
+\ as bugs appear, kludges and guards are likely to accumulate)
+

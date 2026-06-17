@@ -1,0 +1,77 @@
+\ =============================================================================
+\ Data tables — flat, source-defined entity tables with an editor codec
+\ =============================================================================
+\ A %table is a read-only %iterable of fixed-stride rows declared inline in
+\ source with DATA: ... DATA; (or the lower-level table: ... table;). Each table
+\ records its source file + line so the editor can jump to / regenerate it.
+\
+\ A %descriptor bundles the per-table codec the editor needs but the game does
+\ not: data>actor (decode a row into a live actor), actor>code (encode an actor
+\ back into a source row), and edit (per-table editor controls/overlays). The
+\ game reads the table flat; only the editor inflates rows to actors and writes
+\ them back.
+\ =============================================================================
+
+module [supershow]
+public
+
+class: %table
+    is-a %iterable           \ free each/#items; rows are opaque, so item-type stays null
+    prop desc     :addr      \ → codec + edit: hooks (editor only)
+    256 nprop srcpath$ :cstring
+    prop src-line :int
+    prop stride   :int       \ row size
+    prop data     :addr      
+class;
+
+%table :: el@ ( n - a )
+    stride @ * data @ + ;
+
+%table :: el? ( n - )
+    cr dup . this el@ stride @ dump ;
+
+: table: ( stride <name> - ) ( - table )
+    create %table dmake { stride !  here data !
+    CurrSourceName drop zcount srcpath$ place    \ full path, for editor jump-to-source
+    line# @ src-line ! ;                         \ line of the DATA:/table: statement
+
+: table; ( - ) 
+    here data @ - stride @ / item-count ! } ;
+
+
+class: %descriptor
+    prop stride :int
+    prop 'data>actor :xt    \ decode: row addr -> live actor (returns actor)
+    prop 'actor>code :xt    \ encode: actor (scoped) -> regenerated source text
+    prop 'edit       :xt    \ editor hook: custom mouse / keys / widget overlays
+class;
+
+: data: ( descriptor <name> - ) ( - table )
+    dup >stride @ table: 
+    desc ! ;
+
+: data; ( - )
+    table; ;
+
+: data>actor ( n table - actor ) 
+    swap over el@ swap -> desc @ -> 'data>actor @ execute ;
+
+: actor>code ( actor table - )
+    -> desc @ -> 'actor>code @ swap { execute } ;
+
+: edit-update ( actor table - )
+    -> desc @ -> 'edit @ swap { execute } ;
+
+: descriptor: ( stride <name> - ) ( - descriptor )
+    create %descriptor dmake {   stride ! ;
+
+: descriptor;
+    } ;
+
+: :data>actor ( - ) ( a - actor ) :noname 'data>actor ! ;
+: :actor>code ( - ) ( - )   :noname 'actor>code ! ;
+: :edit       ( - ) ( - )   :noname 'edit ! ;
+
+: "n," ( n - ) f" %n , " type ;
+: "s," ( a len - ) f" %s , " type ;
+: "name," ( a - ) body>name "s," ;

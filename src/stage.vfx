@@ -22,7 +22,7 @@ continuation: actives> ( - ) ( - )
     [: { en @ if xt execute then } ;] stg@ each
     r> to xt ;
 
-: each-active ( xt - )
+: each-active ( xt - ) ( - )
     xt >r to xt
     [: { en @ if xt execute then } ;] stg@ each
     r> to xt ;

@@ -1,0 +1,22 @@
+c: %playfieldobj-actor  strat ;
+
+: "n," f" %n , " type ;
+: "name," body>name f" %s , " type ;
+
+descriptor: playfieldobj
+
+    \ [ x , y , strategy , ]
+
+    data>actor:
+        a!>   a@+ a@+ at   %playfieldobj-actor one { a@+ load-strategy  this } ;
+    
+    actor>code:
+        x @ >i "n," y @ >i "n," strat @ "name," ;
+
+    edit:
+        \ custom mouse controls
+        \ custom key commands
+        \ custom widgets rendering 
+    ;
+
+descriptor;
