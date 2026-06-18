@@ -20,7 +20,8 @@ public
 : edit-table ( table - )
     just  to editing                    \ single-table session: clear the stage
     editing #items 0 ?do  i editing data>actor drop  loop
-    editing editor-update ;             \ one-shot 'editor hook (backgrounds etc.)
+    editing editor-update               \ one-shot 'editor hook (backgrounds etc.)
+;
 
 \ TODO: dog-ear comments — preserve each row's trailing "\ ..." across the round-trip.
 \ On load, capture it into a per-actor lstring; on write-back, re-emit it after the row.
@@ -42,17 +43,20 @@ public
     begin  ln n <  ix len <  and  while
         buf ix + c@ 10 = if  ln 1 + to ln  then
         ix 1 + to ix
-    repeat  ix ;
+    repeat  ix
+;
 
 || : bol ( buf off - off' )             \ back up to the start of off's line
     {: buf off :}
     off begin dup 0> while
         1- dup buf + c@ 10 = if  1+ exit  then
-    repeat ;
+    repeat
+;
 
 || : find$ ( buf len a u - off )        \ first byte offset of needle, or -1
     {: buf len nd ndl :}
-    buf len nd ndl search if  drop buf -  else  2drop -1  then ;
+    buf len nd ndl search if  drop buf -  else  2drop -1  then
+;
 
 \ --- write-back --------------------------------------------------------------
 \ Splice the regenerated rows between the DATA: header line (kept) and the
@@ -73,10 +77,12 @@ public
     buf semi +     new pre rowsl + +   len semi -  move      \ keep DATA;...
     new total  editing >srcpath$ count  fwrite
     new free throw
-    rowss lfree ;
+    rowss lfree
+;
 
 : write-back ( - )
     editing >srcpath$ count ['] (splice) fread ;
 
 \ --- save: write-back, then honing reload to refresh the table + REPL ---------
-: save-table ( - )  write-back  editing >srcpath$ count reload-file ;
+: save-table ( - )  
+    write-back  editing >srcpath$ count reload-file ;
