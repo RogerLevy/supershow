@@ -1,0 +1,82 @@
+\ =============================================================================
+\ Table editor — the table-mode half of the sketchpad revamp
+\ =============================================================================
+\ Opens a DATA: table into the stage as editable actors (data>actor), and
+\ writes the live actors back into the table's source block (actor>code).
+\ Game code never needs this — it reads tables flat. Primitives: src/table.vfx.
+\ Only the DATA: block's rows are rewritten; the rest of the file is untouched.
+\ =============================================================================
+
+module [table-edit]
+import %supershow%/src/supershow.vfx
+import %supershow%/lib/lstrout.vfx     \ lstrout (lcount/lfree come in via supershow)
+import %supershow%/lib/fstools.vfx     \ fread fwrite
+public
+
+0 value editing      \ the %table currently open for editing
+
+\ --- load a table for editing ------------------------------------------------
+
+: edit-table ( table - )
+    just  to editing                    \ single-table session: clear the stage
+    editing #items 0 ?do  i editing data>actor drop  loop
+    editing editor-update ;             \ one-shot 'editor hook (backgrounds etc.)
+
+\ TODO: dog-ear comments — preserve each row's trailing "\ ..." across the round-trip.
+\ On load, capture it into a per-actor lstring; on write-back, re-emit it after the row.
+
+\ --- regenerate the rows as source text --------------------------------------
+\ actor>code types one row; wrap each with indent + newline, capture via lstrout.
+
+|| : (rows) ( - )
+    [: ( )  ."     " me editing actor>code  cr ;] each-active ;  \ the ( ) is just a syntax highlighting guard 
+
+: table-rows>$ ( - lstr )               \ caller lfrees
+    ['] (rows) lstrout ;
+
+\ --- locate the DATA: block in a slurped source buffer -----------------------
+
+|| : nth-line ( buf len n - off )       \ byte offset of the start of line n (1-based)
+    {: buf len n | ix ln :}
+    1 to ln  0 to ix
+    begin  ln n <  ix len <  and  while
+        buf ix + c@ 10 = if  ln 1 + to ln  then
+        ix 1 + to ix
+    repeat  ix ;
+
+|| : bol ( buf off - off' )             \ back up to the start of off's line
+    {: buf off :}
+    off begin dup 0> while
+        1- dup buf + c@ 10 = if  1+ exit  then
+    repeat ;
+
+|| : find$ ( buf len a u - off )        \ first byte offset of needle, or -1
+    {: buf len nd ndl :}
+    buf len nd ndl search if  drop buf -  else  2drop -1  then ;
+
+\ --- write-back --------------------------------------------------------------
+\ Splice the regenerated rows between the DATA: header line (kept) and the
+\ DATA; marker line (kept). Runs as fread's callback so the slurped buffer is
+\ freed for us. src-line is 1-based; the DATA; marker must be lowercase.
+
+|| : (splice) ( buf len - )
+    {: buf len | pre semi rowss rowsa rowsl total new :}
+    buf len  editing >src-line @ 1+  nth-line  to pre        \ end of the DATA: line
+    buf  buf pre + len pre - s" data;" find$
+      dup 0< abort" write-back: no data; marker"
+      pre +  bol  to semi                                    \ start of the DATA; line
+    table-rows>$ to rowss   rowss lcount  to rowsl to rowsa
+    pre rowsl +  len semi - +  to total
+    total allocate throw to new
+    buf            new                 pre move              \ keep ...DATA:
+    rowsa          new pre +           rowsl move            \ inject rows
+    buf semi +     new pre rowsl + +   len semi -  move      \ keep DATA;...
+    new total  editing >srcpath$ count  fwrite
+    new free throw
+    rowss lfree ;
+
+: write-back ( - )
+    editing >srcpath$ count ['] (splice) fread ;
+
+\ --- save: write-back, then honing reload to refresh the table + REPL ---------
+: save-table ( - )  write-back  editing >srcpath$ count reload-file ;

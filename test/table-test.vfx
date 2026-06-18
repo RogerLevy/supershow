@@ -1,5 +1,6 @@
 module
 import %supershow%/src/supershow.vfx
+import %supershow%/sketchpad/table-edit.vfx
 private
 
 0 value a
@@ -63,16 +64,16 @@ create tree2 %playfield-type dmake {
 : somewhere gamew rnd gameh rnd ;
 
 playfield data: forest
-    somewhere 2, tree1 ,
-    somewhere 2, tree2 ,
-    somewhere 2, tree2 ,
-    somewhere 2, tree1 ,
-    somewhere 2, tree2 ,
-    somewhere 2, tree1 ,
-    somewhere 2, tree1 ,
-    somewhere 2, tree2 ,
-    somewhere 2, tree2 ,
-    somewhere 2, tree1 ,
+    298 , 158 , TREE1 , 
+    285 , 33 , TREE2 , 
+    60 , 204 , TREE2 , 
+    2 , 218 , TREE1 , 
+    196 , 105 , TREE2 , 
+    271 , 229 , TREE1 , 
+    121 , 138 , TREE1 , 
+    0 , 232 , TREE2 , 
+    81 , 161 , TREE2 , 
+    218 , 37 , TREE1 , 
 data;
 
 
@@ -94,6 +95,17 @@ data;
 \ encode: regenerate the source rows from the live actors
 : forest. ( - )
     [: me forest actor>code cr ;] each-active ;
+
+\ randomize every inflated actor (proves write-back captures live state, not the file)
+: scramble ( - )
+    [: gamew rnd gameh rnd 2>p x 2! ;] each-active ;
+
+\ load forest, scramble positions, write the changed rows back (to the .new sibling)
+: test-writeback ( - )
+    forest edit-table
+    scramble
+    write-back
+    show> ~editor ;
 
 public
 

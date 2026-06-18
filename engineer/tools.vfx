@@ -71,6 +71,9 @@ forth-public
     last-file$ c@ 0= abort" No file loaded."
     honing on do-include honing off ;
 
+: reload-file ( a u - )   \ programmatic honing reload of a specific file (for editors, CTRL+R)
+    last-file$ place  honing on do-include honing off ;
+
 : hone! ( a len - )
     dup 0= abort" Tried to set load action to null string."
     last-file$ place honing on ;
