@@ -80,7 +80,7 @@ forth-public
     2dup s" f"  s= if 2drop TYPE_FLOAT   meta-type ! exit then
     2dup s" xt" s= if 2drop TYPE_XT      meta-type ! exit then
     over c@ [char] % = if
-        sfind dup 0= if drop -1 abort" Unknown class in property type annotation" then
+        sfind 0= if drop -1 abort" Unknown class in property type annotation" then
         >body meta-ref !  TYPE_OBJREF meta-type !  exit
     then
     2drop -1 abort" Unknown property type code" ;
