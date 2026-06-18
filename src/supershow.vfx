@@ -58,3 +58,14 @@ module [supershow]
 	include autoload
 	include level                \ JSON level loader (tilemap layers + scene actors)
 	include runtime
+
+
+\ =============================================================================
+\ Tools
+\ =============================================================================
+
+debug @ [if]
+    include %idir%/tools.vfx                \ Development tools
+    \ include %supershow%/sketchpad/sketchpad.vfx  \ Stage editor
+    \ s" sketchpad" <f12> func
+[then]

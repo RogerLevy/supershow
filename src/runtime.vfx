@@ -75,12 +75,3 @@ init-supershow
 \     %scene load-default-dir
 \     s" modes.vfx" ?included ;
 
-\ =============================================================================
-\ Tools
-\ =============================================================================
-
-debug @ [if]
-    include %idir%/tools.vfx                \ Development tools
-    \ include %idir%/sketchpad/sketchpad.vfx  \ Stage editor
-    \ s" sketchpad" <f12> func
-[then]

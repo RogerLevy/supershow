@@ -1,6 +1,10 @@
 module
 import %supershow%/src/supershow.vfx
 import %supershow%/sketchpad/table-edit.vfx
+
+\ temporary:
+import %supershow%/sketchpad/sketchpad.vfx
+
 private
 
 0 value a
@@ -39,6 +43,11 @@ c: %actor strat ;  \ add strat prop
         drop
     ;
 
+    :pick   \ clickable area = the strategy's sprite, else 16x16
+        strat @ >bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then
+        x 2@ 2swap box-around
+    ;
+
 descriptor;
 
 
@@ -64,16 +73,17 @@ create tree2 %playfield-type dmake {
 : somewhere gamew rnd gameh rnd ;
 
 playfield data: forest
-    298 , 158 , TREE1 , 
-    285 , 33 , TREE2 , 
-    60 , 204 , TREE2 , 
-    2 , 218 , TREE1 , 
-    196 , 105 , TREE2 , 
-    271 , 229 , TREE1 , 
-    121 , 138 , TREE1 , 
-    0 , 232 , TREE2 , 
-    81 , 161 , TREE2 , 
-    218 , 37 , TREE1 , 
+    49 , 120 , TREE1 , 
+    280 , 44 , TREE2 , 
+    107 , 122 , TREE2 , 
+    221 , 120 , TREE1 , 
+    282 , 120 , TREE1 , 
+    106 , 45 , TREE1 , 
+    46 , 47 , TREE2 , 
+    217 , 44 , TREE1 , 
+    264 , 189 , TREE1 , 
+    109 , 191 , TREE1 , 
+    46 , 191 , TREE1 , 
 data;
 
 
@@ -115,3 +125,5 @@ public
         [: ~tree ;] forest each ;
 
 main
+
+design forest

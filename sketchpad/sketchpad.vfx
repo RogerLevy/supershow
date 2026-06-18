@@ -1,173 +1,146 @@
-\ ==============================================================================
-\ SKETCHPAD mode
-
-\ SKETCHPAD: vocabulary
-\ THIS - value pointing to the current scene
-\ SAVEAS <name> - create a scene (along with the file) and assign it to THIS.
-\                 no extension.
-\ EDIT <name>   - create or load a scene - no extension.
-
-\ ( startup: create scenes from every file in dat/scn/ and scenes: )
-
-\ ( make a bunch of actors )
-
-\ saveas myscene   \ create a scene
-
-\ ( make some changes )
-
-\ CTRL+S - saves THIS
-
-\ otherscene load   \ instantiate more actors from pre-existing scene
-
-\ edit otherscene   \ set THIS to the given scene. this would clear the stage 
-                    \ and load the scene.
-\ ==============================================================================
-
-private
-
-fload %supershow%/lib/help.vfx
-
-\ ==============================================================================
-
-public
-
-defer sketchpad-overlay
-['] noop is sketchpad-overlay
-
-private
-
-create this-path 256 allot   \ current scene file path (counted string)
-
-\ ==============================================================================
-
-\ Commands
-
-: (scene-path)  bl parse this-path place ;
-
-: (this-set?)  this-path c@ 0= abort" No current scene!  Required: `SAVEAS <name>` or `EDIT <name>`" ;
-
-command : save ( - )
-    \ Save current scene to current path.
-    (this-set?)
-    this-path count save-scene ;
-
-command : saveas ( <name> - )
-    \ Save stage as named scene (.json).
-    bl parse f" dat/scn/%s.json" this-path place   save ;
-
-command : edit ( <name> - )
-    \ Clear stage and load named scene.
-    bl parse f" dat/scn/%s.json" this-path place   just   this-path count load-scene ;
-
-command : ctrl+s ( - )
-    \ Hotkey: Save current scene.
-    save ;
-
-: order-swap  get-order >r swap r> set-order ;
-
-command : as ( obj - )
-    \ Scope into the given object.
-    as  ['] sketchpad>> >body @ +order  order-swap ;
-
+\ =============================================================================
+\ Sketchpad — visual editor for tables (and, phase 2, scenes)
+\ =============================================================================
+\ design <table>   open a DATA: table for editing (table mode)
+\ open <file>      open a scene (.json)            -- phase 2
+\ save             write the current target        (ctrl+s)
+\ saveas <file>    scene only                       -- phase 2
+\
+\ GUI: click=pick, dbl-click=jump-to-source (table), drag=move, ctrl+drag=copy,
+\      del=delete, space+drag=pan, ctrl+s=save, ctrl+r=reload (table).
+\ The clickable area of each actor comes from the table's pick-box hook.
 \ =============================================================================
 
-0 value mx 
-0 value my
-0 value dragee
+module [sketchpad]
+import %supershow%/src/supershow.vfx
+import %idir%/table-edit.vfx
+import %supershow%/addons/shapes.vfx
+import %supershow%/lib/help.vfx
 
-: editable? ( obj - flag ) 
-    serializable? ;
+private
 
-: bmpbox
-    {: | w h :}
-    bmp @ bmpwh to h to w
-    x 2@ 2>i w h 2 2 2/ 2- 2dup w h 2+ ;
+\ ---- mode -------------------------------------------------------------------
+1 constant +table
+2 constant +scene
+0 value mode
+: in-table? ( - flag )  mode +table = ;
 
-: pick ( - obj | 0 )
+\ ---- state ------------------------------------------------------------------
+0 value selected                 \ picked actor (0 = none)
+0 value camx   0 value camy      \ camera origin, fixed pixels
+0 value pressx  0 value pressy   \ screen pos at mouse-down (click vs drag)
+0 value moved?                   \ has this drag passed the threshold
+0 value copy-pending?            \ ctrl was down at mouse-down
+0 value last-click-ms            \ for double-click detection
+0 value last-actor
+0 value panning?
+0 value pan-lastx  0 value pan-lasty
+
+1   constant drag-threshold      \ px of movement before a press becomes a drag
+350 constant dclick-ms
+
+\ ---- camera / mouse ---------------------------------------------------------
+\ Pure translate camera: screen delta == world delta, so mickey moves actors 1:1.
+: mouse-world ( - x. y. )  pmouse camx camy 2+ ;
+
+\ ---- picking ----------------------------------------------------------------
+: pick ( - actor|0 )
     0
-    actives> 
-        bmp @ -exit
-        this editable? -exit
-        mouse 2dup bmpbox overlap? if
-            drop this 
-        then ;
-
-: copy-actor ( obj - obj` )
-    %actor one copy
-    dup actors index over -> id !
-    dup start ;
-
-: ?copy ( obj - obj` )
-    dup ctrl? if copy-actor ." copy" cr nip then ;
-
-: dragging ( - )
-    lb <lb - 
-    case
-        1 of pick ?dup if dup as ?copy dup .summary to dragee then endof
-        0 of dragee ?dup if { lb if mickey 2>p x 2+! then } then endof
-        -1 of 0 to dragee endof
-    endcase ;
-
-: deleting ( - )
-    rb <rb - 
-    case
-        1 of pick ?dup if unload then endof
-    endcase ;
-
-: input ( - )
-    dragging
-    deleting
+    [: mouse-world  me the-table pick-box pt-rect? if  drop me  then ;] each-active
 ;
 
-variable flicker-ctr
+\ ---- copy / move ------------------------------------------------------------
+: copy-selected ( - actor )  selected  copy-actor ;   \ clone, stays on stage
+: do-move ( - )  selected -exit  pmickey selected >x 2+! ;
 
-: flicker ( - )
-    1 flicker-ctr +!  flicker-ctr @ 1 and ?exit this draw ;
+: bring-to-front ( - )  selected dup >parent @ push ;
+: send-to-back ( - )  selected dup >parent @ unshift ;
 
-: sprites ( - )
-    1 batch> actives> this editable? if this draw else flicker then ;
+\ ---- jump to source (table mode) --------------------------------------------
+\ TODO: upgrade to work like LOCATE (configured editor + exact row, not block start).
+: jump-to-source ( - )
+    the-table >src-line @  the-table >srcpath$ count
+    f" vscode.exe -g %s:%n" >zpad ExecDoc drop
+;
 
-aka _hold hold     \ shadow system variable
-variable hold      \ new private variable will work with f8 and persist
+\ ---- pan on space + LMB drag (after GreySplatter try-pan) --------------------
+: ?pan ( - flag )
+    {: | mx my :}
+    <space> held? <lmb> held? and 0= if  0 to panning?  0 exit  then
+    mouse to my to mx
+    panning? not if  mx to pan-lastx  my to pan-lasty  -1 to panning?  then
+    pan-lastx mx -  >p +to camx
+    pan-lasty my -  >p +to camy
+    mx to pan-lastx  my to pan-lasty
+    -1
+;
 
-variable 'oldshow
-: ?toggle-mode
-    'show @ ip>nfa name> r@ ip>nfa name> = if
-        r> drop \ this is fine with locals because it's not a continuation
-        'oldshow @ ip>nfa name> execute
-    else
-        'show @ 'oldshow !
-    then ;
+\ ---- click / drag / double-click --------------------------------------------
+: moved-far? ( - flag )
+    mouse {: mx my :}
+    mx pressx - abs  my pressy - abs  max  drag-threshold >
+;
 
-\ =============================================================================
+: on-press ( - )
+    mouse to pressy to pressx
+    0 to moved?
+    ctrl? to copy-pending?
+    pick to selected
+;
 
-private
+: ?start-drag ( - )
+    moved? ?exit
+    moved-far? -exit
+    -1 to moved?
+    copy-pending? if  copy-selected to selected  0 to copy-pending?  then
+;
 
-create bgc 0.5e sf, 0.5e sf, 0.5e sf, 1e sf,
+: on-click ( - )                 \ a press that released without dragging
+    selected -exit
+    mstime last-click-ms -  dclick-ms <   selected last-actor =  and
+    in-table? and if  jump-to-source  then
+    mstime to last-click-ms  selected to last-actor
+;
 
-\ redef : cls ( - )
-\     bgc 4f@ al_clear_to_color ;
+: ?mouse ( - )
+    <lmb> pressed? if  on-press exit  then
+    <lmb> held?    if  ?start-drag  moved? if do-move then  exit  then
+    <lmb> letgo?   if  moved? not if on-click then  then
+;
 
-command : backdrop ( f-r f-g f-b f-a - )
-    \ Set tool backdrop color.
-    bgc 4f! ;
+\ ---- key actions ------------------------------------------------------------
+: do-save ( - )  in-table? if  write-back  then ;
+: ?delete ( - )  <del> pressed? if  selected ?dup if  unload  0 to selected  then  then ;
+: ?save   ( - )  ctrl? <S> pressed? and if  do-save  then ;
+: ?reload ( - )  in-table? ctrl? <R> pressed? and and if  reload-table  then ;
+: ?order  ( - )  <f> pressed? if bring-to-front then   <b> pressed? if send-to-back then ;
 
+: input ( - )
+    ?pan ?exit
+    ?mouse  ?delete  ?save  ?reload  ?order
+;
+
+\ ---- render -----------------------------------------------------------------
+: ~actors ( - )  [: me the-table edit-update ;] each-active ;
+
+: ~selection ( - )
+    selected -exit
+    selected the-table pick-box  {: x1 y1 x2 y2 :}
+    15 color
+    x1 y1 atp  x2 y2 x1 y1 2- rect
+;
+
+: ~edit ( - )
+    m{  camx negate p>f  camy negate p>f  1e 1e 0e transform
+        ~actors  ~selection
+    m}
+;
+
+\ ---- commands ---------------------------------------------------------------
 public
 
-: sketchpad
-    ?toggle-mode
-    hold on
-    repl on
-    sketchpad>>
-    gamew 2 / gameh 2 / at 
-    show> 
-        hold @ _hold ! 
-        step sprites sketchpad-overlay
-        input ;
-
-\ =============================================================================
-
-honing @ [if]
-sketchpad
-save-order \ TODO: is this needed anymore? (see ?HONE)
-[then]
+command : design ( - <table> )
+    \ Open a DATA: table for editing (table mode).
+    bl parse evaluate  edit-table  +table to mode
+    show>  input  sweep  ~edit
+;

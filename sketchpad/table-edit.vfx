@@ -13,14 +13,14 @@ import %supershow%/lib/lstrout.vfx     \ lstrout (lcount/lfree come in via super
 import %supershow%/lib/fstools.vfx     \ fread fwrite
 public
 
-0 value editing      \ the %table currently open for editing
+0 value the-table      \ the %table currently open for editing
 
 \ --- load a table for editing ------------------------------------------------
 
 : edit-table ( table - )
-    just  to editing                    \ single-table session: clear the stage
-    editing #items 0 ?do  i editing data>actor drop  loop
-    editing editor-update               \ one-shot 'editor hook (backgrounds etc.)
+    just  to the-table                    \ single-table session: clear the stage
+    the-table #items 0 ?do  i the-table data>actor drop  loop
+    the-table editor-update               \ one-shot 'editor hook (backgrounds etc.)
 ;
 
 \ TODO: dog-ear comments — preserve each row's trailing "\ ..." across the round-trip.
@@ -30,7 +30,7 @@ public
 \ actor>code types one row; wrap each with indent + newline, capture via lstrout.
 
 || : (rows) ( - )
-    [: ( )  ."     " me editing actor>code  cr ;] each-active ;  \ the ( ) is just a syntax highlighting guard 
+    [: ( )  ."     " me the-table actor>code  cr ;] each-active ;  \ the ( ) is just a syntax highlighting guard 
 
 : table-rows>$ ( - lstr )               \ caller lfrees
     ['] (rows) lstrout ;
@@ -65,7 +65,7 @@ public
 
 || : (splice) ( buf len - )
     {: buf len | pre semi rowss rowsa rowsl total new :}
-    buf len  editing >src-line @ 1+  nth-line  to pre        \ end of the DATA: line
+    buf len  the-table >src-line @ 1+  nth-line  to pre        \ end of the DATA: line
     buf  buf pre + len pre - s" data;" find$
       dup 0< abort" write-back: no data; marker"
       pre +  bol  to semi                                    \ start of the DATA; line
@@ -75,14 +75,15 @@ public
     buf            new                 pre move              \ keep ...DATA:
     rowsa          new pre +           rowsl move            \ inject rows
     buf semi +     new pre rowsl + +   len semi -  move      \ keep DATA;...
-    new total  editing >srcpath$ count  fwrite
+    new total  the-table >srcpath$ count  fwrite
     new free throw
     rowss lfree
 ;
 
 : write-back ( - )
-    editing >srcpath$ count ['] (splice) fread ;
+    the-table >srcpath$ count ['] (splice) fread ;
 
-\ --- save: write-back, then honing reload to refresh the table + REPL ---------
-: save-table ( - )  
-    write-back  editing >srcpath$ count reload-file ;
+\ Reload the edited table's source file (honing re-include). Editor binds this to CTRL+R;
+\ save (CTRL+S) is write-back only — the two are deliberately separate.
+: reload-table ( - )
+    the-table >srcpath$ count reload-file ;

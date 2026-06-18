@@ -45,13 +45,24 @@ class: %descriptor
     prop 'actor>code :xt    \ encode: actor (scoped) -> regenerated source text
     prop 'edit       :xt    \ editor actor hook: custom mouse / keys / widget overlays
     prop 'editor     :xt    \ editor UI expansion hook: custom global operations
+    prop 'pick       :xt    \ editor: an actor's clickable area -> ( x1. y1. x2. y2. )
 class;
+
+: box-around ( cx. cy. w. h. - x1. y1. x2. y2. )   \ centered box from a size
+    2 2 2/ 2>r
+    2dup 2r@ 2-
+    2swap 2r> 2+
+;
+
+|| : (pick16) ( - x1. y1. x2. y2. )     \ default clickable area: 16x16 centered on pos
+    x 2@ 16. 16. box-around ;
 
 %descriptor >template {
     ['] stub 'data>actor !
     ['] drop 'editor !
     ['] noop 'edit !
     ['] noop 'actor>code !
+    ['] (pick16) 'pick !
 }
 
 : data: ( descriptor <name> - ) ( - table )
@@ -73,6 +84,9 @@ class;
 : editor-update ( table - )
     dup -> desc @ -> 'editor @ execute ;
 
+: pick-box ( actor table - x1. y1. x2. y2. )    \ the actor's clickable area (world coords)
+    -> desc @ -> 'pick @ swap { execute } ;
+
 : descriptor: ( stride <name> - ) ( - descriptor )
     create %descriptor dmake { stride ! ;
 
@@ -82,7 +96,8 @@ class;
 : :data>actor ( - <code;> ) ( a - actor )   :noname 'data>actor ! ;
 : :actor>code ( - <code;> ) ( - )           :noname 'actor>code ! ;
 : :edit       ( - <code;> ) ( - )           :noname 'edit ! ;
-: :editor     ( - <code;> ) ( table - )     :noname 'editor ! ; 
+: :editor     ( - <code;> ) ( table - )     :noname 'editor ! ;
+: :pick       ( - <code;> ) ( - x1. y1. x2. y2. )  :noname 'pick ! ;
 
 : "n," ( n - ) f" %n , " type ;
 : "s," ( a len - ) f" %s , " type ;

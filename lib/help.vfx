@@ -1,4 +1,8 @@
+module
+
 redef variable commands
+
+forth-public
 
 redef : help ( - )
     commands

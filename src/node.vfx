@@ -20,3 +20,12 @@ MAX_NODES %node array nodes
 
 : recycle ( node - )
     dup dlremove  dup >pool @ push ;
+
+: copy-node ( node-src node-dest - )
+    over %node is? not abort" COPY-NODE: Source is not a %node."
+    dup %node is? not abort" COPY-NODE: Dest is not a %node."
+    {
+        ( obj ) %node -> next-ofs @ +   this dup sizeof   %node -> next-ofs @ /string   move   \ preserve node links
+    } 
+;
+
