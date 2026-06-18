@@ -59,8 +59,14 @@ private
 \ ---- jump to source (table mode) --------------------------------------------
 \ TODO: upgrade to work like LOCATE (configured editor + exact row, not block start).
 : jump-to-source ( - )
-    the-table >src-line @  the-table >srcpath$ count
-    f" vscode.exe -g %s:%n" >zpad ExecDoc drop
+    {: | zparams[ 256 ] :}
+    
+    the-table >src-line @  1 +  selected dup >parent @ indexof + 
+    the-table >srcpath$ count
+    f" -g %s:%n" zparams[ zplace
+
+    console@  z" code"  zparams[  wd@ >zpad 
+    1 ShellExecute drop
 ;
 
 \ ---- pan on space + LMB drag (after GreySplatter try-pan) --------------------
@@ -114,10 +120,11 @@ private
 : ?save   ( - )  ctrl? <S> pressed? and if  do-save  then ;
 : ?reload ( - )  in-table? ctrl? <R> pressed? and and if  reload-table  then ;
 : ?order  ( - )  <f> pressed? if bring-to-front then   <b> pressed? if send-to-back then ;
+: ?home   ( - )  <home> pressed? if 0 to camx 0 to camy then ;
 
 : input ( - )
     ?pan ?exit
-    ?mouse  ?delete  ?save  ?reload  ?order
+    ?mouse  ?delete  ?save  ?reload  ?order  ?home
 ;
 
 \ ---- render -----------------------------------------------------------------

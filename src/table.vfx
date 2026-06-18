@@ -97,7 +97,7 @@ class;
 : :actor>code ( - <code;> ) ( - )           :noname 'actor>code ! ;
 : :edit       ( - <code;> ) ( - )           :noname 'edit ! ;
 : :editor     ( - <code;> ) ( table - )     :noname 'editor ! ;
-: :pick       ( - <code;> ) ( - x1. y1. x2. y2. )  :noname 'pick ! ;
+: :pick-box   ( - <code;> ) ( - x1. y1. x2. y2. )  :noname 'pick ! ;
 
 : "n," ( n - ) f" %n , " type ;
 : "s," ( a len - ) f" %s , " type ;

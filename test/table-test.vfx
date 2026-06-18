@@ -43,7 +43,7 @@ c: %actor strat ;  \ add strat prop
         drop
     ;
 
-    :pick   \ clickable area = the strategy's sprite, else 16x16
+    :pick-box   \ clickable area = the strategy's sprite, else 16x16
         strat @ >bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then
         x 2@ 2swap box-around
     ;
@@ -77,11 +77,11 @@ playfield data: forest
     280 , 44 , TREE2 , 
     107 , 122 , TREE2 , 
     221 , 120 , TREE1 , 
-    282 , 120 , TREE1 , 
+    287 , 118 , TREE1 , 
     106 , 45 , TREE1 , 
     46 , 47 , TREE2 , 
     217 , 44 , TREE1 , 
-    264 , 189 , TREE1 , 
+    254 , 189 , TREE1 , 
     109 , 191 , TREE1 , 
     46 , 191 , TREE1 , 
 data;
@@ -110,7 +110,7 @@ data;
 : scramble ( - )
     [: gamew rnd gameh rnd 2>p x 2! ;] each-active ;
 
-\ load forest, scramble positions, write the changed rows back (to the .new sibling)
+\ load forest, scramble positions, write the changed rows back 
 : test-writeback ( - )
     forest edit-table
     scramble
