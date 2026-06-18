@@ -1,0 +1,117 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/lib/colors.vfx
+import %supershow%/addons/shapes.vfx
+import %supershow%/sketchpad/sketchpad.vfx
+
+0 value a
+continuation: a!>  a >r swap to a execute r> to a ;
+: a@+  a @  cell +to a ;
+
+: 4@ @+ swap @+ swap @+ swap @ ;
+: 4! >r 2swap r@ 2! r> 8 + 2! ;
+
+\ ----------------------------------------------------
+
+trait: %editable
+    :: edit-render ( actor - ) drop ;
+trait;
+
+c: %actor strat ;  \ add strategy property, for the descriptor to render with
+
+\ ----------------------------------------------------
+
+3 cells descriptor: playfield
+    \ [ x , y , strategy , ]
+    
+    :data>actor  a!>   a@+ a@+ at   %actor one { a@+ strat !   this } ;
+    :actor>code  x @ >i "n," y @ >i "n," strat @ "name," ;
+    :edit  me strat @ edit-render ;
+
+    : ?size  strat @ >bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then ;
+    :pick-box  x 2@ ?size box-around ;
+descriptor;
+
+c: %playfield-type  %editable bmp hitbox 16 ;
+
+: ~hitbox ( - )
+    hitbox 8 + 2@ or -exit
+    hitbox 4@  2swap bmp @ bmpwh 2>p 2 2 2/ 2- +atp   red rect
+;
+
+%playfield-type :: edit-render ( actor - ) 
+    { x 2@ 2>i at } bmp @ cput 
+    ~hitbox 
+;
+    
+: playfield-type:  create %playfield-type dmake as ;
+
+\ ----------------------------------------------------
+
+bitmap %idir%\dat\gfx\trees.png
+trees.png 64 64 tileset-from trees.ts
+
+bitmap %idir%\dat\gfx\path.png
+
+playfield-type: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
+playfield-type: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
+playfield-type: path1  path.png bmp !
+
+playfield data: forest
+    335 , 246 , PATH1 , 
+    11 , 135 , TREE1 , 
+    287 , 41 , TREE2 , 
+    159 , 127 , TREE2 , 
+    197 , 105 , TREE1 , 
+    284 , 171 , TREE1 , 
+    101 , 3 , TREE1 , 
+    46 , 47 , TREE2 , 
+    217 , 44 , TREE1 , 
+    236 , 157 , TREE1 , 
+    46 , 191 , TREE1 , 
+    326 , 170 , TREE1 , 
+    404 , 181 , TREE1 , 
+    438 , 200 , TREE1 , 
+    468 , 227 , TREE1 , 
+    505 , 267 , TREE1 , 
+    532 , 309 , TREE1 , 
+    550 , 368 , TREE1 , 
+    565 , 407 , TREE1 , 
+    367 , 180 , TREE1 , 
+    62 , 289 , TREE2 , 
+    169 , 363 , TREE2 , 
+    130 , 322 , TREE1 , 
+    104 , 344 , TREE1 , 
+    132 , 355 , TREE1 , 
+    200 , 323 , TREE1 , 
+    225 , 348 , TREE1 , 
+    209 , 376 , TREE1 , 
+    255 , 381 , TREE1 , 
+    283 , 350 , TREE1 , 
+    141 , 382 , TREE1 , 
+    48 , 338 , TREE1 , 
+    73 , 387 , TREE1 , 
+    263 , 435 , TREE1 , 
+    340 , 393 , TREE1 , 
+    200 , 416 , TREE1 , 
+    306 , 403 , TREE1 , 
+    326 , 447 , TREE1 , 
+    166 , 461 , TREE1 , 
+    243 , 60 , TREE1 , 
+    70 , 65 , TREE1 , 
+    9 , 10 , TREE1 , 
+data;
+
+: ~tree ( a - )
+    a!>   a@+ a@+ at   a@+ >bmp @ cput ;
+
+public
+
+: main
+    $50e040ff backdrop !
+    show>
+        1 batch>  [: ~tree ;] forest each ;
+
+main
+
+design forest

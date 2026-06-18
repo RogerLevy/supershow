@@ -53,6 +53,8 @@ private
 : copy-selected ( - actor )  selected  copy-actor ;   \ clone, stays on stage
 : do-move ( - )  selected -exit  pmickey selected >x 2+! ;
 
+: copy-it ( - )  copy-selected  dup selected insert-over  to selected ;
+
 : bring-to-front ( - )  selected dup >parent @ push ;
 : send-to-back ( - )  selected dup >parent @ unshift ;
 
@@ -98,7 +100,7 @@ private
     moved? ?exit
     moved-far? -exit
     -1 to moved?
-    copy-pending? if  copy-selected to selected  0 to copy-pending?  then
+    copy-pending? if  copy-it  0 to copy-pending?  then
 ;
 
 : on-click ( - )                 \ a press that released without dragging

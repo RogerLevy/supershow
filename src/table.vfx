@@ -54,7 +54,7 @@ class;
     2swap 2r> 2+
 ;
 
-|| : (pick16) ( - x1. y1. x2. y2. )     \ default clickable area: 16x16 centered on pos
+|| : _small-box ( - x1. y1. x2. y2. )     \ default clickable area: 16x16 centered on pos
     x 2@ 16. 16. box-around ;
 
 %descriptor >template {
@@ -62,7 +62,7 @@ class;
     ['] drop 'editor !
     ['] noop 'edit !
     ['] noop 'actor>code !
-    ['] (pick16) 'pick !
+    ['] _small-box 'pick !
 }
 
 : data: ( descriptor <name> - ) ( - table )
