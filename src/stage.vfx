@@ -144,7 +144,7 @@ continuation: who> ( - actor|0 ) ( - f )
     push ;
 
 : stage-init ( actor stage - )
-    udup push  { -1 rnd id !   en on } ;
+    udup push  { -1 rnd id ! } ;
 
 : one-in ( class stage - actor )
     >r >r free-nodes pop r> over construct dup r> stage-init ;
@@ -155,7 +155,7 @@ continuation: who> ( - actor|0 ) ( - f )
 : spawn ( class - actor )
     one dup start ;
 
-: copy-actor ( actor - actor' )
+: one-copy ( actor - actor' )
     dup >cla @ one {
         id @ >r  \ preserve id
         ( actor ) this copy-node

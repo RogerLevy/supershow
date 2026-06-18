@@ -50,7 +50,7 @@ private
 ;
 
 \ ---- copy / move ------------------------------------------------------------
-: copy-selected ( - actor )  selected  copy-actor ;   \ clone, stays on stage
+: copy-selected ( - actor )  selected  one-copy ;   \ clone, stays on stage
 : do-move ( - )  selected -exit  pmickey selected >x 2+! ;
 
 : copy-it ( - )  copy-selected  dup selected insert-over  to selected ;
@@ -130,7 +130,7 @@ private
 ;
 
 \ ---- render -----------------------------------------------------------------
-: ~actors ( - )  [: me the-table edit-update ;] each-active ;
+: ~actors ( - )  [: me render  me the-table edit-update ;] each-active ;
 
 : ~selection ( - )
     selected -exit

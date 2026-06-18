@@ -23,7 +23,7 @@ class: %actor
     prop prio :int <save            \ 0 = behind BG, <>0 = in front of BG   
     prop id :int
 
-    template { -1 id ! }
+    template { -1 id !  en on }
 
     static autoclass                \ flag
 

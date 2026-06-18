@@ -13,38 +13,40 @@ continuation: a!>  a >r swap to a execute r> to a ;
 
 \ ----------------------------------------------------
 
-trait: %editable
-    :: edit-render ( actor - ) drop ;
+trait: %hitbox-haver  
+    16 nprop hitbox
 trait;
-
-c: %actor strat ;  \ add strategy property, for the descriptor to render with
 
 \ ----------------------------------------------------
 
-3 cells descriptor: playfield
-    \ [ x , y , strategy , ]
-    
-    :data>actor  a!>   a@+ a@+ at   %actor one { a@+ strat !   this } ;
-    :actor>code  x @ >i "n," y @ >i "n," strat @ "name," ;
-    :edit  me strat @ edit-render ;
+c: %prototype  %actor proto:%prototype ;
 
-    : ?size  strat @ >bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then ;
-    :pick-box  x 2@ ?size box-around ;
-descriptor;
+: prototype: ( class <name> - ) create dmake as  this proto ! ;
 
-c: %playfield-type  %editable bmp hitbox 16 ;
+\ ----------------------------------------------------
+
+c: %playfield-entity  %prototype %hitbox-haver ;
 
 : ~hitbox ( - )
+    me %hitbox-haver is? -exit
     hitbox 8 + 2@ or -exit
     hitbox 4@  2swap bmp @ bmpwh 2>p 2 2 2/ 2- +atp   red rect
 ;
 
-%playfield-type :: edit-render ( actor - ) 
-    { x 2@ 2>i at } bmp @ cput 
-    ~hitbox 
-;
+%playfield-entity :: draw
+    x 2@ 2>i at  bmp @ cput  ~hitbox ;
+
+3 cells descriptor: playfield.desc
+    \ [ x , y , prototype , ]
     
-: playfield-type:  create %playfield-type dmake as ;
+    :data>actor  a!>   a@+ a@+   a@+ one-copy { 2>p x 2!  this } ;
+    :actor>code  x @ >i "n,"   y @ >i "n,"   proto @ "name," ;
+
+    : ?size  bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then ;
+    :pick-box  x 2@ ?size box-around ;
+descriptor;
+   
+: playfield-entity:  %playfield-entity prototype: ;
 
 \ ----------------------------------------------------
 
@@ -53,15 +55,15 @@ trees.png 64 64 tileset-from trees.ts
 
 bitmap %idir%\dat\gfx\path.png
 
-playfield-type: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
-playfield-type: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
-playfield-type: path1  path.png bmp !
+playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
+playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
+playfield-entity: path1  path.png bmp !
 
-playfield data: forest
-    335 , 246 , PATH1 , 
+playfield.desc data: forest
+    341 , 238 , PATH1 , 
     11 , 135 , TREE1 , 
     287 , 41 , TREE2 , 
-    159 , 127 , TREE2 , 
+    157 , 131 , TREE2 , 
     197 , 105 , TREE1 , 
     284 , 171 , TREE1 , 
     101 , 3 , TREE1 , 
