@@ -120,6 +120,17 @@ public
 : ~border
     camx camy 2negate atp  14 color  view-pxw view-pxh 2>p rect ;
 
+|| : ~layer-bound ( n - )
+    {: n | par :}
+    n slot { prx @ } to par
+    n slot { visx @ >p  camx par p*  -  visy @ >p  camy par p*  -  atp }
+    n layer-px  2>p rect ;
+
+: ~layer-bounds ( - )
+    layer# scratch# = ?exit
+    $00ffff60 rgba8
+    layer# ~layer-bound ;
+
 \ Screen-grid overlay: vertical/horizontal lines every gridw/gridh world
 \ pixels, offset by the camera (matching ~border's -cam origin).
 : ~vgrid ( pxh - )
@@ -148,6 +159,7 @@ public
     ~info
     ~grid
     ~border
+    ~layer-bounds
     ~selection
 ;
 
