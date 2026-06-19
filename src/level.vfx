@@ -105,6 +105,28 @@ class;
 \ key are visible. Shared by the game loader and the editor.
 : ?j>on ( layerj key - flag )  2dup ?get-item if  j>n  else  2drop -1  then ;
 
+\ ---- shared layer-JSON decoders (build-layer here + build-layer-slot in gs) ---
+
+\ Resolve a layer's tileset: its "tileset" word, else the word derived from the
+\ "tilesetfile" path (<base>.ts).
+: layer-tileset ( layerj - tileset )
+    dup "tileset" ?j>z ?dup if  nip zcount evaluate  exit  then
+    "tilesetfile" ?j>z ?dup 0= abort" Layer JSON has no tileset or tilesetfile field."
+    zcount -path -ext f" %s.ts" evaluate ;
+
+\ A layer's name: its "name", else "layer<idx>".
+: layer-name$ ( layerj idx - a u )
+    swap "name" ?j>z ?dup if  nip zcount  else  f" layer%n"  then ;
+
+\ Apply a layer's view props (parallax / offsets / repeat / visibility) to tm.
+: layer-view! ( layerj tilemap - )
+    {: layerj tm :}
+    layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
+    layerj "visx"   ?j>n  tm >visx !
+    layerj "visy"   ?j>n  tm >visy !
+    layerj "repeat" ?j>n  tm >rpt !
+    layerj "vis"    ?j>on  tm >vis ! ;
+
 private
 
 create lname-buf 64 allot       \ scratch for a layer's bare name (see build-layer)
@@ -113,32 +135,16 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
     {: lev-name lev-len idx layerj | cols rows tm :}
     layerj "cols" j>n to cols
     layerj "rows" j>n to rows
-    \ The layer's bare name is optional in the JSON (older gs saves omit it), so
-    \ fall back to "layer<idx>". Copy it into lname-buf because it's used twice:
-    \ once to mint the tilemap's dict word "<level>-<layer>", and again to fill
-    \ the tilemap's own name$ field below. (The fallback goes through f"'s
-    \ rotating buffer, so the stable copy avoids it being clobbered.)
-    layerj "name" ?j>z
-    ?dup if  zcount  else  idx f" layer%n"  then
-    lname-buf place
-    \ Mint the named tilemap, then set name$ to the bare name so the runtime
-    \ matches what the editor stores: gs round-trips name$ <-> the JSON "name",
-    \ so a level loaded at runtime reports the same layer names it was saved with.
+    \ The bare name is used twice — to mint the tilemap's dict word
+    \ "<level>-<layer>" and to fill its name$ — so stash it in lname-buf (a stable
+    \ copy, since the f" below would otherwise reuse its rotating buffer).
+    layerj idx layer-name$  lname-buf place
     lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  new-layer-tm to tm
+    \ name$ on the runtime tilemap mirrors what the editor round-trips to JSON,
+    \ so a level loaded at runtime reports the same layer names it was saved with.
     lname-buf count  tm >name$ place
-    layerj "tileset" ?j>z ?dup if 
-        zcount evaluate  tm >ts ! 
-    else
-        layerj "tilesetfile" ?j>z ?dup if 
-            zcount -ext f" %s.ts" sfind not abort" Layer JSON has no tileset or tilesetfile field." 
-            ( tileset-xt ) execute tm >ts !
-        then
-    then
-    layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
-    layerj "visx"   ?j>n  tm >visx !
-    layerj "visy"   ?j>n  tm >visy !
-    layerj "repeat" ?j>n  tm >rpt !
-    layerj "vis"    ?j>on  tm >vis !
+    layerj layer-tileset  tm >ts !
+    layerj tm layer-view!
     tm >en on
     tm
 ;

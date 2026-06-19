@@ -341,23 +341,12 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     {: layerj n :}
     n slot {
         layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
-        layerj "tileset" ?j>z ?dup if 
-            zcount evaluate  ts ! 
-        else
-            layerj "tilesetfile" ?j>z ?dup
-            0= abort" Layer JSON has no tileset or tilesetfile field." 
-            zcount -path -ext f" %s.ts" evaluate ts !
-        then
-
-        layerj "name" ?j>z ?dup if  zcount  else  n f" layer%n"  then  name$ place
-        layerj "parallax" ?j>p dup 0= if drop 1.0 then  prx !
-        layerj "visx"   ?j>n  visx !
-        layerj "visy"   ?j>n  visy !
-        layerj "repeat" ?j>n  rpt !
-        layerj "vis"    ?j>on  vis !
+        layerj layer-tileset  ts !
+        layerj n layer-name$  name$ place
+        layerj this layer-view!
         layerj "tiles" j>s  this string>tilemap
         en on
-    } 
+    }
 ;
 
 : layer-px ( n - wpx hpx )  slot { w @ h @ this cr>xy } ;
