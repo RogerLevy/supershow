@@ -118,11 +118,4 @@ data;
 
 public
 
-: main
-    $50e040ff backdrop !
-    show>
-        1 batch>  [: ~tree ;] forest each ;
-
-main
-
-design forest
+: ~forest  1 batch>  [: ~tree ;] forest each ;

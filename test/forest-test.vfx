@@ -1,0 +1,12 @@
+module
+import %supershow%/src/supershow.vfx
+import %idir%/forest.vfx
+
+: main
+    $50e040ff backdrop !
+    show>
+        ~forest ;
+
+main
+
+design forest

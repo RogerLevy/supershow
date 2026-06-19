@@ -31,15 +31,11 @@ class: %spewer  %actor derive  class;
         %treat spawn as>
             4. -2. 2rnd  -2. -2. 2+  vx 2! ;
 
-\ ---- Main -------------------------------------------------------------------
+\ ---- Public -----------------------------------------------------------------
 
-: ~test  sprites ;
-: think   step ;
+public
 
-: main
-    just
-    3 0 do  %spewer spawn drop  loop
-    show> think ~test ;
-
-main
+: ~treats    sprites ;
+: treats-think   step ;
+: treats-load   3 0 do  %spewer spawn drop  loop ;
 

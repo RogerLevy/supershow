@@ -1,0 +1,10 @@
+module
+import %supershow%/src/supershow.vfx
+import %idir%/treats.vfx
+
+: main
+    just
+    treats-load
+    show> treats-think ~treats ;
+
+main
