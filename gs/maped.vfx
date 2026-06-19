@@ -24,18 +24,6 @@ public
     mx to pan-lastx  my to pan-lasty
     clamp-camera  -1 ;
 
-: ?layer-keys ( - )
-    <1> pressed? if 0 set-layer then
-    <2> pressed? if 1 set-layer then
-    <3> pressed? if 2 set-layer then
-    <4> pressed? if 3 set-layer then
-    <5> pressed? if 4 set-layer then
-    <6> pressed? if 5 set-layer then
-    <7> pressed? if 6 set-layer then
-    <8> pressed? if 7 set-layer then
-    <9> pressed? if 8 set-layer then
-    <`> pressed? if scratch# set-layer then ;   \ backtick = scratch pad (layer 10)
-
 : ?grid-move ( - )   \ arrow keys nudge the camera by one grid cell
     <left>  pressed? if  gridw negate >p  +to camx  then
     <right> pressed? if  gridw        >p  +to camx  then
@@ -83,13 +71,13 @@ public
     try-pan ?exit
     <'> pressed? if  grid? not to grid?  then   \ toggle screen grid
     ?grid-move
-    ?layer-keys
     <E> pressed? if eraser then
     <H> pressed? if fliph then
     <V> pressed? if flipv then
     <lmb> held?  if  mouse-cell at the-layer paint  then
     <rmb> held?  if  copy-brush-area  then
 ;
+
 
 \ ---- draw --------------------------------------------------------------------
 
