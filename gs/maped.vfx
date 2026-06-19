@@ -43,6 +43,28 @@ public
     <down>  pressed? if  gridh        >p  +to camy  then
     clamp-camera ;
 
+-1 value rmb-startc
+0  value rmb-startr
+
+\ Shift+RMB drag: define selection rect interactively; on release copy to brush.
+: do-rmb-marquee ( - )
+    {: | col row :}
+    shift? -exit
+    <rmb> pressed? if
+        mouse-cell to rmb-startr to rmb-startc
+        rmb-startc rmb-startr  tile-sel 2!
+        1 1  tile-sel 2 cells + 2!
+    then
+    rmb-startc 0< ?exit
+    <rmb> letgo? if  copy-sel  -1 to rmb-startc  exit  then
+    <rmb> held? -exit
+    mouse-cell to row to col
+    rmb-startc col min  rmb-startr row min
+    tile-sel 2!
+    rmb-startc col - abs 1 +  rmb-startr row - abs 1 +
+    tile-sel 2 cells + 2!
+;
+
 : maped-input ( - )
     ctrl? if
         shift? if  <S> pressed? if save-as then  exit  then   \ Ctrl+Shift+S = save as
@@ -54,7 +76,10 @@ public
         <E> pressed? if erase-sel then
         exit
     then
-    shift? if  do-marquee exit  then
+    shift? if
+        do-rmb-marquee
+        do-marquee exit
+    then
     try-pan ?exit
     <'> pressed? if  grid? not to grid?  then   \ toggle screen grid
     ?grid-move
@@ -63,7 +88,7 @@ public
     <H> pressed? if fliph then
     <V> pressed? if flipv then
     <lmb> held?  if  mouse-cell at the-layer paint  then
-    <rmb> held?  if  mouse-cell the-layer tile@ load-brush-1  then 
+    <rmb> held?  if  copy-brush-area  then
 ;
 
 \ ---- draw --------------------------------------------------------------------

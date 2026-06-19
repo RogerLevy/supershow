@@ -226,6 +226,9 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 : copy-sel ( - )   \ active layer's selected region -> brush
     the-layer  sel-box  the-brush  slice-tilemap ;
 
+: copy-brush-area ( - )   \ copy brush-sized region at cursor into the brush
+    the-layer  mouse-cell  brushw brushh  the-brush  slice-tilemap ;
+
 : erase-sel ( - )   \ clear the selected region on the active layer
     selh for
         selw for
