@@ -2,7 +2,6 @@ module
 import %supershow%/src/supershow.vfx
 import %supershow%/lib/colors.vfx
 import %supershow%/addons/shapes.vfx
-import %supershow%/sketchpad/sketchpad.vfx
 
 0 value a
 continuation: a!>  a >r swap to a execute r> to a ;

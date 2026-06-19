@@ -113,6 +113,8 @@ public
 : .json ( cjson - )
     serialize-cjson udup type cjson-free ;
 
+aka j. .json
+
 \ Builder API
 aka cjson-new-object  new-object
 aka cjson-new-array   new-array

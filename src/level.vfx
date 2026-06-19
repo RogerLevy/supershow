@@ -126,7 +126,14 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
     \ so a level loaded at runtime reports the same layer names it was saved with.
     lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  new-layer-tm to tm
     lname-buf count  tm >name$ place
-    layerj "tileset" j>s evaluate  tm >ts !
+    layerj "tileset" ?j>z ?dup if 
+        zcount evaluate  tm >ts ! 
+    else
+        layerj "tilesetfile" ?j>z ?dup if 
+            zcount -ext f" %s.ts" sfind not abort" Layer JSON has no tileset or tilesetfile field." 
+            ( tileset-xt ) execute tm >ts !
+        then
+    then
     layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
     layerj "visx"   ?j>n  tm >visx !
     layerj "visy"   ?j>n  tm >visy !

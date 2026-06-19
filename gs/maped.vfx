@@ -77,7 +77,7 @@ public
 ;
 
 : ~selection ( - )
-    15 color
+    $ffffff80 rgba8
     selc selr cell-screen-xy atp
     selw tilew * >p  selh tileh * >p  rect 
 ;
@@ -120,10 +120,10 @@ public
 : ~maped ( - )
     ~world
     ~brush-ghost
-    ~selection
     ~info
     ~grid
     ~border
+    ~selection
 ;
 
 : maped-frame ( - )  maped-input ~maped ;

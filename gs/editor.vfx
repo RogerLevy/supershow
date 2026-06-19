@@ -298,8 +298,10 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         path-a path-len f" bitmap %s" .evaluate              \ define "<file>.<ext>" bitmap word
     then
     path-a path-len -path evaluate to bmpid
-    bmpid  bmpw 16 / to tw                         \ tile size = width / 16 (square)
-    bmpid  name-a name-len -ext  tw tw  f" %n %n tileset-from %s.ts"  evaluate 
+    name-a name-len -ext f" %s.ts" sfind nip not if
+        bmpid  bmpw 16 / to tw                         \ tile size = width / 16 (square)
+        bmpid  name-a name-len -ext  tw tw  f" %n %n tileset-from %s.ts" .evaluate 
+    then
 ;
 
 \ Pick a PNG via dialog; ensure its named tileset is loaded.
@@ -318,12 +320,17 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 \ Load a level's tilesets from stored "tilesetfile" paths (if any). Layers
 \ without one are assumed already defined (e.g. compiled into the program).
 : preload-tilesets ( cjson - )
-    {: cjson | layers buf[ 256 ] :}
+    {: cjson | layers fp[ 256 ] lyr :}
     cjson "layers" j>j to layers
     layers jsize for  
-        layers i j>j "tilesetfile" ?j>z ?dup if
-            zcount resolve-tileset buf[ place
-            buf[ count  layers i j>j "tileset" j>s  ensure-tileset
+        layers i j>j to lyr
+        lyr "tilesetfile" ?j>z ?dup if
+            zcount resolve-tileset fp[ place
+            lyr "tileset" ?j>z not if
+                fp[ count 2dup -path ensure-tileset
+            else
+                fp[ count  lyr "tileset" j>s  ensure-tileset
+            then
         then
     loop 
 ;
@@ -334,7 +341,14 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     {: layerj n :}
     n slot {
         layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
-        layerj "tileset" j>s evaluate  ts !
+        layerj "tileset" ?j>z ?dup if 
+            zcount evaluate  ts ! 
+        else
+            layerj "tilesetfile" ?j>z ?dup
+            0= abort" Layer JSON has no tileset or tilesetfile field." 
+            zcount -path -ext f" %s.ts" evaluate ts !
+        then
+
         layerj "name" ?j>z ?dup if  zcount  else  n f" layer%n"  then  name$ place
         layerj "parallax" ?j>p dup 0= if drop 1.0 then  prx !
         layerj "visx"   ?j>n  visx !
