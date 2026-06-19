@@ -2,6 +2,8 @@
 \ Shared editor state, screen dispatcher, camera/mouse mapping, brush, save.
 \ See gs/main.vfx for the program entry point.
 
+include %supershow%/lib/help.vfx
+
 public
 
 \ ---- state -------------------------------------------------------------------
@@ -114,8 +116,6 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 : layer-count     ( - n )         the-level >layers @ #items ;
 : brushw          ( - n )         the-brush >w @ ;
 : brushh          ( - n )         the-brush >h @ ;
-
-: resize-layer ( cols rows - )  the-layer resize-tilemap ;   \ REPL: resize active layer
 
 : blink! ( - )  18 to blink ;       \ flash the freshly-selected layer for a moment
 
@@ -434,13 +434,13 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 : new-level ( - )
     pick-tileset  dup 0= if 4drop exit then  *new-level ;
 
-: no-tileset. ( - )
-    z" GreySplatter" z" No tileset selected, quitting..." message-box ;
+: no-tileset ( - )
+    z" GreySplatter" z" No tileset selected, quitting..." messagebox ;
 
 \ Turnkey startup: like new-level, but a level is mandatory, so quit cleanly
 \ (with a heads-up) when the user cancels the tileset dialog.
 : new-level-or-quit ( - )
-    pick-tileset  dup 0= if no-tileset. bye then  *new-level ;
+    pick-tileset  dup 0= if no-tileset bye then  *new-level ;
 
 : open-dialog ( - )
     0 z" Open Level" z" *.json" load-dialog
@@ -519,7 +519,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 : free-slot ( - n )   \ first free paintable slot (excludes the scratch pad), or -1
     scratch# for  i slot >en @ 0= if  i unloop exit  then  loop  -1 ;
 
-: add-layer ( w h - )   \ fill the first free slot with a blank layer + active tileset
+command : add-layer ( w h - )   
+    \ Fill the first free slot with a blank layer + active tileset
     {: w h | n :}
     the-tileset -exit              \ nothing to inherit a tileset from
     free-slot to n
@@ -534,16 +535,27 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     n to layer#
     set-bounds ;
 
-: delete-layer ( - )   \ clear the active layer and free its slot
+command : delete-layer ( - )   
+    \ Clear the active layer and free its slot
     the-layer {  this clear-tilemap  en off  } ;
 
-: visible    ( - )  layer# scratch# < if  the-layer >vis on   then ;   \ REPL: show layer (1-9)
-: invisible  ( - )  layer# scratch# < if  the-layer >vis off  then ;   \ REPL: hide layer (1-9)
+command : visible ( - ) 
+    \ Show the active layer (1-9)
+    layer# scratch# < if  the-layer >vis on   then ;   
 
-: reorder ( n - )   \ move the active layer to draw-order position n
+command : invisible  ( - )  
+    \ Hide the active layer (1-9)
+    layer# scratch# < if  the-layer >vis off  then ;   
+
+command : reorder ( n - )   
+    \ move the active layer to draw-order position n
     {: n | tm :}
     n 0 max  layer-count 1 - min to n
     the-layer to tm
     layer# the-layers removeat
     tm n the-layers insertat
     n to layer# ;
+
+command : resize-layer ( cols rows - )  
+    \ Resize active layer
+    the-layer resize-tilemap ;   

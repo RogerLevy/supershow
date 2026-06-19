@@ -27,6 +27,8 @@ c: %prototype  %actor proto:%prototype ;
 
 c: %playfield-entity  %prototype %hitbox-haver ;
 
+: playfield-entity:  %playfield-entity prototype: ;
+
 : ~hitbox ( - )
     me %hitbox-haver is? -exit
     hitbox 8 + 2@ or -exit
@@ -36,6 +38,9 @@ c: %playfield-entity  %prototype %hitbox-haver ;
 %playfield-entity :: draw
     x 2@ 2>i at  bmp @ cput  ~hitbox ;
 
+playfield-entity: nul  0 0 0 0 hitbox 4!
+playfield-entity: lock-marker  0 0 0 0 hitbox 4!
+
 3 cells descriptor: playfield.desc
     \ [ x , y , prototype , ]
     
@@ -43,11 +48,14 @@ c: %playfield-entity  %prototype %hitbox-haver ;
     :actor>code  x @ >i "n,"   y @ >i "n,"   proto @ "name," ;
 
     : ?size  bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then ;
-    :pick-box  x 2@ ?size box-around ;
+    
+    :pick-box  
+        next @ ?dup if >proto @ lock-marker = if  0 0 0 0 exit then then
+        x 2@ ?size box-around 
+    ;
+
 descriptor;
    
-: playfield-entity:  %playfield-entity prototype: ;
-
 \ ----------------------------------------------------
 
 bitmap %idir%\dat\gfx\trees.png
@@ -59,12 +67,14 @@ playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
 playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
 playfield-entity: path1  path.png bmp !
 
+
 playfield.desc data: forest
     341 , 238 , PATH1 , 
+    0 , 0 , LOCK-MARKER , 
     11 , 135 , TREE1 , 
     287 , 41 , TREE2 , 
-    157 , 131 , TREE2 , 
-    197 , 105 , TREE1 , 
+    159 , 130 , TREE2 , 
+    194 , 107 , TREE1 , 
     284 , 171 , TREE1 , 
     101 , 3 , TREE1 , 
     46 , 47 , TREE2 , 

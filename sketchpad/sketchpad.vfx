@@ -15,7 +15,7 @@ module [sketchpad]
 import %supershow%/src/supershow.vfx
 import %idir%/table-edit.vfx
 import %supershow%/addons/shapes.vfx
-import %supershow%/lib/help.vfx
+include %supershow%/lib/help.vfx
 
 private
 
@@ -147,6 +147,11 @@ private
 
 \ ---- commands ---------------------------------------------------------------
 public
+
+command : reposition ( x y - ) 
+    \ Shift all actors by the given x,y (int)
+    2>p [: 2dup x 2+! ;] each-active 2drop 
+;
 
 command : design ( - <table> )
     \ Open a DATA: table for editing (table mode).

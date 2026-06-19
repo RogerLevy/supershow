@@ -12,6 +12,7 @@ module [gs]
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 import [cjson]
+import [allegro5]
 include %idir%/editor.vfx
 include %idir%/maped.vfx
 include %idir%/tiles.vfx
@@ -20,6 +21,7 @@ include %idir%/tiles.vfx
     save-current ;
 
 : main ( - )
+    display al_show_mouse_cursor
     s" ^ gs" evaluate  \ fixes wrong search order in turnkey
     2 user-zoom !
     tv off

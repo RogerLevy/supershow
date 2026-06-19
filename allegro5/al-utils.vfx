@@ -190,9 +190,9 @@ extern BOOL SetThreadPriority( hthread, priority );
 : load-dialog  ( zpath ztitle zformats - path len|0 )
     ALLEGRO_FILECHOOSER_FILE_MUST_EXIST file-dialog ;
 
-: message-box  ( ztitle ztext - )   \ simple native OK info box
+: messagebox  ( ztitle ztext - )   \ simple native OK info box
     {: ztitle ztext :}
-    display ztitle 0 ztext 0 0 al_show_native_message_box drop ;
+    display ztitle z" " ztext 0 0 al_show_native_message_box drop ;
 
 aka alqueue queue
 aka almixer mixer 
