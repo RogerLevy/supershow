@@ -567,6 +567,7 @@ command : reorder ( n - )
     tm n the-layers insertat
     n to layer# ;
 
-command : resize-layer ( cols rows - )  
+command : resize-layer ( cols rows - )
     \ Resize active layer
-    the-layer resize-tilemap ;   
+    the-layer resize-tilemap
+    set-bounds ;
