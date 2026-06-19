@@ -354,6 +354,11 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
 : layer-px ( n - wpx hpx )  slot { w @ h @ this cr>xy } ;
 
+\ Pixel bounds for the current view: scratch layer dims on the scratch screen,
+\ level dims otherwise.
+: view-pxw ( - n )  layer# scratch# = if  scratch# layer-px drop  else  the-level >pxw @  then ;
+: view-pxh ( - n )  layer# scratch# = if  scratch# layer-px nip   else  the-level >pxh @  then ;
+
 : set-bounds ( - )   \ camera bounds = largest enabled paintable-layer extent
     {: | mw mh :}
     0 to mw  0 to mh

@@ -118,20 +118,20 @@ public
 ;
 
 : ~border
-    camx camy 2negate atp  14 color  the-level >pxw 2@ 2>p rect ;
+    camx camy 2negate atp  14 color  view-pxw view-pxh 2>p rect ;
 
 \ Screen-grid overlay: vertical/horizontal lines every gridw/gridh world
 \ pixels, offset by the camera (matching ~border's -cam origin).
 : ~vgrid ( pxh - )
     {: pxh :}
-    the-level >pxw @ gridw /  1 +  for
+    view-pxw gridw /  1 +  for
         i gridw * >p camx -  dup  camy negate  atp
         pxh >p camy -  line
     loop ;
 
 : ~hgrid ( pxw - )
     {: pxw :}
-    the-level >pxh @ gridh /  1 +  for
+    view-pxh gridh /  1 +  for
         i gridh * >p camy -  camx negate  over  atp
         pxw >p camx -  swap  line
     loop ;
@@ -139,8 +139,8 @@ public
 : ~grid ( - )
     grid? 0= ?exit
     $ffff00a0 rgba8
-    the-level >pxh @ ~vgrid
-    the-level >pxw @ ~hgrid ;
+    view-pxh ~vgrid
+    view-pxw ~hgrid ;
 
 : ~maped ( - )
     ~world
