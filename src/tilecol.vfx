@@ -5,7 +5,7 @@
 \ tmslide -- AABB sweep+pushout against a tilemap grid.
 \   Moves the scoped actor, sliding along solid tile edges.
 \   Usage:  -3 -8 3 0  my-tilemap  ['] my-filter  ['] my-response  tmslide
-\   filter-xt:   ( meta - solid? )
+\   filter-xt:   ( tile# - solid? )
 \   response-xt: ( col row dir - )  dir = BIT_FLR/BIT_CEL/BIT_WLT/BIT_WRT
 \   pushed? is set true if any pushout occurred.
 \
@@ -74,14 +74,19 @@ private
 \ tmslide helpers
 \ =============================================================================
 
-\ Get tile metadata via the-map; empty tile ($FFFFFFFF) returns 0
-: get-meta ( col row - meta )
-    the-map tile@ dup $FFFFFFFF = if drop 0 exit then meta ;
+\ Read the tile id via the-map (raw; empty stays $FFFFFFFF).
+: get-tile ( col row - tile# )
+    the-map tile@ ;
 
-\ Pre-check directional bit, then call user filter.
-\ Drops meta and returns false if the bit test fails.
-: ?solid ( meta bit - solid? )
-    over and 0= if drop false exit then
+\ Tile metadata via the-map; empty tile ($FFFFFFFF) returns 0.
+: get-meta ( col row - meta )
+    get-tile dup $FFFFFFFF = if drop 0 exit then meta ;
+
+\ Empty-tile guard + directional bit pre-check, then hand the tile id to the
+\ user filter, which decides final solidity (e.g. the tileset's solid?).
+: ?solid ( tile# bit - solid? )
+    over $FFFFFFFF = if 2drop false exit then
+    over meta and 0= if drop false exit then
     the-filter execute ;
 
 \ =============================================================================
@@ -119,7 +124,7 @@ private
     px _mbw >p + >col-  px >col
     {: brow rcol lcol :}
     rcol 1 + lcol ?do
-        i brow 2dup set-probe get-meta
+        i brow 2dup set-probe get-tile
         BIT_FLR ?solid if
             true to pushed?  true to floor?
             brow to hit-row  i to hit-col
@@ -133,7 +138,7 @@ private
     px _mbw >p + >col-  px >col
     {: trow rcol lcol :}
     rcol 1 + lcol ?do
-        i trow 2dup set-probe get-meta
+        i trow 2dup set-probe get-tile
         BIT_CEL ?solid if
             true to pushed?  true to ceiling?
             trow to hit-row  i to hit-col
@@ -147,7 +152,7 @@ private
     ny _mbh >p + >row-  ny >row
     {: rcol brow trow :}
     brow 1 + trow ?do
-        rcol i 2dup set-probe get-meta
+        rcol i 2dup set-probe get-tile
         BIT_WLT ?solid if
             true to pushed?  true to rwall?
             i to hit-row  rcol to hit-col
@@ -161,7 +166,7 @@ private
     ny _mbh >p + >row-  ny >row
     {: lcol brow trow :}
     brow 1 + trow ?do
-        lcol i 2dup set-probe get-meta
+        lcol i 2dup set-probe get-tile
         BIT_WRT ?solid if
             true to pushed?  true to lwall?
             i to hit-row  lcol to hit-col
@@ -202,12 +207,12 @@ public
 
 \ Slide the scoped actor against tilemap collision.
 \ x1 y1 x2 y2 are relative hitbox corners (integer offsets from actor origin).
-\ filter-xt:   ( meta - solid? ) narrow-phase filter; called only for tiles
+\ filter-xt:   ( tile# - solid? ) narrow-phase filter; called only for tiles
 \   that pass the directional BIT_* pre-check.
 \ response-xt: ( col row dir - ) called on each pushout; dir = BIT_FLR/CEL/WLT/WRT.
 \   Pass 0 for no response.
 \ Sets pushed? floor? ceiling? lwall? rwall? hit-col hit-row.
-: tmslide ( x1 y1 x2 y2 tilemap filter-xt response-xt - ) ( meta - solid? ) ( col row dir - )
+: tmslide ( x1 y1 x2 y2 tilemap filter-xt response-xt - ) ( tile# - solid? ) ( col row dir - )
     to the-response  to the-filter  to the-map
     the-map -> ts @ to the-ts
     the-ts -> baseid @ pile!
@@ -222,9 +227,6 @@ public
     sweep-vertical sweep-horizontal
     nx px - x +!
     ny py - y +! ;
-
-\ Common filters
-: solid? ( meta - solid? )  0<> ;
 
 \ Corner-open checks: true if the tile at col/row is passable in the direction
 \ of the current wall/floor hit. Relies on lwall?/rwall?/floor?/ceiling? state.

@@ -97,7 +97,7 @@ class;
 : meta ( tile# - n ) 65535 and pile@ + global-metas el@ ;
 : collectible?  meta $20 and 0<> ;
 : destructible?  meta $80 and 0<> ;
-: solid?  meta $0F and $0F = ;
+: solid?  meta $0F and 0<> ;
 : instakill?  meta $40 and 0<> ;
 : trap?  meta $10 and 0<> ;
 
