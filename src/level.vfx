@@ -76,7 +76,7 @@ private
 
 \ Create a named %tilemap (mirrors the `tilemap` defining word in autoload.vfx)
 : new-layer-tm ( cols rows a u - tilemap )
-    f" tilemap %s" evaluate   lastbody ;
+    f" tilemap %s" .evaluate   lastbody ;
 
 public
 
@@ -86,6 +86,7 @@ trait: %layer
     prop vis                     \ visible (games + editor honor this)
     prop visx    :int            \ static pixel x offset (visual only)
     prop visy    :int            \ static pixel y offset (visual only)
+    32 nprop name$ :cstring      \ layer name (preserved across editor save/load)
 trait;
 
 class: %tilemap
@@ -106,12 +107,25 @@ class;
 
 private
 
-: build-layer ( lvname-a lvname-u layerj - tilemap )
-    {: la lu layerj | cols rows tm :}
+create lname-buf 64 allot       \ scratch for a layer's bare name (see build-layer)
+
+: build-layer ( lev-name lev-len idx layerj - tilemap )
+    {: lev-name lev-len idx layerj | cols rows tm :}
     layerj "cols" j>n to cols
     layerj "rows" j>n to rows
-    layerj "name" j>s  la lu 2swap  f" %s-%s"   ( name-a name-u )
-    cols rows 2swap  new-layer-tm to tm
+    \ The layer's bare name is optional in the JSON (older gs saves omit it), so
+    \ fall back to "layer<idx>". Copy it into lname-buf because it's used twice:
+    \ once to mint the tilemap's dict word "<level>-<layer>", and again to fill
+    \ the tilemap's own name$ field below. (The fallback goes through f"'s
+    \ rotating buffer, so the stable copy avoids it being clobbered.)
+    layerj "name" ?j>z
+    ?dup if  zcount  else  idx f" layer%n"  then
+    lname-buf place
+    \ Mint the named tilemap, then set name$ to the bare name so the runtime
+    \ matches what the editor stores: gs round-trips name$ <-> the JSON "name",
+    \ so a level loaded at runtime reports the same layer names it was saved with.
+    lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  new-layer-tm to tm
+    lname-buf count  tm >name$ place
     layerj "tileset" j>s evaluate  tm >ts !
     layerj "parallax" ?j>p  dup 0= if drop 1.0 then  tm >prx !
     layerj "visx"   ?j>n  tm >visx !
@@ -124,17 +138,23 @@ private
 
 public
 
-: build-level ( root - level )
-    {: root | lvl layersj n mw mh :}
+: build-level ( cjson|jsonfile - level )
+    {: param | lvl root layersj n mw mh :}
     %level dmake to lvl
+    param dup %jsonfile is? if  -> json @  then  to root
     lvl {
         root src !
-        root "name" j>s name$ place
+        param %jsonfile is? if
+            param body>name -ext name$ place
+        else
+            root "name" ?j>z ?dup 0= abort" Level JSON has no name field."
+            zcount name$ place
+        then
         root "layers" j>j to layersj
         layersj jsize to n
         n %int %array hmake layers !
         n 0 ?do
-            name$ count  layersj i j>j  build-layer   ( tilemap )
+            name$ count  i  layersj i j>j  build-layer   ( tilemap )
             i layers @ el!
         loop
         \ camera bounds: default to the largest layer's pixel extent, then let

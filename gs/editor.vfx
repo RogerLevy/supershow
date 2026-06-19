@@ -67,6 +67,9 @@ array;
 %level dmake to the-level                          \ the one persistent editor level
 the-level { slots layers ! }                       \ its layers ARE the fixed slot pool
 
+\ Seed each slot's default layer name; load overrides it, save writes it back.
+:noname  max-layers for  i f" layer%n"  i slot >name$ place  loop ; execute
+
 \ ---- tileset hot-reload ------------------------------------------------------
 \ Poll each enabled slot's tileset; reload + re-slice when its source file's
 \ mtime changes. The change check (source-changed?) lives on %bitmap, so a
@@ -332,6 +335,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     n slot {
         layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
         layerj "tileset" j>s evaluate  ts !
+        layerj "name" ?j>z ?dup if  zcount  else  n f" layer%n"  then  name$ place
         layerj "parallax" ?j>p dup 0= if drop 1.0 then  prx !
         layerj "visx"   ?j>n  visx !
         layerj "visy"   ?j>n  visy !
@@ -409,8 +413,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     0 to layer#  0 load-brush-1 ;
 
 : *new-level ( tspath-a tspath-len tsname-a tsname-len - )   \ build a blank level around a chosen tileset
-    {: tspath-a tspath-len tsname-a tsname-len | root layers layer0 tw :}
-    tsname-a tsname-len evaluate >tw @ to tw
+    {: tspath-a tspath-len tsname-a tsname-len | root layers layer0 _tw :}
+    tsname-a tsname-len evaluate >tw @ to _tw
     cjson-new-object to root
     "untitled"  "tsname"  root  cjson-add-string
     cjson-new-array to layers
@@ -420,8 +424,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     gs-zbuf  "tileset"      layer0 cjson-add-string
     tspath-a tspath-len gs-zbuf zplace  
     gs-zbuf  "tilesetfile"  layer0 cjson-add-string
-    tw    "tw"    layer0 cjson-add-int
-    tw    "th"    layer0 cjson-add-int
+    _tw    "tw"    layer0 cjson-add-int
+    _tw    "th"    layer0 cjson-add-int
     128   "cols"  layer0 cjson-add-int
     128   "rows"  layer0 cjson-add-int
     "_"   "tiles" layer0 cjson-add-string
@@ -453,6 +457,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     {: tm | json :}
     cjson-new-object to json
     tm {
+        name$ count             gs-zbuf zplace  gs-zbuf  "name"         json cjson-add-string
         ts @ body>name            gs-zbuf zplace  gs-zbuf  "tileset"      json cjson-add-string
         ts @ >bmp @ tileset-path  gs-zbuf zplace  gs-zbuf  "tilesetfile"  json cjson-add-string
         w @  "cols"  json cjson-add-int
@@ -488,7 +493,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     save-cams  1 +to version
     cjson-new-object to root
     cjson-new-array  to arr
-    "untitled"  "name"  root cjson-add-string
+    \ No root "name": the level's name is its file's base name (see build-level).
     scratch# for
         i slot >en @ if  i slot layer>json  0 arr cjson-add-item  then
     loop
