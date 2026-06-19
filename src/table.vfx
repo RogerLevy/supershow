@@ -12,7 +12,7 @@
 \ them back.
 \ =============================================================================
 
-module [supershow]
+module [supershow.actor]
 public
 
 class: %table

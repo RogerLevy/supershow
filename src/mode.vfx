@@ -10,8 +10,6 @@ class: %mode
     prop _tv :int
 class;
 
-%mode template { actors stg ! }
-
 0 %mode :construct ( - )
     0 _zoom !
     -1 _tv !
@@ -22,8 +20,6 @@ class;
 
 %mode object default-mode
 default-mode gamemode !
-
-:noname ( - stage )  gamemode @ -> stg @ ; is stg@
 
 || variable catchup
 

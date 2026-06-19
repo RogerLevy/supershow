@@ -1,5 +1,5 @@
 module [shapes]
-import supershow
+import [supershow.actor]
 import allegro5
 
 public

@@ -12,7 +12,7 @@
 \ =============================================================================
 
 module [sketchpad]
-import %supershow%/src/supershow.vfx
+import [supershow.actor]
 import %idir%/table-edit.vfx
 import %supershow%/addons/shapes.vfx
 include %supershow%/lib/help.vfx

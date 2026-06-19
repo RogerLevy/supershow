@@ -1,7 +1,10 @@
 module [supershow.core]
 	import engineer
+	reexport [engineer]
 	import allegro5
 	reexport [allegro5.utils]
+	import cjson
+	reexport [cjson]
 	public
 	include checks               \ Validations
 	include %idir%/../lib/mersenne.vfx  \ RNG
@@ -9,6 +12,8 @@ module [supershow.core]
 	include traits               \ Object traits
 	include asset                \ Base asset
 	include node
+	include border               \ TV border / framing transform (deferred tv/zoom)
+	include mode                 \ Game modes: frame dispatch, show>/work>, zoom/tv
 
 module [supershow.assets]
 	import bitmap
@@ -18,25 +23,22 @@ module [supershow.assets]
 	import-as %idir%/tilemap.vfx tilemap
 	reexport [tilemap]
 
-module [supershow]
-	import engineer
-	reexport [engineer]
+\ Everything the actor system and the editor (sketchpad) share. Kept as its own
+\ resident module so sketchpad/shapes can import [supershow.actor] instead of the
+\ full [supershow] umbrella — that breaks the supershow -> sketchpad -> supershow
+\ cycle (sketchpad is debug-included below, after this module is fully declared).
+module [supershow.actor]
 	import allegro5
 	import core
-	reexport [core]	
-	import assets 
+	reexport [core]
+	import [assets]
 	reexport [assets]
-	import waveplay             \ Audio engine
-	reexport [waveplay]
-	import shader               \ Shaders
-	reexport [shader]
-	import-as %idir%/spritebank.vfx spritebank   \ Batched sprite renderer
-	reexport [spritebank]
 
 	\ Actor system
 	import %idir%/../lib/rsort.vfx
 	include actor
 	include stage                \ Actor/sprite system
+	include mode-stage           \ Bind mode system's stage to `actors` (actor half of mode)
 	include task                 \ Cooperative multitasking
 	include timer
 	include sprites
@@ -50,10 +52,23 @@ module [supershow]
 	include scene                \ JSON scene save/load
 	include table                \ Flat source-defined data tables + editor codec
 
-	\ ?
-	include border               \ TV border / ininclude 
-	include mode                 \ Game modes w/ separate logic and rendering
-	include tweak                \ Persistent variable control	
+module [supershow]
+	import core
+	reexport [core]
+	import [actor]
+	reexport [actor]
+	import allegro5
+
+	import assets
+	reexport [assets]
+	import waveplay             \ Audio engine
+	reexport [waveplay]
+	import shader               \ Shaders
+	reexport [shader]
+	import-as %idir%/spritebank.vfx spritebank   \ Batched sprite renderer
+	reexport [spritebank]
+
+	include tweak                \ Persistent variable control
 	\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
 	include autoload
 	include level                \ JSON level loader (tilemap layers + scene actors)
@@ -66,6 +81,8 @@ module [supershow]
 
 debug @ [if]
     include %idir%/tools.vfx                \ Development tools
-    \ include %supershow%/sketchpad/sketchpad.vfx  \ Stage editor
+    
+	import %supershow%/sketchpad/sketchpad.vfx  \ Table/stage editor
+	reexport [sketchpad]
     \ s" sketchpad" <f12> func
 [then]

@@ -8,7 +8,7 @@
 \ =============================================================================
 
 module [table-edit]
-import %supershow%/src/supershow.vfx
+import [supershow.actor]
 import %supershow%/lib/lstrout.vfx     \ lstrout (lcount/lfree come in via supershow)
 import %supershow%/lib/fstools.vfx     \ fread fwrite
 public

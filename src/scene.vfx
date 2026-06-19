@@ -2,7 +2,7 @@
 \ Scene save/load — flat JSON actor serialization
 \ =============================================================================
 
-module [supershow]
+module [supershow.actor]
 import [cjson]
 
 public

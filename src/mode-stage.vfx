@@ -1,0 +1,17 @@
+\ =============================================================================
+\ Mode <-> stage coupling — the actor-dependent half of the mode system.
+\ =============================================================================
+\ mode.vfx lives in [supershow.core] and is actor-agnostic. This file (loaded in
+\ [supershow.actor], after stage.vfx) is the only part that touches the stage
+\ system: it binds a mode's stage to the global `actors` stage and points stg@
+\ at the active mode's stage. Headerless — compiles into [supershow.actor].
+\ =============================================================================
+
+public
+
+\ Future modes inherit the global stage in their template; patch the
+\ already-constructed default-mode (built back in mode.vfx, before `actors`).
+%mode template { actors stg ! }
+default-mode { actors stg ! }
+
+:noname ( - stage )  gamemode @ -> stg @ ; is stg@
