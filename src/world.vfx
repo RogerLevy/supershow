@@ -37,8 +37,8 @@ private
 %system :: unload
     en off  vis off  this dlremove ;
 
-c: %box-params ;
-c: %sprite-params ;
+c: %box-params    msk lyr id  x1:p y1:p z1:p  x2:p y2:p z2:p ;   \ AABB hitbox query record
+c: %sprite-params x:p y:p z:p bmp id prio ;                    \ sprite query record
 
 : withdraw ( system - )
     >cohorts @ vacate ;
@@ -48,9 +48,15 @@ public
 %box-params object nul-box
 %sprite-params object nul-sprite
 
-%denizen :: entity-count ( - n ) 0 ; 
-%denizen :: entity-box ( - a ) nul-box ; 
-%denizen :: entity-sprite ( - a ) nul-sprite ; 
+%denizen :: entity-count  ( - n )         0 ;
+%denizen :: entity-box    ( n - %box )    drop nul-box ;
+%denizen :: entity-sprite ( n - %sprite ) drop nul-sprite ;
+
+\ Emit each of this system's sprites to xt ( %sprite - ). One entity may emit
+\ several (e.g. a body + a shadow). Default maps entity-sprite over entity-count.
+%denizen :: entity-sprites ( xt - )
+    {: emit :}
+    this entity-count for  i this entity-sprite emit execute  loop ;
 
 : clear-world ( - )
     ['] withdraw  staff each

@@ -161,6 +161,16 @@ Property type annotations (`:int`, `:fixed`, `:float`, `:xt`, `:ref`, `:addr`) a
 
 `nprop` (or `nproperty`) — like `prop` but takes an explicit byte size first: `256 nprop buf :cstring`. Use when you need a multi-byte field (buffers, structs) rather than a single cell. `prop` is just `cell nprop`.
 
+**Property names are late-bound and reusable across classes.** Declaring a property whose name already exists does NOT create a conflicting word or error — `nproperty` detects the existing property (`%property already?`) and maps it into the new class. The single accessor word resolves the right offset per-class at runtime (via `->property`). So defining `x`/`y`/`bmp`/etc. in several unrelated classes is fine and intended: each class gets its own slot, and `obj -> x @` reads whichever class `obj` is. You do NOT need to invent unique field names (e.g. `bx1`/`sx`) to avoid collisions — reuse the natural name. (Caveat: a same-named property must be the same logical thing; the offset differs per class but the accessor is shared.)
+
+**Embedding a record object inline (manual, no special feature):** reserve the bytes with `nprop` sized to the record class, and stamp its class pointer in the owner's template so the inline buffer is a valid object:
+```forth
+%box-params sizeof nprop box-params       \ inline storage for an embedded %box-params
+%owner template { %box-params box-params ! }   \ stamp class ptr -> valid object
+\ then: box-params -> x1 !   (access like any scoped object)
+```
+This only stamps the class pointer, not the record class's own template defaults — fine for flat records, insufficient if the record class has template defaults.
+
 ### Protocols
 
 A protocol is a late-bound method. Defined with `::` inside a trait (creates the slot) or a class (overrides it).

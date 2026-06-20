@@ -1163,8 +1163,8 @@ redef : ; ( - )
 aka nprop nproperty
 aka prop property
 
-: copy ( srcobj destobj - destobj )
-    dup dup >r sizeof move r> ;
+: copy ( srcobj dest - obj )
+    dup >r over sizeof move r> ;
 
 : can? ( object|class classifier|protocol-xt - bool )
     {: obj-or-class second-param | class-to-check :}

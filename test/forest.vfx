@@ -62,9 +62,9 @@ trees.png 64 64 tileset-from trees.ts
 
 bitmap %idir%\dat\gfx\path.png
 
-playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
-playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
-playfield-entity: path1  path.png bmp !
+playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!   2 prio !
+playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!   2 prio !
+playfield-entity: path1  path.png bmp !   0 prio !   \ background layer
 
 public
 
@@ -129,6 +129,32 @@ public
 \ - Provide Sprite records
 \ - Provide Hitbox records
 
+\ Static read-only data, so a single scratch record per kind suffices (a cohort
+\ consumes each box/sprite before asking for the next).
+%box-params    object forest-box
+%sprite-params object forest-sprite
+
+: row-size ( proto - w. h. )  >bmp @ ?dup if bmpwh 2>p else 16. 16. then ;
+
+\ forest row = [ x:int , y:int , proto:addr ]
+: row>box ( row - %box )
+    >r forest-box {
+        1 msk !  1 lyr !  r@ 2 cells + @ id !
+        r@ @ >p  r@ cell+ @ >p  r@ 2 cells + @ row-size  box-around
+        x2 2!  x1 2!
+        0. z1 !  64. z2 !
+    } r> drop  forest-box ;
+
+: row>sprite ( row - %sprite )
+    >r forest-sprite {
+        r@ @ >p  r@ cell+ @ >p  x 2!   0. z !
+        r@ 2 cells + @ >bmp @  bmp !   r@ 2 cells + @ id !
+        r@ 2 cells + @ >prio @  prio !
+    } r> drop  forest-sprite ;
+
 c: %forest %system ;
 %forest :: render  ~forest ;
+%forest :: entity-count  ( - n )          forest #items ;
+%forest :: entity-box    ( n - %box )     forest el@ row>box ;
+%forest :: entity-sprite ( n - %sprite )  forest el@ row>sprite ;
 %forest manager: forest.sys manager;

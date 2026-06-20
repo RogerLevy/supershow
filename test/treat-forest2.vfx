@@ -5,7 +5,7 @@
 
 \ NOTE: This is *not* a typical use-case.
 \ We are just demonstrating how deep integration of simple
-\ programs (like this one) into a game is accomplished.
+\ programs (like treats and forest) into a game is accomplished.
 
 \ Normally, systems with cross-cutting concerns should be 
 \ self-contained and self-sufficient.  There are going to be
@@ -25,6 +25,41 @@ module
 import %supershow%/src/supershow.vfx
 import %idir%/forest.vfx
 import %idir%/treats.vfx
+import %suprtshow%/lib/rsort.vfx
+
+\ ---- Cross-system y-sorted render -------------------------------------------
+\ Atypical on purpose: the coordinator reaches into BOTH systems' sprite records
+\ and interleaves them by depth (crowd.vfx-style), so a treat behind a tree is
+\ occluded by it. forest's entity-sprite is a reused scratch, so we COPY each
+\ record into a stable buffer, then radix-sort pointers by y.
+
+4096 constant MAX_SPRITES
+%sprite-params sizeof constant /spr
+create spr-buf    MAX_SPRITES /spr * allot      \ stable record copies
+create spr-order  MAX_SPRITES cells allot       \ pointers into spr-buf (what gets sorted)
+0 value #spr
+
+: +spr ( %sprite - )
+    {: src | slot :}
+    #spr MAX_SPRITES < not if exit then
+    src -> bmp @ 0= if exit then                \ skip bmp-less rows (lock-marker)
+    spr-buf   #spr /spr * + to slot
+    src slot copy ( slot ) spr-order #spr cells + !
+    1 +to #spr ;
+
+: collect ( system - )  ['] +spr swap entity-sprites ;
+
+: ~ysort ( - )
+    0 to #spr
+    forest.sys collect
+    treats.sys collect
+    \ sort key: prio (major layer) then base-y (feet = y + half sprite height)
+    spr-order #spr [: dup -> prio @ 11 <<  swap dup -> y @ >i  swap -> bmp @ bmpwh nip 2 /  + + ;] rsort
+    1 batch>
+        #spr for
+            spr-order i cells + @
+            { x @  y @ z @ -  2>i at  bmp @ cput }   \ z raises the sprite off its ground y
+        loop ;
 
 : main
     $60c030ff backdrop !
@@ -32,8 +67,7 @@ import %idir%/treats.vfx
     forest.sys load
     treats.sys load
     show>
-        god                    \ treats.sys steps its own stage; forest.sys is procedural
-        forest.sys render      \ background playfield
-        treats.sys render ;    \ falling treats on top (own stage)
+        god         \ treats.sys steps its own stage; forest.sys is procedural
+        ~ysort ;    \ forest + treats sprites, interleaved by depth
 
 main

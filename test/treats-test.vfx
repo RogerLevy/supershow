@@ -5,6 +5,7 @@ import %idir%/treats.vfx
 \ treats now owns a private stage, so it's driven through its system, not by
 \ top-level step/sprites (which would hit the default stage instead).
 : main
+    $d0d0d0ff backdrop !
     just
     treats.sys load
     show> god  treats.sys render ;
