@@ -8,6 +8,7 @@ import %idir%/treats.vfx
     $d0d0d0ff backdrop !
     just
     treats.sys load
+    treats-load            \ OOP-managed spawning: one spewer
     show> god  treats.sys render ;
 
 main

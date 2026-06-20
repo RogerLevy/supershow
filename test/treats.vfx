@@ -39,7 +39,7 @@ class;
 %treat :: start
     ?ts rndtile bmp !
     physics>
-        vx @ 0.99 p* vx !
+        vx 2@ 0.98 dup 2p* vx 2!
         vx 2@ x 2+!                     \ drift on the ground plane
         grav vz +!  vz @ z +!          \ fall in z
         z @ 0> not if bounce then ;
@@ -61,7 +61,7 @@ class: %spewer  %actor derive  class;
     gamew rnd  gameh rnd  at
     %treat spawn as>
         3. 3. 2rnd  1.5 1.5 2-  vx 2!     \ x,y drift, symmetric
-        80. z !
+        64. z !
         2. rnd 1. +  vz ! ;                \ pop upward in z
 
 %spewer :: start
@@ -73,7 +73,7 @@ public
 
 : ~treats    sprites ;
 : treats-think   step ;
-: treats-load   3 for  %spewer spawn drop  loop ;
+: treats-load   %spewer treats.stage one-in start ;   \ OOP: one spewer actor (into treats' stage) that spews
 
 \ ---- World integration ------------------------------------------------------
 
@@ -100,7 +100,7 @@ public
 
 0 value emit-xt
 c: %treats %system ;
-%treats :: start   act>  spew  step ;   \ spawn + step its own stage each frame
+%treats :: start   act>  step ;   \ just step its stage; the runner decides how to populate it
 %treats :: render  ~treats ;
 %treats :: entity-count  ( - n )          treats.stage #items ;
 %treats :: entity-box    ( n - %box )     treats.stage el@ treat>box ;
@@ -112,3 +112,5 @@ c: %treats %system ;
        this treat>sprite emit-xt execute
     ;] each-active ;
 %treats manager: treats.sys manager;
+
+: treats-spew   treats.sys as> spew ;   \ procedural: spawn one treat per call into treats' stage

@@ -39,15 +39,16 @@ create spr-buf    MAX_SPRITES /spr * allot      \ stable record copies
 create spr-order  MAX_SPRITES cells allot       \ pointers into spr-buf (what gets sorted)
 0 value #spr
 
-: +spr ( %sprite - )
+: +spr ( sprite - )
     {: src | slot :}
-    #spr MAX_SPRITES < not if exit then
-    src -> bmp @ 0= if exit then                \ skip bmp-less rows (lock-marker)
+    #spr MAX_SPRITES < not ?exit
+    src -> bmp @ 0= ?exit                       \ skip bmp-less rows (lock-marker)
     spr-buf   #spr /spr * + to slot
     src slot copy ( slot ) spr-order #spr cells + !
     1 +to #spr ;
 
-: collect ( system - )  ['] +spr swap entity-sprites ;
+: collect ( system - )  
+    ['] +spr swap entity-sprites ;
 
 : ~ysort ( - )
     0 to #spr
@@ -67,7 +68,8 @@ create spr-order  MAX_SPRITES cells allot       \ pointers into spr-buf (what ge
     forest.sys load
     treats.sys load
     show>
-        god         \ treats.sys steps its own stage; forest.sys is procedural
+        god         \ steps both systems' stages
+        treats-spew \ procedural spawning: one treat per frame
         ~ysort ;    \ forest + treats sprites, interleaved by depth
 
 main

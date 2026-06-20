@@ -5,7 +5,9 @@ import %idir%/forest.vfx
 
 : main
     just
-    treats-load
-    show> treats-think ~forest ~treats ;
+    forest.sys load
+    treats.sys load
+    treats-load                          \ OOP-managed spawning: one spewer
+    show> god  forest.sys render  treats.sys render ;
 
 main
