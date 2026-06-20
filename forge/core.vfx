@@ -424,10 +424,12 @@ aka save-exe save
 : u+  rot + swap ;
 
 \ Search order stack
-aligned-page search-order-stack
+here dup 65535 and 65536 swap - allot 
+constant search-order-stack 
 variable sosp   search-order-stack sosp ! \ object stack pointer
-: sos-push ( ? - ) sosp @ !  4 sosp c+! ;
-: sos-pop ( - ? ) -4 sosp c+!  sosp @ @ ;
+
+: sos-push ( ? - ) sosp @ !  4 sosp w+! ;
+: sos-pop ( - ? ) -4 sosp w+!  sosp @ @ ;
 : sos-pushes ( ... n - ) dup >r for sos-push loop r> sos-push ;
 : sos-pops ( - ... n ) sos-pop dup >r for sos-pop loop r> ;
 : save-order ( - ) get-order sos-pushes get-current sos-push ;
