@@ -253,7 +253,7 @@ public
 : enter ( level - )
     {: lvl :}
     lvl refill-tilemaps
-    just
+    clear-stage
     lvl >src @ "actors" ?j>j ?dup if j>many then
 ;
 

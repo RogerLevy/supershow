@@ -2,9 +2,11 @@ module
 import %supershow%/src/supershow.vfx
 import %idir%/treats.vfx
 
+\ treats now owns a private stage, so it's driven through its system, not by
+\ top-level step/sprites (which would hit the default stage instead).
 : main
     just
-    treats-load
-    show> treats-think ~treats ;
+    treats.sys load
+    show> god  treats.sys render ;
 
 main

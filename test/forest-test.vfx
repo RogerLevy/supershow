@@ -9,4 +9,5 @@ import %idir%/forest.vfx
 
 main
 
-design forest
+\ ^ forest-sys design forest
+design forest 

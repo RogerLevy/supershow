@@ -18,7 +18,8 @@ public
 \ --- load a table for editing ------------------------------------------------
 
 : edit-table ( table - )
-    just  to the-table                    \ single-table session: clear the stage
+    clear-stage  
+    to the-table                    \ single-table session: clear the stage
     the-table #items 0 ?do  i the-table data>actor drop  loop
     the-table editor-update               \ one-shot 'editor hook (backgrounds etc.)
 ;

@@ -3,6 +3,9 @@ import %supershow%/src/supershow.vfx
 import %supershow%/lib/colors.vfx
 import %supershow%/addons/shapes.vfx
 
+\ ----------------------------------------------------
+\ General utilities
+
 0 value a
 continuation: a!>  a >r swap to a execute r> to a ;
 : a@+  a @  cell +to a ;
@@ -10,26 +13,21 @@ continuation: a!>  a >r swap to a execute r> to a ;
 : 4@ @+ swap @+ swap @+ swap @ ;
 : 4! >r 2swap r@ 2! r> 8 + 2! ;
 
-\ ----------------------------------------------------
-
-trait: %hitbox-haver  
-    16 nprop hitbox
-trait;
-
-\ ----------------------------------------------------
-
 c: %prototype  %actor proto:%prototype ;
 
 : prototype: ( class <name> - ) create dmake as  this proto ! ;
 
 \ ----------------------------------------------------
+\ Playfield entity prototype - read-only data
 
-c: %playfield-entity  %prototype %hitbox-haver ;
+c: %playfield-entity  %prototype hitbox 16 ;
 
 : playfield-entity:  %playfield-entity prototype: ;
 
+\ ----------------------------------------------------
+\ Editor integration
+
 : ~hitbox ( - )
-    me %hitbox-haver is? -exit
     hitbox 8 + 2@ or -exit
     hitbox 4@  2swap bmp @ bmpwh 2>p 2 2 2/ 2- +atp   red rect
 ;
@@ -56,6 +54,8 @@ playfield-entity: lock-marker  0 0 0 0 hitbox 4!
 descriptor;
    
 \ ----------------------------------------------------
+\ The actual forest scene
+\ To edit visually: `design forest`
 
 bitmap %idir%\dat\gfx\trees.png
 trees.png 64 64 tileset-from trees.ts
@@ -66,6 +66,7 @@ playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!
 playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!
 playfield-entity: path1  path.png bmp !
 
+public
 
 playfield.desc data: forest
     341 , 238 , PATH1 , 
@@ -113,9 +114,21 @@ playfield.desc data: forest
     9 , 10 , TREE1 , 
 data;
 
+private
+
 : ~tree ( a - )
     a!>   a@+ a@+ at   a@+ >bmp @ cput ;
 
 public
 
 : ~forest  1 batch>  [: ~tree ;] forest each ;
+
+\ ----------------------------------------------------
+\ World integration
+\ - Attachment point: forest.sys
+\ - Provide Sprite records
+\ - Provide Hitbox records
+
+c: %forest %system ;
+%forest :: render  ~forest ;
+%forest manager: forest.sys manager;

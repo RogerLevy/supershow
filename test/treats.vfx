@@ -1,4 +1,4 @@
-module [treats]
+module
 import %supershow%/src/supershow.vfx
 
 bitmap %idir%/dat/gfx/icons1.png
@@ -7,9 +7,16 @@ bitmap %idir%/dat/gfx/icons2.png
 icons1.png  16 16 tileset-from  icons1.ts
 icons2.png  16 16 tileset-from  icons2.ts
 
+\ ---- Private stage ----------------------------------------------------------
+\ treats owns its own stage; every class in this module resolves stg@ to it,
+\ so spawn/step/sprites/just hit it automatically with no explicit passing.
+\ Consequence: treats can only be driven through its system (god + render).
+%stage object treats.stage
+treats.stage use-stage
+
 \ ---- Treat ------------------------------------------------------------------
 
-class: %treat  %actor derive  class;
+c: %treat  %actor z ; 
 
 : ?ts  2 rnd if icons1.ts else icons2.ts then ;
 : rndtile ( ts - bmpid )  dup -> #tiles @ rnd tile ;
@@ -21,15 +28,20 @@ class: %treat  %actor derive  class;
         in? not if me unload exit then
         0.3 vy +! ;
 
+\ %treat :: render
+
+
 \ ---- Spewer -----------------------------------------------------------------
 
 class: %spewer  %actor derive  class;
 
+: spew
+    gamew rnd  gameh rnd  at
+    %treat spawn as>
+        4. -2. 2rnd  -2. -2. 2+  vx 2! ;
+
 %spewer :: start
-    act>
-        gamew rnd  gameh rnd  at
-        %treat spawn as>
-            4. -2. 2rnd  -2. -2. 2+  vx 2! ;
+    act> spew ;
 
 \ ---- Public -----------------------------------------------------------------
 
@@ -37,5 +49,10 @@ public
 
 : ~treats    sprites ;
 : treats-think   step ;
-: treats-load   3 0 do  %spewer spawn drop  loop ;
+: treats-load   3 for  %spewer spawn drop  loop ;
 
+\ World integration
+c: %treats %system ;
+%treats :: start   act>  3 for spew loop  step ;   \ spawn + step its own stage each frame
+%treats :: render  ~treats ;
+%treats manager: treats.sys manager;

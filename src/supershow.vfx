@@ -51,6 +51,7 @@ module [supershow.actor]
 	include tilecol              \ Tilemap slide collision & tile reading
 	include scene                \ JSON scene save/load
 	include table                \ Flat source-defined data tables + editor codec
+	include world                \ Systems layer: %system denizens, cohorts, world/registry; defines `just`
 
 module [supershow]
 	import core

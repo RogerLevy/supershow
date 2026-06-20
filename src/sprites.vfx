@@ -32,6 +32,10 @@ continuation: sorted-actors> ( xt - ) ( - )
     r> to sxt ;
 fast}
 
+\ NOTE: %actors can override RENDER, but assuming the game calls SPRITES
+\ to render the stage, or uses bitmap holding, they must only draw bitmaps (or text via PRINT).
+\ WARNING: Without bitmap holding enabled, performance on OpenGL tanks.
+
 : backsprites ( - )
     ec> 1 batch> [: >prio @ ;] sorted-actors> prio @ ?exit this render ?pillory ;
 

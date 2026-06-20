@@ -5,7 +5,7 @@
 public
 
 class: %stage
-    %node derive
+    is-a %dltree
 class;
 
 defer stg@ ( - stage )
@@ -86,32 +86,29 @@ continuation: who> ( - actor|0 ) ( - f )
 \ : priority ( n - )
 \     nextpri! ;
 
-|| : (behave)
-    actives>
-        ?benched
-        sp@ >r
-        ['] behave catch if
-            dup err_bailed = if drop else
-                this swap bench
-            then
+: (behave)
+    ?benched
+    sp@ >r
+    ['] behave catch if
+        dup err_bailed = if drop else
+            this swap bench
         then
-        r> restore-sp ;
+    then
+    r> restore-sp ;
 
-|| : (move)
-    actives>
-        ?benched
-        sp@ >r
-        ['] physics catch if
-            dup err_bailed = if drop else
-                this swap bench
-            then
+: (physics)
+    ?benched
+    sp@ >r
+    ['] physics catch if
+        dup err_bailed = if drop else
+            this swap bench
         then
-        r> restore-sp ;
+    then
+    r> restore-sp ;
 
 || : (step) ( - )
-    (behave)
-    (move)
-    +gametime ;
+    ['] (behave) each-active
+    ['] (physics) each-active ;
 
 %actor :: unload ( - )
     unloaded on ; 
@@ -135,10 +132,6 @@ continuation: who> ( - actor|0 ) ( - f )
 
 : clear-stage ( - )
     ['] unload stg@ each sweep ;
-
-: just ( - )
-    ." JUST : Clearing all actors!" cr
-    clear-stage gamew 2 / gameh 2 / at  ;
 
 : transfer ( actor stage - )
     push ;
@@ -166,7 +159,25 @@ continuation: who> ( - actor|0 ) ( - f )
 
 \ Default stage
 %stage object actors
-' actors is stg@
+actors value default-stage
+
+\ The current stage follows `this`: an object's class records its origin module
+\ (nibs.vfx), and a module may claim a private stage (mod.stg). Objects whose module
+\ claims no stage — and the top-level nullobj — fall back to default-stage (actors).
+: (stg@) ( - stage )
+    cla @ -> origin-module @ ?dup if  mod.stg @ ?dup ?exit  then
+    default-stage ;
+' (stg@) is stg@
+
+\ Assign a stage to the current module (call at top level while compiling).
+\ Classes defined here resolve stg@ to it; another module shares it by passing
+\ the same stage object to use-stage. Caller supplies the stage, so it can be
+\ named or anonymous, public or private, as needed.
+: use-stage ( stage - )  current-module mod.stg ! ;
+
+\ This's module's own stage, or 0 if it claims none (no default-stage fallback).
+: own-stage@ ( - stage|0 )
+    cla @ -> origin-module @ ?dup if  mod.stg @ exit  then  0 ;
 
 \ =============================================================================
 \ Script Classes

@@ -1,0 +1,39 @@
+\ treat-forest2 — advanced coordinator: forest + treats as independent %systems.
+\ This step verifies world coordination only: both systems are loaded into the
+\ world, updated through `god`, and drawn through their `render` protocols.
+\ (entity-box / entity-sprite querying comes next.)
+
+\ NOTE: This is *not* a typical use-case.
+\ We are just demonstrating how deep integration of simple
+\ programs (like this one) into a game is accomplished.
+
+\ Normally, systems with cross-cutting concerns should be 
+\ self-contained and self-sufficient.  There are going to be
+\ times where a procedural approach wins out, and a %system will
+\ make the most sense - but you need just a little bit of 
+\ interoperability to make it mesh well in your game.  
+
+\ ***This is NOT a component or plugin system.***
+
+\ Think of it as sub-game-engines.
+
+\ Sequencing and superimposing are meant to be the dominant 
+\ use cases.  *And you can always just use the Stage!*
+
+
+module
+import %supershow%/src/supershow.vfx
+import %idir%/forest.vfx
+import %idir%/treats.vfx
+
+: main
+    $60c030ff backdrop !
+    just
+    forest.sys load
+    treats.sys load
+    show>
+        god                    \ treats.sys steps its own stage; forest.sys is procedural
+        forest.sys render      \ background playfield
+        treats.sys render ;    \ falling treats on top (own stage)
+
+main

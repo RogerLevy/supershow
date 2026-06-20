@@ -92,6 +92,8 @@ Restricted, limited-scope systems that might not use %actor are going to be good
 • minigames
 • dialogue boxes
 • UI
+• transitions
+• cutscenes
 
 A "zelda-like" system would manage the much looser constraints of a dynamic, %actor-based world with top-down mechanics.
 It could just use the default Stage, or create its own. 

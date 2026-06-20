@@ -1,0 +1,101 @@
+module [supershow.actor]
+
+public 
+
+trait: %denizen
+    prop en
+    prop vis
+trait;
+
+class: %system
+    %actor derive
+    is-a %loadable
+    is-a %denizen
+    prop cohorts :ref %stack
+    prop stg   \ if not zero, changes the current stage on LOAD
+    prop mode  \ if not zero, changes the current mode on LOAD
+class;
+
+0 %system :construct ( - )
+    16 %addr %stack dmake cohorts ! ;
+
+class: %world
+    is-a %dltree
+class;
+
+%world object world   \ global singleton
+
+256 %addr stack staff  \ list of defined systems
+
+private
+
+%system :: load
+    this world push   en on  vis on
+    own-stage@ if clear-stage then   \ a stage-owning system starts with a fresh stage
+    this start ;
+
+%system :: unload
+    en off  vis off  this dlremove ;
+
+c: %box-params ;
+c: %sprite-params ;
+
+: withdraw ( system - )
+    >cohorts @ vacate ;
+
+public
+
+%box-params object nul-box
+%sprite-params object nul-sprite
+
+%denizen :: entity-count ( - n ) 0 ; 
+%denizen :: entity-box ( - a ) nul-box ; 
+%denizen :: entity-sprite ( - a ) nul-sprite ; 
+
+: clear-world ( - )
+    ['] withdraw  staff each
+    ['] unload  world each
+;
+
+: active-cohorts ( xt system - ) ( system - )
+    {: xt sys :}
+    sys >cohorts @ #items for
+        i sys >cohorts @ el@ dup >en @ if
+             xt execute
+        else drop then
+    loop
+;
+
+: each-cohort ( xt system - ) ( system - )
+    >cohorts @ each ;
+
+: register ( system-a system-b - )
+    {: sys-a sys-b :}
+    sys-a sys-b >cohorts @ indexof -1 <> ?exit  \ exit if already a cohort
+    sys-a sys-b >cohorts @ push 
+;
+
+: connect ( system-a system-b - )
+    2dup register swap register ;
+
+: god ( - )
+    [: { en @ if behave then } ;] world each 
+    [: { en @ if physics then } ;] world each 
+;
+
+: just ( - )
+    clear-stage 
+    clear-world
+    gamew 2 / gameh 2 / at  
+    ." JUST : Stage and world cleared." cr
+;
+
+: manager: ( class <name> - ) ( - system )
+    {: class :} 
+    class %system is? not abort" MANAGER: : Class must be a descendant of %SYSTEM."
+    class object
+    lastbody staff push 
+    lastbody {
+;
+
+: manager; ( - ) } ; 

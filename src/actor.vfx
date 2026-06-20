@@ -1,9 +1,5 @@
 public
 
-variable clock  clock on
-variable gamelife
-0d 2value gametime
-
 class: %actor
     %node derive
 
@@ -74,11 +70,6 @@ c: %actor benched ;  \ controls behavior and physics
 : resurrect ( actor - ) { benched off   this start } ;
 
 \ Step
-: +gametime ( - )
-    clock @ if
-        gametime usdelta 0 d+ to gametime  
-    then
-    1 gamelife +! ;
 
 : behave  beha @ ?oexec ;
 : physics  phys @ ?oexec ;
@@ -152,6 +143,12 @@ redef : halt  beha off  0 0 vx 2! ;
         <up> held? if -2. y +! then
         <down> held? if 2. y +! then ;
 
+: enable ( actor - )
+    >en on ;
+
+: disable ( actor - )
+    >en off ;
+
 \ =============================================================================
 \ Actor Inspection
 \ =============================================================================
@@ -168,3 +165,4 @@ redef : halt  beha off  0 0 vx 2! ;
     .status
     ." at: " x 2@ 2>i swap . . 
     ." ] " pop-attribute ;
+

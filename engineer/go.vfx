@@ -109,10 +109,21 @@ create proj2d 64 allot          \ scratch 2D ortho projection (ALLEGRO_TRANSFORM
     proj2d al_use_projection_transform
     ALLEGRO_DEPTH_TEST 0 al_set_render_state ;
 
+0d 2value gametime
+variable gamelife
+variable clock  clock on
+
+|| : +gametime ( - )
+    clock @ if
+        gametime usdelta 0 d+ to gametime  
+    then
+    1 gamelife +! ;
+
 : draw-game  reset-render-state cls 0 0 at 'show @ ?execute ;
 : process-tick  e{ draw-game e} ;
 : frame  
     update-delta 
+    +gametime
     process-input 
     process-tick 
     system-controls 

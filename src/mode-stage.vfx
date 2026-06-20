@@ -14,4 +14,7 @@ public
 %mode template { actors stg ! }
 default-mode { actors stg ! }
 
-:noname ( - stage )  gamemode @ -> stg @ ; is stg@
+\ NOTE: stg@ is NOT bound here anymore. The current stage now follows `this`
+\ (object -> class origin-module -> mod.stg, see stage.vfx (stg@)), not the mode.
+\ Modes no longer switch the stage; mode.stg is vestigial pending the mode cleanup
+\ (see 1.0-plan: "Modes: decouple from stages").

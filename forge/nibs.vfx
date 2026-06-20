@@ -268,6 +268,7 @@ continuation: ec> ( - ) ( - )
     cell field on-apply-xt
     cell field on-derive-xt
     cell field on-reopen-xt
+    cell field origin-module             \ module this class was defined in (for stg@ / debug scoping)
     /list field dependents              \ classifier dependents (classes that applied the trait or classes that derived the class)
     cell field #openings
     cell field is-datatype
@@ -842,6 +843,9 @@ create %protocol  %class dmake {
 
 : class; ( - )
     template drop
+    classifier -> origin-module @ 0= if            \ stamp once; reopening from another module keeps the original
+        current-module classifier -> origin-module !
+    then
     end-classifier ;
 
 : is-a ( <trait> - )

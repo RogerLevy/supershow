@@ -13,8 +13,6 @@ only forth definitions
 
 aka old-included included
 
-only forth also moduleing definitions
-
 \ ------------------------------------------------------------------------------
 \ Module struct
 \ ------------------------------------------------------------------------------
@@ -24,6 +22,7 @@ cell field mod.pub-wl        \ public wordlist handle
 cell field mod.priv-wl       \ private wordlist handle
 cell field mod.imports       \ linked list head of imports (0 = none)
 cell field mod.reexports     \ linked list head of reexports (0 = none)
+cell field mod.stg           \ private stage for this module (0 = use default-stage)
 0 field mod.srcfile          \ inline zstring (source file name, last field)
 drop
 
@@ -35,6 +34,8 @@ constant /imp-node
 \ ------------------------------------------------------------------------------
 \ Module name helpers
 \ ------------------------------------------------------------------------------
+
+only forth also moduleing definitions
 
 create mnb 256 allot
 : >bracket-name ( a u - a' u' )
@@ -195,6 +196,7 @@ create qname-buf 256 allot
     r> ,                    \ mod.priv-wl
     0 ,                     \ mod.imports
     0 ,                     \ mod.reexports
+    0 ,                     \ mod.stg
     CurrSourceName drop zcount 1+ dup allot here over - swap move  \ mod.srcfile (inline zstring)
     immediate
     does-module
