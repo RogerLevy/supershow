@@ -596,17 +596,17 @@ For a one-shot timed callback:
 Assets are declared at the top level of a file (outside any word definition). They are compile-time operations that embed the file data and register the asset.
 
 ```forth
-bitmap %idir%/dat/gfx/mysprite.png    \ declares word `mysprite.png` → bmpid
-bitmap %idir%/dat/gfx/player.png
+bitmap %idir%/assets/gfx/mysprite.png    \ declares word `mysprite.png` → bmpid
+bitmap %idir%/assets/gfx/player.png
 
 mysprite.png 16 16 tileset-from  player-ts   \ ( bmpid tw th <name> ) → tileset
 20 15 tilemap the-map                         \ ( w h <name> ) → tilemap
 
-sample %idir%/dat/smp/jump.ogg       \ declares word `*jump*` → plays sample
-bgm mytrack  %idir%/dat/bgm/music.ogg \ declares word `mytrack` → streams BGM
+sample %idir%/assets/smp/jump.ogg       \ declares word `*jump*` → plays sample
+bgm mytrack  %idir%/assets/bgm/music.ogg \ declares word `mytrack` → streams BGM
 
-ttf-font 12 %idir%/dat/fnt/myfont.ttf  \ loads TTF font, sets as default
-bitmap-font %idir%/dat/fnt/font.png     \ bitmap font
+ttf-font 12 %idir%/assets/fnt/myfont.ttf  \ loads TTF font, sets as default
+bitmap-font %idir%/assets/fnt/font.png     \ bitmap font
 ```
 
 After `bitmap myfile.png`, the word `myfile.png` exists and returns the bmpid when called.
@@ -614,7 +614,7 @@ After `sample jump.ogg`, `*jump*` returns the sample ID. Call `*jump* sound` to 
 `hush` — stop all audio.
 `softice` (or whatever bgm name) — stream that BGM.
 
-The `%idir%/dat/gfx/` path is conventional. `%idir%` is the project root.
+The `%idir%/assets/gfx/` path is conventional. `%idir%` is the project root.
 
 ---
 
@@ -816,7 +816,7 @@ act>
 ### Loading assets and using them
 
 ```forth
-bitmap %idir%/dat/gfx/player.png
+bitmap %idir%/assets/gfx/player.png
 player.png 16 16 tileset-from player-ts
 
 %myactor :: start ( - )
@@ -853,9 +853,9 @@ Broad-phase AABB grid: `cgrid` (see `src/cgrid.vfx`, `test/boxland.vfx`).
 ### Audio (brief — see src/waveplay.vfx, test/audiotest.vfx)
 
 ```forth
-sample %idir%/dat/smp/jump.ogg   \ creates word *jump*
+sample %idir%/assets/smp/jump.ogg   \ creates word *jump*
 *jump* sound                     \ play sample
-bgm mymusic %idir%/dat/bgm/track.ogg   \ creates word mymusic
+bgm mymusic %idir%/assets/bgm/track.ogg   \ creates word mymusic
 mymusic                           \ stream BGM
 hush                              \ stop all audio
 ```

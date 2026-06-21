@@ -3,7 +3,7 @@ import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 public
 
-bitmap %idir%/dat/gfx/sparkle.png
+bitmap %idir%/assets/gfx/sparkle.png
 
 0 value cursor       \ orbiting target actor
 

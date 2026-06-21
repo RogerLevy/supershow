@@ -54,7 +54,7 @@ c: %playfield-type  %editable bmp hitbox 16 ;
 %playfield-type :: edit-render ( actor - )
     { x 2@ 2>i at } bmp @ cput ;
 
-bitmap %idir%\dat\gfx\trees.png
+bitmap %idir%\assets\gfx\trees.png
 trees.png 64 64 tileset-from trees.ts
 
 create tree1 %playfield-type dmake {

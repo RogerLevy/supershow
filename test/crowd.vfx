@@ -5,10 +5,10 @@ import %supershow%/src/supershow.vfx
 \ Spritesheets
 \ =============================================================================
 
-bitmap %idir%/dat/gfx/2200man.png
-bitmap %idir%/dat/gfx/alfador.png
-bitmap %idir%/dat/gfx/fairgirl.png
-bitmap %idir%/dat/gfx/lyle.png
+bitmap %idir%/assets/gfx/2200man.png
+bitmap %idir%/assets/gfx/alfador.png
+bitmap %idir%/assets/gfx/fairgirl.png
+bitmap %idir%/assets/gfx/lyle.png
 
 2200man.png  21 36 tileset-from  man.ts
 alfador.png  18 20 tileset-from  cat.ts

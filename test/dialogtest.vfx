@@ -7,7 +7,7 @@ import allegro5
 0 value dlg
 
 : load-font ( -- )
-    s" %idir%/dat/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
+    s" %idir%/assets/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
     the-font 0= abort" Failed to load Habbo.ttf" ;
 
 create text0

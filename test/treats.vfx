@@ -1,9 +1,9 @@
 module
 import %supershow%/src/supershow.vfx
 
-bitmap %idir%/dat/gfx/icons1.png
-bitmap %idir%/dat/gfx/icons2.png
-bitmap %idir%/dat/gfx/icon-shadow.png
+bitmap %idir%/assets/gfx/icons1.png
+bitmap %idir%/assets/gfx/icons2.png
+bitmap %idir%/assets/gfx/icon-shadow.png
 
 icons1.png  16 16 tileset-from  icons1.ts
 icons2.png  16 16 tileset-from  icons2.ts

@@ -7,9 +7,9 @@ import allegro5
 \ Assets
 \ =============================================================================
 
-bitmap %idir%/dat/gfx/alfador.png
-bitmap %idir%/dat/gfx/fairgirl.png
-bitmap %idir%/dat/gfx/2200man.png
+bitmap %idir%/assets/gfx/alfador.png
+bitmap %idir%/assets/gfx/fairgirl.png
+bitmap %idir%/assets/gfx/2200man.png
 
 alfador.png   18 20 tileset-from cat.ts
 fairgirl.png  21 28 tileset-from girl.ts
@@ -18,7 +18,7 @@ fairgirl.png  21 28 tileset-from girl.ts
 0 value the-font
 
 : load-font ( - )
-    s" %idir%/dat/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
+    s" %idir%/assets/fonts/Habbo.ttf" expand >zpad 16 0 al_load_ttf_font to the-font
     the-font 0= abort" Failed to load Habbo.ttf" ;
 
 \ =============================================================================

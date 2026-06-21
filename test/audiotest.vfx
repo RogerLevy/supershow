@@ -3,13 +3,13 @@ import %supershow%/src/supershow.vfx
 
 \ ---- Assets ----------------------------------------------------------------
 
-sample %idir%/dat/smp/snd-01.ogg
-sample %idir%/dat/smp/snd-02.ogg
-sample %idir%/dat/smp/snd-03.ogg
-sample %idir%/dat/smp/snd-04.ogg
-sample %idir%/dat/smp/snd-05.ogg
+sample %idir%/assets/smp/snd-01.ogg
+sample %idir%/assets/smp/snd-02.ogg
+sample %idir%/assets/smp/snd-03.ogg
+sample %idir%/assets/smp/snd-04.ogg
+sample %idir%/assets/smp/snd-05.ogg
 
-bgm softice  %idir%/dat/bgm/softice.ogg
+bgm softice  %idir%/assets/bgm/softice.ogg
 
 \ ---- Controls --------------------------------------------------------------
 

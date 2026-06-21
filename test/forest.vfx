@@ -57,10 +57,10 @@ descriptor;
 \ The actual forest scene
 \ To edit visually: `design forest`
 
-bitmap %idir%\dat\gfx\trees.png
+bitmap %idir%\assets\gfx\trees.png
 trees.png 64 64 tileset-from trees.ts
 
-bitmap %idir%\dat\gfx\path.png
+bitmap %idir%\assets\gfx\path.png
 
 playfield-entity: tree1  trees.ts 0 tile bmp !   26. 51. 15. 10. hitbox 4!   2 prio !
 playfield-entity: tree2  trees.ts 1 tile bmp !   18. 44. 33. 12. hitbox 4!   2 prio !
@@ -69,22 +69,32 @@ playfield-entity: path1  path.png bmp !   0 prio !   \ background layer
 public
 
 playfield.desc data: forest
+    49 , 59 , TREE2 , 
+    326 , 151 , TREE1 , 
+    32 , 109 , TREE1 , 
     341 , 238 , PATH1 , 
     0 , 0 , LOCK-MARKER , 
-    11 , 135 , TREE1 , 
+    27 , 137 , TREE1 , 
     287 , 41 , TREE2 , 
-    295 , 57 , TREE2 , 
-    291 , 71 , TREE2 , 
-    278 , 86 , TREE2 , 
-    159 , 130 , TREE2 , 
+    267 , 97 , TREE2 , 
+    167 , 142 , TREE2 , 
     194 , 107 , TREE1 , 
-    284 , 171 , TREE1 , 
+    290 , 169 , TREE1 , 
+    279 , -8 , TREE1 , 
+    314 , -15 , TREE1 , 
     101 , 3 , TREE1 , 
-    46 , 47 , TREE2 , 
     217 , 44 , TREE1 , 
     236 , 157 , TREE1 , 
     46 , 191 , TREE1 , 
-    326 , 170 , TREE1 , 
+    86 , 220 , TREE1 , 
+    4 , 224 , TREE1 , 
+    39 , 230 , TREE1 , 
+    16 , 239 , TREE1 , 
+    43 , 253 , TREE1 , 
+    138 , 243 , TREE1 , 
+    190 , 242 , TREE1 , 
+    237 , 260 , TREE1 , 
+    254 , 237 , TREE1 , 
     404 , 181 , TREE1 , 
     438 , 200 , TREE1 , 
     468 , 227 , TREE1 , 
@@ -113,8 +123,9 @@ playfield.desc data: forest
     326 , 447 , TREE1 , 
     166 , 461 , TREE1 , 
     243 , 60 , TREE1 , 
-    70 , 65 , TREE1 , 
+    309 , 80 , TREE1 , 
     9 , 10 , TREE1 , 
+    159 , 250 , TREE1 , 
 data;
 
 private

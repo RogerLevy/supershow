@@ -7,10 +7,10 @@ module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 
-bitmap %idir%/dat/gfx/greyzebes.png
+bitmap %idir%/assets/gfx/greyzebes.png
 greyzebes.png 16 16 tileset-from greyzebes.ts
 
-JSONFILE %idir%/dat/levels/leveldemo.json  
+JSONFILE %idir%/assets/levels/leveldemo.json  
 
 0 value the-level
 0 value camx        \ camera origin (fixed pixels)
