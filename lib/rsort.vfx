@@ -38,9 +38,13 @@ pass1shift value radixShift
 
 defer @key  ( item - key )
 
-create table0  16384 cells 16 * allot
-create table1  16384 cells 16 * allot
-table0 value table
+0 value table0
+0 value table1
+0 value table
+
+16384 cells 16 * allocate throw to table0
+16384 cells 16 * allocate throw to table1
+table0 to table
 
 : other  table table0 = if  table1  else  table0  then  to table ;
 : radix++  radix 4 << to radix  4 +to radixShift ;
@@ -63,6 +67,11 @@ table0 value table
   16 0 do  i bucket @+ cells dup >r  dest swap move  r> +to dest  loop ;
 
 public
+
+: init-rsort ( - )
+    16384 cells 16 * allocate throw to table0
+    16384 cells 16 * allocate throw to table1
+    table0 to table ;
 
 : rsort  ( addr #cells xt - ) ( addr - key )  \ note: destructive
     over 0= if 2drop drop exit then

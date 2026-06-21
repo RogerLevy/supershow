@@ -26,7 +26,7 @@ private
 \ Note: action-of is standard ANS Forth; alternatively use ['] BusyIdle >body @
 ['] BusyIdle >body @ value 'original-busyidle
 
-create gds 2 mb allot
+\ create gds 2 mb allot
 
 : repl-post ( - )
     frame-timer al_stop_timer 
@@ -45,7 +45,7 @@ variable _rp
 fast{
 : repl-frame ( - )
     0 sp@ >r rp@ _rp !
-    gds [ 2 mb 4096 - ] literal + sp!
+    \ gds [ 2 mb 4096 - ] literal + sp!
     ['] repl-mode-frame catch _err !
     _rp @ rp! r> sp! drop
     _err @

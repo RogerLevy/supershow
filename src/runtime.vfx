@@ -47,6 +47,7 @@ public
 
 : init-supershow ( - )
     ." Initializing Supershow..." cr
+    init-rsort
     hold off
     user-zoom off
     refit

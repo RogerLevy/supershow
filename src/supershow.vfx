@@ -36,6 +36,7 @@ module [supershow.actor]
 
 	\ Actor system
 	import %idir%/../lib/rsort.vfx
+	reexport [rsort]
 	include actor
 	include stage                \ Actor/sprite system
 	include mode-stage           \ Bind mode system's stage to `actors` (actor half of mode)
