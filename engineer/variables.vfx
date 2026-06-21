@@ -37,6 +37,7 @@ wordlist constant honing-wl
 250000 value max-usdelta \ cap on usdelta (us); absorbs stalls/hitches so time can't lurch
 create zcommand 256 allot 
 variable backup
+variable repl-game-active
 
 \ =============================================================================
 \ Add protection from unintentional redefinitions (use REDEF) 

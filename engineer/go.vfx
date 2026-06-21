@@ -41,7 +41,10 @@ redef : ticks  ( n - ms )
     winmode  
     update-delta update-delta ;
 
-: ?idle  debug @ if (EmptyIdle) then ;
+: ?idle ( - )
+    repl-game-active @ ?exit
+    debug @ if (EmptyIdle) then 
+;
 
 \ =============================================================================
 \ Event handler

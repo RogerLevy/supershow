@@ -20,9 +20,6 @@ module [engineer]
 
 public
 
-\ Flag to control REPL game mode
-variable repl-game-active
-
 private
 
 \ Save original BusyIdle action
@@ -39,12 +36,7 @@ create gds 2 mb allot
 
 \ REPL-mode frame: like regular frame with proper spin-based pacing
 : repl-mode-frame ( - )
-    update-delta
-    process-input
-    process-tick
-    system-controls
-    display al_flip_display
-    spin
+    frame
     <esc> pressed? if >vfx then ;
 
 \ Single frame execution for REPL mode (no throw, catches errors)
