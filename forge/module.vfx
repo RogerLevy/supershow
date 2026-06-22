@@ -330,6 +330,10 @@ synonym bare-module-name? bare-name?
 \ Core words
 \ ------------------------------------------------------------------------------
 
+: open-module ( module - )
+    to current-module
+    current-module build-module-search-order ;
+
 redef : module ( - )
     qualified-import? if
         0 to qualified-import?
@@ -348,8 +352,7 @@ redef : module ( - )
         ?module
     then
     -1 to section-declared?
-    to current-module
-    current-module build-module-search-order ;
+    open-module ;
 
 redef : global ( - )
     only forth definitions  0 to current-module ;
@@ -376,9 +379,8 @@ redef : global ( - )
         r> to current-module restore-order
         mod 0= if abort" ^ : file did not declare a module." then
     then
-    mod dup to current-module
-    ." Current module: " current-module .name cr
-    build-module-search-order ;
+    mod dup open-module
+    ." Current module: " current-module .name cr ;
 
 redef : public ( - )
     -1 to section-declared?

@@ -129,12 +129,6 @@ redef : } ( - ) -4 osp c+!  osp @ @ to this ;
 : that ( - object ) osp @ @ ;
 continuation: as> ( %actor - ) ( - ) swap { ( xt ) execute } ;
 
-: as ( object - )
-    \ Bind the given object and switch to its vocabulary if it has one
-    to this
-    cla @ body>name f" %s/"
-    sfind if execute else drop then ;
-
 : this! ( object - ) to this ;
 aka me this
 aka me! this!
@@ -1160,6 +1154,11 @@ redef : ; ( - )
 \ Misc
 \ ==============================================================================
 
+: as ( object - )
+    \ Bind the given object and switch to its vocabulary if it has one
+    to this
+    cla @ -> origin-module @ ?dup if open-module then ;
+
 aka nprop nproperty
 aka prop property
 
@@ -1374,7 +1373,7 @@ class: %global class;  \ ECP = ROOTEC
     nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { nullobj { 
 ;
 reset-object-stack
-nullobj as 
+nullobj this!
 in-dict
 
 \ ==============================================================================
@@ -1389,7 +1388,7 @@ in-dict
     fresh-next-classifier# @ next-classifier# ! 
     fresh-/static @ to /static
     reset-object-stack
-    nullobj this!  in-dict
+    nullobj as  in-dict
     reset-ec-stack
     fresh/ec @ to s/ec
     0 to classifier 
