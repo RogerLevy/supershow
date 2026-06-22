@@ -81,10 +81,7 @@ module [supershow]
 \ Tools
 \ =============================================================================
 
-debug @ [if]
-    include %idir%/tools.vfx                \ Development tools
-    
-	import %supershow%/sketchpad/sketchpad.vfx  \ Table/stage editor
-	reexport [sketchpad]
-    \ s" sketchpad" <f12> func
-[then]
+include %idir%/tools.vfx                \ Development tools
+
+import %supershow%/sketchpad/sketchpad.vfx  \ Table/stage editor
+reexport [sketchpad]
