@@ -43,6 +43,6 @@ public
 : load-scene ( path len - )
     {: path len :}
     path len load-json 
-    dup 0= abort" load-scene: file not found or parse error"
+    dup 0= abort" load-scene: File not found or parse error"
     dup "actors" j>j j>many
     destroy-json ;
