@@ -65,7 +65,7 @@
 	},
 	"settings": {
 		"explorer.autoReveal": false,
-		"explorer.compactFolders": true,
+		"explorer.compactFolders": false,
 		"explorer.excludeGitIgnore": false,
 		"explorer.fileNesting.enabled": true,
 		"explorer.sortOrder": "type",
