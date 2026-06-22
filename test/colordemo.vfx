@@ -8,7 +8,9 @@ module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 import %supershow%/lib/colors.vfx
-
+import %supershow%/lib/oklab.vfx
+import [allegro5]
+    
 private
 
 variable mx  variable my
@@ -81,8 +83,9 @@ variable held              \ id of the slider being dragged (0 = none)
 public
 
 : main
+    display al_show_mouse_cursor
     0 held !
     vga-8x8 default-font!
     show> ~demo ;
 
-\ main
+main

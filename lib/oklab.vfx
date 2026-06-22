@@ -1,3 +1,5 @@
+module [oklab]
+
 \ ============================================================================
 \ OKLab / OKLCh perceptual color space
 \ ============================================================================
@@ -19,6 +21,8 @@
 \
 \ Matrix constants below are Ottosson's published M1 (linear sRGB -> LMS),
 \ M2 (LMS' -> Lab), and their inverses; transcribe with care.
+
+import [allegro5.utils]    \ pen channels ppen*@/!, c>p
 
 private
 
