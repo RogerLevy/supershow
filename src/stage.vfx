@@ -140,7 +140,7 @@ continuation: who> ( - actor|0 ) ( - f )
     udup push  { -1 rnd id ! } ;
 
 : one-in ( class stage - actor )
-    >r >r *node r> over construct dup r> stage-init ;
+    >r *node dup r> stage-init ;
 
 : one ( class - actor )
     stg@ one-in ;

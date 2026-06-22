@@ -11,13 +11,12 @@ class: %node
 class;
 
 \ Node pool
-
 %node object free-nodes
 
-%node >template { free-nodes pool ! }
+\ %node >template { free-nodes pool ! }
 
 : recycle ( node - )
-    dup dlremove  dup >pool @ push ;
+    dup dlremove  dup >pool @ dup if push else 2drop then ;
 
 : copy-node ( node-src node-dest - )
     over %node is? not abort" COPY-NODE: Source is not a %node."
@@ -27,12 +26,14 @@ class;
     } 
 ;
 
-: *node ( - node )
+: *node ( class - node )
     free-nodes #items if
         free-nodes pop
+        swap over construct
     else
         #nodes @ MAX_NODES = abort" Maximum node limit (32768) exceeded."
         1 #nodes +!
-        align here s/node allot 
+        align dmake 
+        free-nodes over >pool !
     then 
 ;
