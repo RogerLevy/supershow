@@ -354,6 +354,14 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     loop 
 ;
 
+: hide-tilesets ( - )   \ hide each used tileset's word so preload re-slices it fresh
+    max-layers for
+        i slot { en @ ts @ and } if
+            i slot >ts @ body> >name hidename
+        then
+    loop
+;
+
 \ ---- build the persistent level from a cjson root (over the fixed slots) ------
 
 : build-layer-slot ( layerj n - )   \ configure + refill + enable slot n
@@ -431,6 +439,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 : open-level ( path-a path-len - )
     expand lvl-path$ place
     lvl-path$ count load-json
+    hide-tilesets 
     ( json ) dup preload-tilesets    \ load each layer's tileset from its "tilesetfile"
         load-level                   \ load-editor (inside) restores the cameras + version
     0 to layer#  0 load-brush-1 ;
@@ -478,6 +487,11 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     0 z" Open Level" z" *.json" load-dialog
     dup 0= if 2drop exit then
     gs-zbuf zplace  gs-zbuf zcount open-level ;
+
+: revert ( - )   \ reload the current level from disk, re-slicing its tilesets
+    lvl-path$ c@ 0= ?exit
+    lvl-path$ count open-level
+;
 
 \ ---- save (serialize the live enabled layers to a fresh cjson tree) ----------
 

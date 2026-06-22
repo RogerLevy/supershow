@@ -92,6 +92,7 @@ public
         <C> pressed? if copy-sel then
         <X> pressed? if copy-sel erase-sel then
         <E> pressed? if erase-sel then
+        <R> pressed? if revert then
         exit
     then
     shift? if
