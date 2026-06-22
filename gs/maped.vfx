@@ -64,6 +64,25 @@ public
     tile-sel 2 cells + 2!
 ;
 
+: toggle-mute ( - )
+    layer# scratch# < if  the-layer >vis toggle  then ;
+
+: toggle-solo ( - )
+    false
+    scratch# for
+        layer# i <> if  the-level i layer >vis @ or then 
+    loop
+    if
+        scratch# for
+            layer# i <> if  the-level i layer >vis off  then 
+        loop
+    else
+        scratch# for
+            layer# i <> if  the-level i layer >vis on  then 
+        loop
+    then 
+    the-layer >vis on ;
+
 : maped-input ( - )
     ctrl? if
         shift? if  <S> pressed? if save-as then  exit  then   \ Ctrl+Shift+S = save as
@@ -88,6 +107,8 @@ public
     <V> pressed? if flipv then
     <lmb> held?  if  mouse-cell at the-layer paint  then
     <rmb> held?  if  copy-brush-area  then
+    <m> pressed? if  toggle-mute  then 
+    <s> pressed? if  toggle-solo  then
 ;
 
 

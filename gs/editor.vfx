@@ -430,7 +430,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
 : open-level ( path-a path-len - )
     expand lvl-path$ place
-    lvl-path$ count load-json 
+    lvl-path$ count load-json
     ( json ) dup preload-tilesets    \ load each layer's tileset from its "tilesetfile"
         load-level                   \ load-editor (inside) restores the cameras + version
     0 to layer#  0 load-brush-1 ;
@@ -572,14 +572,6 @@ command : add-layer ( w h - )
 command : delete-layer ( - )   
     \ Clear the active layer and free its slot
     the-layer {  this clear-tilemap  en off  } ;
-
-command : visible ( - ) 
-    \ Show the active layer (1-9)
-    layer# scratch# < if  the-layer >vis on   then ;   
-
-command : invisible  ( - )  
-    \ Hide the active layer (1-9)
-    layer# scratch# < if  the-layer >vis off  then ;   
 
 command : reorder ( n - )   
     \ Move the active layer to draw-order position n (1-10)
