@@ -18,7 +18,7 @@ public
 : scroll-to ( n - )  0 scroll-max clamp to pick-scroll ;
 : wheel-delta ( - n )  wheel  dup wheel-prev -  swap to wheel-prev ;
 
-: ?scroll ( - )
+: ?tiles-scroll ( - )
     wheel-delta ?dup if  tileh 3 * *  negate  pick-scroll +  scroll-to  then
     <HOME> pressed? if  0 scroll-to  then
     <END>  pressed? if  scroll-max scroll-to  then
@@ -77,7 +77,7 @@ public
     evaluate  the-layer >ts !  2drop ;
 
 : tiles-input ( - )
-    ?scroll
+    ?tiles-scroll
     ctrl? if  <O> pressed? if change-tileset then  exit  then
     shift? if  pick-rect exit  then
     in-sheet? -exit

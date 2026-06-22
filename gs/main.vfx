@@ -13,6 +13,7 @@ import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 import [cjson]
 import [allegro5]
+include %supershow%/lib/help.vfx
 include %idir%/editor.vfx
 include %idir%/maped.vfx
 include %idir%/tiles.vfx

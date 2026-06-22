@@ -2,9 +2,7 @@
 \ Shared editor state, screen dispatcher, camera/mouse mapping, brush, save.
 \ See gs/main.vfx for the program entry point.
 
-include %supershow%/lib/help.vfx
-
-public
+private
 
 \ ---- state -------------------------------------------------------------------
 
@@ -22,6 +20,11 @@ true value info?               \ info overlay toggle
 true value grid?               \ screen-grid overlay on/off (persisted in "editor")
 320  value gridw               \ screen-grid cell size, pixels
 240  value gridh
+
+public command variable fixed-grid
+    \ Fixes the grid to the camera
+
+private
 
 create tile-sel  0 , 0 , 1 , 1 ,   \ marquee: col , row , #cols , #rows
 
@@ -389,7 +392,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
 : load-editor ( cjson - )   \ camera positions + version + grid from the "editor" block
     {: cjson | ej :}
-    320 to gridw  240 to gridh         \ grid defaults
+    320 to gridw  240 to gridh  0 fixed-grid !    \ grid defaults
     cjson "editor" ?get-item to ej
     ej 0= if
         0 to version
@@ -405,7 +408,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         ej "grid" ?j>n             to grid?
     then
     ej "gridw"       ?j>n ?dup if  to gridw  then
-    ej "gridh"       ?j>n ?dup if  to gridh  then ;
+    ej "gridh"       ?j>n ?dup if  to gridh  then
+    ej "fixed-grid"  ?j>n  fixed-grid ! ;
 
 : load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
     {: cjson | layersj n :}
@@ -510,6 +514,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     grid?           "grid"         ej cjson-add-int
     gridw           "gridw"        ej cjson-add-int
     gridh           "gridh"        ej cjson-add-int
+    fixed-grid @    "fixed-grid"   ej cjson-add-int
     ej ;
 
 : *level-json ( - cjson )   \ serialize live layers; bumps version + syncs cameras
@@ -577,8 +582,8 @@ command : invisible  ( - )
     layer# scratch# < if  the-layer >vis off  then ;   
 
 command : reorder ( n - )   
-    \ move the active layer to draw-order position n
-    {: n | tm :}
+    \ Move the active layer to draw-order position n (1-10)
+    1 - 0 9 clamp {: n | tm :}
     n 0 max  layer-count 1 - min to n
     the-layer to tm
     layer# the-layers removeat
@@ -589,3 +594,4 @@ command : resize-layer ( cols rows - )
     \ Resize active layer
     the-layer resize-tilemap
     set-bounds ;
+

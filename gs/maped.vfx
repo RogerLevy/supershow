@@ -16,20 +16,31 @@ public
 \ on the first frame of the drag so there's no jump.
 : try-pan ( - flag )
     {: | mx my :}
-    <SPACE> held? <lmb> held? and 0= if  0 to panning?  0 exit  then
+    <space> held? <lmb> held? and 0= if  0 to panning?  0 exit  then
     mouse to my to mx
     panning? not if  mx to pan-lastx  my to pan-lasty  -1 to panning?  then
     pan-lastx mx -  >p  +to camx
     pan-lasty my -  >p  +to camy
     mx to pan-lastx  my to pan-lasty
-    clamp-camera  -1 ;
+    clamp-camera  -1 
+;
 
 : ?grid-move ( - )   \ arrow keys nudge the camera by one grid cell
+    shift? -exit
     <left>  pressed? if  gridw negate >p  +to camx  then
     <right> pressed? if  gridw        >p  +to camx  then
     <up>    pressed? if  gridh negate >p  +to camy  then
     <down>  pressed? if  gridh        >p  +to camy  then
-    clamp-camera ;
+    clamp-camera 
+;
+
+: ?scroll ( - )
+    shift? ?exit
+    <left> held? if  -2. +to camx  then
+    <right> held? if  2. +to camx  then
+    <up> held? if  -2. +to camy  then
+    <down> held? if  2. +to camy  then
+;
 
 -1 value rmb-startc
 0  value rmb-startr
@@ -71,6 +82,7 @@ public
     try-pan ?exit
     <'> pressed? if  grid? not to grid?  then   \ toggle screen grid
     ?grid-move
+    ?scroll
     <E> pressed? if eraser then
     <H> pressed? if fliph then
     <V> pressed? if flipv then
@@ -83,6 +95,7 @@ public
 
 : ~brush-ghost ( - )
     shift? ?exit
+    <space> held? ?exit
     the-tileset the-brush >ts !
     mouse-cell cell-screen-xy atp
     the-brush draw
@@ -135,11 +148,29 @@ public
         pxw >p camx -  swap  line
     loop ;
 
+: ~fixed-vgrid ( - )
+    appw gridw + 2 / gridw umod
+    appw gridw /  2 +  for
+        dup  i gridw * +  >p  dup  0.  atp
+        apph >p  line
+    loop  drop
+;
+
+: ~fixed-hgrid ( - )
+    apph gridh + 2 / gridh umod
+    apph gridh /  2 +  for
+        dup  i gridh * +  >p  0.  over  atp
+        appw >p  swap  line
+    loop  drop
+;
+
 : ~grid ( - )
     grid? 0= ?exit
     $ffff00a0 rgba8
-    view-pxh ~vgrid
-    view-pxw ~hgrid ;
+    fixed-grid @ if  ~fixed-vgrid  ~fixed-hgrid
+               else  view-pxh ~vgrid  view-pxw ~hgrid
+    then
+;
 
 : ~maped ( - )
     ~world
