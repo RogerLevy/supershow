@@ -1,6 +1,5 @@
 module
 import %supershow%/src/supershow.vfx
-import %supershow%/lib/colors.vfx
 import %supershow%/addons/shapes.vfx
 
 \ ----------------------------------------------------

@@ -7,10 +7,8 @@
 module
 import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
-import %supershow%/lib/colors.vfx
-import %supershow%/lib/oklab.vfx
 import [allegro5]
-    
+
 private
 
 variable mx  variable my

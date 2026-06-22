@@ -1,6 +1,5 @@
 module
 import %supershow%/addons/3d/model.vfx
-import %supershow%/lib/colors.vfx
 public
 
 \ Arwing-style ship mesh (ported from Ramen's arwing.mdl.f). 40 vertices, indexed

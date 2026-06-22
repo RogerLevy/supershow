@@ -5,6 +5,10 @@ module [supershow.core]
 	reexport [allegro5.utils]
 	import cjson
 	reexport [cjson]
+	import %idir%/../lib/colors.vfx     \ named colors, HSL, mix8
+	reexport [colors]
+	import %idir%/../lib/oklab.vfx      \ OKLab/OKLCh perceptual color + mixers
+	reexport [oklab]
 	public
 	include checks               \ Validations
 	include %idir%/../lib/mersenne.vfx  \ RNG

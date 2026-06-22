@@ -11,8 +11,8 @@ module
 import %supershow%/src/supershow.vfx
 import allegro5
 import %supershow%/lib/v3d.vfx
-import %supershow%/lib/colors.vfx
 reexport [v3d]      \ model API exposes v3d positions/scales; callers need its ops
+import %supershow%/lib/colors.vfx
 reexport [colors]   \ models are authored with named color words
 public
 
@@ -186,9 +186,9 @@ create axis s/v3d allot
 ;
 
 : vertices: ( mesh - mesh start )  here  2dup swap >vertices !  white ;
-: ;vertices ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
+: vertices; ( mesh start - )       udup  here swap -  s/modelvertex /  swap >vcount !  gen-normals ;
 : indices:  ( mesh - mesh start )  here  2dup swap >indices ! ;
-: ;indices  ( mesh start - )       udup  here swap -  cell /  swap >icount !   dup de-index  gen-normals ;
+: indices;  ( mesh start - )       udup  here swap -  cell /  swap >icount !   dup de-index  gen-normals ;
 
 
 \ ---- model object ----

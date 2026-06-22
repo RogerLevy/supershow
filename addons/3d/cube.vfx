@@ -5,7 +5,6 @@ module [cube]
 \ fixed and converts to float); size is 1.0 so the cube spans -1..+1 on each axis.
 
 import %supershow%/addons/3d/model.vfx
-import %supershow%/lib/colors.vfx
 public
 
 1. constant size

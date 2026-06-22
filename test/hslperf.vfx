@@ -3,7 +3,6 @@
 
 module
 import %supershow%/src/supershow.vfx
-import %supershow%/lib/colors.vfx
 
 \ Allegro color addon (baked into the monolith DLL). Stateless conversion.
 \ h in degrees, s/l 0..1, outputs floats 0..1.
