@@ -29,7 +29,7 @@ class;
 : rndtile ( ts - bmpid )  dup -> #tiles @ rnd tile ;
 : in? ( - f )  x 2@ 2>i  0 gameh within? >r  0 gamew within? r> and ;
 
--0.2 constant grav      \ reduced z-gravity (compressed isometric view)
+-0.2 constant grav      \ reduced z-gravity (top-down oblique view)
 
 : bounce ( - )                 \ this=treat; it just reached the ground
     0. z !
