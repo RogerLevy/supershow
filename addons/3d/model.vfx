@@ -28,9 +28,9 @@ ALLEGRO_PRIM_POINT_LIST     constant POINT_LIST
 \ ---- transform buffers (ALLEGRO_TRANSFORM = 4x4 floats = 64 bytes) ----
 64 constant s/transform
 : transform: ( <name> - )  create here s/transform allot al_identity_transform ;
-transform: p        \ projection
-transform: t        \ scratch model rotation
-transform: t2       \ scratch model compose
+|| transform: p        \ projection
+|| transform: t        \ scratch model rotation
+|| transform: t2       \ scratch model compose
 transform: camt     \ camera transform (identity until a camera writes it)
 transform: modelmtx \ object->world for the current model (captured by modelview, for lighting)
 create axis s/v3d allot
