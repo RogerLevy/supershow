@@ -7,12 +7,12 @@ trait;
 
 create autoloads /list allot&erase 
 
-: init-autoloads ( - )
+|| : init-autoloads ( - )
     autoloads list-count for
         list-next on-startup
     loop drop ;
 
-: save-autoloads ( - )
+|| : save-autoloads ( - )
     autoloads list-count for
         list-next on-turnkey-save
     loop drop ;
@@ -41,50 +41,47 @@ class;
 class: %bitmap
     is-a %autoload
 
-    : does-bitmap ( - ) 
+    || : does-bitmap ( - ) 
         does> >bmp @ ;
 
-    : _load-albmp ( - )
+    || : _load-albmp ( - )
         this @data memfile@ dup
             0 al_load_bitmap_f albmp !
         -memfile ;
-
-    redef : bitmap ( <path> - ) ( - bmpid )
-        bl parse 
-        2dup fexists? not abort" File not found"
-        2dup -path sfind nip if 2drop exit then
-        2dup -path %bitmap asset does-bitmap { 
-            ( fp len ) embed
-            _load-albmp 
-            this add-bitmap bmp !
-        } ;
-    
-    aka bitmap: bitmap
 
     :: on-startup ( - )
         this body> >name count f" Loading bitmap %s" .info
         _load-albmp ;
 class;
+
+redef : bitmap ( <path> - ) ( - bmpid )
+    bl parse 
+    2dup fexists? not abort" File not found"
+    2dup -path sfind nip if 2drop exit then
+    2dup -path %bitmap asset does-bitmap { 
+        ( fp len ) embed
+        _load-albmp 
+        this add-bitmap bmp !
+    } ;
+
 [then]
 
 [defined] %tileset [if]
 class: %tileset
     is-a %autoload
 
-    : tileset-from ( bmpid tilew tileh <name> - ) ( - tileset )
-        bl parse 2dup sfind nip if 2drop 2drop drop exit then
-        %tileset asset {
-            tw 2! bmp !
-            _slice-tileset
-        } ;
-
-    aka +tileset tileset-from
-    aka tileset: tileset-from
-
     :: on-startup ( - )
         this body> >name count f" Slicing tileset %s" .info
         this update-tileset ;
 class;
+
+: tileset-from ( bmpid tilew tileh <name> - ) ( - tileset )
+    bl parse 2dup sfind nip if 2drop 2drop drop exit then
+    %tileset asset {
+        tw 2! bmp !
+        _slice-tileset
+    } ;
+
 [then]
 
 [defined] [supershow.waveplay] [if]
@@ -95,25 +92,13 @@ class: %sample
     prop alsmp
     16 nprop ident :cstring
 
-    : does-sample ( - ) 
+    || : does-sample ( - ) 
         does> -> id @ sound ;
 
-    : _load-alsmp ( - alsmp )
+    || : _load-alsmp ( - alsmp )
         this @data memfile@ dup
             ident count >zpad al_load_sample_f alsmp !
         -memfile ;
-
-    : sample ( <path> - ) ( - )
-        \ oggs only for now
-        bl parse 
-        2dup fexists? not abort" File not found"
-        2dup -path -ext f" *%s*" sfind nip if 2drop exit then
-        2dup -path -ext f" *%s*" %sample asset does-sample {
-            2dup '.' ending -1 /string ident place 
-            ( fp len ) embed
-            _load-alsmp
-            alsmp @ add-sample id !
-        } ;
 
     :: on-startup ( - )
         this body> >name count f" Loading sample %s" .info
@@ -121,6 +106,19 @@ class: %sample
         alsmp @ id @ set-sample ;
 
 class;
+
+: sample ( <path> - ) ( - )
+    \ oggs only for now
+    bl parse 
+    2dup fexists? not abort" File not found"
+    2dup -path -ext f" *%s*" sfind nip if 2drop exit then
+    2dup -path -ext f" *%s*" %sample asset does-sample {
+        2dup '.' ending -1 /string ident place 
+        ( fp len ) embed
+        _load-alsmp
+        alsmp @ add-sample id !
+    } ;
+
 [then]
 
 class: %font
@@ -130,48 +128,48 @@ class: %font
     prop size :int            \ TTF point size; 0 = bitmap font
     16 nprop ident :cstring   \ filename hint (".ttf" or ".png")
 
-    : does-font  does> -> alfont @ default-font! ;
+    || : does-font  does> -> alfont @ default-font! ;
 
-    create char-range  0 ,  255 ,
+    || create char-range  0 ,  255 ,
 
-    : _load-ttf ( - )
+    || : _load-ttf ( - )
         this @data memfile@
         ident count >zpad  size @  0  al_load_ttf_font_f  alfont ! ;
         \ NOTE: memfile intentionally not closed — al_load_ttf_font_f holds reference
 
-    : _load-bitmap-font ( - )
+    || : _load-bitmap-font ( - )
         this @data memfile@ dup
             0 al_load_bitmap_f  swap -memfile
         1` char-range`  al_grab_font_from_bitmap  alfont ! ;
-
-    : ttf-font ( size <path> - ) ( - )
-        {: sz :}
-        bl parse
-        2dup fexists? not abort" File not found"
-        2dup -path sfind nip if 2drop exit then
-        2dup -path %font asset does-font {
-            ( fp len ) embed
-            sz size !
-            s" .ttf" ident place
-            _load-ttf
-        } ;
-
-    : bitmap-font ( <path> - ) ( - )
-        bl parse
-        2dup fexists? not abort" File not found"
-        2dup -path sfind nip if 2drop exit then
-        2dup -path %font asset does-font {
-            ( fp len ) embed
-            0 size !
-            s" .png" ident place
-            _load-bitmap-font
-        } ;
 
     :: on-startup ( - )
         this body> >name count f" Loading font %s" .info
         size @ if _load-ttf else _load-bitmap-font then ;
 
 class;
+
+: ttf-font ( size <path> - ) ( - )
+    {: sz :}
+    bl parse
+    2dup fexists? not abort" File not found"
+    2dup -path sfind nip if 2drop exit then
+    2dup -path %font asset does-font {
+        ( fp len ) embed
+        sz size !
+        s" .ttf" ident place
+        _load-ttf
+    } ;
+
+: bitmap-font ( <path> - ) ( - )
+    bl parse
+    2dup fexists? not abort" File not found"
+    2dup -path sfind nip if 2drop exit then
+    2dup -path %font asset does-font {
+        ( fp len ) embed
+        0 size !
+        s" .png" ident place
+        _load-bitmap-font
+    } ;
 
 0 value active-shader
 
@@ -191,23 +189,24 @@ class: %shader
         \ Body: [vs-bytes + 0c][fs-bytes + 0c]
         data @ lcount drop  data2 @ lcount drop  load-shader handle ! ;
 
-    : shader ( <name> <vs-path> <fs-path> - ) ( - )
-        bl parse  bl parse  bl parse
-        {: nm-a nm-n vs-a vs-n fs-a fs-n :}
-        vs-a vs-n fexists? not abort" Vertex shader file not found"
-        fs-a fs-n fexists? not abort" Fragment shader file not found"
-        nm-a nm-n sfind nip if exit then
-        nm-a nm-n %shader asset {
-            vs-a vs-n lslurp 0 c, data !
-            fs-a fs-n lslurp 0 c, data2 !
-            _load-shader
-        } ;
-
     :: on-startup ( - )
         this body> >name count f" Loading shader %s" .info
         _load-shader ;
 
 class;
+
+: shader ( <name> <vs-path> <fs-path> - ) ( - )
+    bl parse  bl parse  bl parse
+    {: nm-a nm-n vs-a vs-n fs-a fs-n :}
+    vs-a vs-n fexists? not abort" Vertex shader file not found"
+    fs-a fs-n fexists? not abort" Fragment shader file not found"
+    nm-a nm-n sfind nip if exit then
+    nm-a nm-n %shader asset {
+        vs-a vs-n lslurp 0 c, data !
+        fs-a fs-n lslurp 0 c, data2 !
+        _load-shader
+    } ;
+
 
 [defined] parse-json [if]
 class: %jsonfile
@@ -216,7 +215,7 @@ class: %jsonfile
     is-a %loadable
     prop json :addr
 
-    : _load-json ( - )
+    || : _load-json ( - )
         this @data parse-json json ! ;
 
     :: on-startup ( - )
