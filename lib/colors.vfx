@@ -64,7 +64,7 @@ $d0d0b0ff color beige
 $e6e6faff color lavender
 $87ceebff color skyblue
 
-: mix ( rgba8 t. - )
+: mix8 ( rgba8 t. - )
     {: c t :}
     1.0 t - to t
     c
@@ -72,3 +72,86 @@ $87ceebff color skyblue
     dup c>p ppeng@ t plerp ppeng! 8 >>
     dup c>p ppenb@ t plerp ppenb! 8 >>
     c>p ppena@ t plerp ppena! ;
+
+\ ============================================================================
+\ HSL  (cheap, classic; matches CSS). For perceptual work use src/oklab.vfx.
+\ ============================================================================
+\ Fixed-point: hue degrees 0..360, saturation/lightness 0..1, RGB 0..1 -- all
+\ 16.16. Textbook max/min/chroma geometry on sRGB; no floats, no OKLab.
+
+private
+
+0 value hr  0 value hg  0 value hb        \ rgb in
+0 value hmax 0 value hmin 0 value hd      \ max, min, chroma
+0 value hh  0 value hs  0 value hl        \ hue, sat, lightness
+0 value ch  0 value cs  0 value cl        \ deltas (+hsl)
+0 value sect                              \ hue sextant 0..5
+
+: pmod ( a. b. - mod. )  2dup p/ pfloor p* - ;   \ a - b*floor(a/b)
+: hwrap ( h. - h. )  360. pmod ;
+: lfac ( L. - k. )  1 << 1. - abs 1. swap - ;     \ 1 - |2L-1|
+
+\ Shift lightness by amount t in [-1,1]: lerp toward black (t<0) or white (t>0).
+\ t=0 unchanged, t=-1 black, t=+1 white. Proportional darkening near the middle.
+: litshift ( L. t. - L'. )
+    dup 0< if  over p* +                 \ L + t*L      (toward black)
+          else  >r 1. over -  r> p* +     \ L + t*(1-L)  (toward white)
+          then ;
+
+public
+
+: rgb>hsl ( r. g. b. - h. s. l. )
+    to hb to hg to hr
+    hr hg max hb max to hmax
+    hr hg min hb min to hmin
+    hmax hmin - to hd
+    hmax hmin + 2 / to hl
+    hd 0= if 0 to hs else
+        hd  hl lfac  p/ to hs
+    then
+    hd 0= if 0 to hh else
+        hmax hr = if
+            hg hb - hd p/  6. pmod
+        else hmax hg = if
+            hb hr - hd p/  2. +
+        else
+            hr hg - hd p/  4. +
+        then then
+        60. p* hwrap to hh
+    then
+    hh hs hl ;
+
+: hsl>rgb ( h. s. l. - r. g. b. )
+    to hl to hs to hh
+    hl lfac hs p* to hd                  \ chroma C
+    hh hwrap 60 / to hh                \ h' in [0,6)
+    hh 2. pmod 1. - abs 1. swap - hd p* to hmax   \ X
+    hl hd 2 / - to hmin                  \ m = L - C/2
+    hh pfloor >i 6 umod to sect
+    sect case
+        0 of hd hmax 0 endof
+        1 of hmax hd 0 endof
+        2 of 0 hd hmax endof
+        3 of 0 hmax hd endof
+        4 of hmax 0 hd endof
+        hd 0 hmax
+    end-case
+    hmin + to hb  hmin + to hg  hmin + to hr
+    hr hg hb ;
+
+: hsl@ ( - h. s. l. )
+    ppenr@ ppeng@ ppenb@ rgb>hsl ;
+
+: hsl ( h. s. l. - )    \ alpha left untouched
+    hsl>rgb
+    0 1. clamp ppenb!
+    0 1. clamp ppeng!
+    0 1. clamp ppenr! ;
+
+: +hsl ( dh. ds. dl. - )    \ hue/sat: additive deltas; lightness: dl in [-1,1], black..white
+    to cl to cs to ch
+    hsl@
+    cl litshift  >r
+    cs +  0 1. clamp  >r
+    ch +  hwrap
+    r> r>  hsl ;

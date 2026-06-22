@@ -1,0 +1,88 @@
+\ Interactive HSL + perceptual (OKLab) color demo.
+\   SRC : a source color via R/G/B sliders.
+\   HSL : the source after +hsl( dHue, dSat, dLight )  -- classic HSL nudge.
+\   MIX : the source flabmix'd toward a target R/G/B by amount n -- OKLab blend.
+\ Drag the sliders with the left mouse button.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+import %supershow%/lib/colors.vfx
+
+private
+
+variable mx  variable my
+variable held              \ id of the slider being dragged (0 = none)
+
+\ source rgb
+1.0 value sr   0.2 value sg   0.2 value sb
+\ +hsl: hue/sat deltas and lightness amount (-1 = black .. 0 = unchanged .. +1 = white)
+0. value dh    0. value ds    0. value dl
+\ flabmix target rgb + amount
+0.2 value tr   0.4 value tg   1.0 value tb   0.5 value amt
+
+40 constant SWX            \ swatch x / width
+130 constant TKX           \ slider track x
+170 constant TKW           \ slider track width
+6 constant TKH             \ track height (px)
+
+: pt-in? ( px py rx ry rw rh - flag )
+    {: px py rx ry rw rh :}
+    px rx >=  px rx rw + <  and
+    py ry >=  py ry rh + <  and  and ;
+
+\ Immediate-mode horizontal slider. Returns the (possibly dragged) value.
+: slider {: val lo hi x y w id | hot hx -- val' :}
+    mx @ my @  x  y 4 -  w  TKH 8 +  pt-in? to hot
+    hot <lmb> pressed? and if  id held !  then
+    held @ id = if
+        <lmb> held? if
+            mx @ x - 0 max w min >p  w >p p/  hi lo - p* lo +  to val
+        else  held off  then
+    then
+    $282828ff rgba8  x y at  w >p TKH >p rectf
+    val lo - hi lo - p/  w >p p* >i  x +  to hx
+    $e0e0e0ff rgba8  hx 3 - y 4 - at  6. TKH 8 + >p rectf
+    val ;
+
+: lbl ( x y a u - )  $c8c8c8ff rgba8  2swap at print ;
+
+: swatch ( x y - )    \ fill = current pen color, then a gray outline
+    2dup at  56. 56. rectf
+    $5a5a5aff rgba8  at  56. 56. rect ;
+
+: ~source ( - )
+    sr sg sb 1. rgba   SWX 8 swatch
+    8 30 s" SRC" lbl
+    TKX 12 - 10 s" R" lbl   sr 0. 1. TKX 10 TKW 1 slider to sr
+    TKX 12 - 28 s" G" lbl   sg 0. 1. TKX 28 TKW 2 slider to sg
+    TKX 12 - 46 s" B" lbl   sb 0. 1. TKX 46 TKW 3 slider to sb ;
+
+: ~hsl-out ( - )
+    sr sg sb 1. rgba   dh ds dl +hsl   SWX 72 swatch
+    8 94 s" HSL" lbl
+    TKX 12 - 74  s" H" lbl   dh -180. 180. TKX 74  TKW 4 slider to dh
+    TKX 12 - 92  s" S" lbl   ds -1.   1.   TKX 92  TKW 5 slider to ds
+    TKX 12 - 110 s" L" lbl   dl -1.   1.   TKX 110 TKW 6 slider to dl ;
+
+: ~mix-out ( - )
+    sr sg sb 1. rgba   tr p>f tg p>f tb p>f 1e amt p>f flabmix   SWX 136 swatch
+    tr tg tb 1. rgba   SWX 58 + 136 at  8. 56. rectf      \ target preview strip
+    8 158 s" MIX" lbl
+    TKX 12 - 138 s" r" lbl   tr  0. 1. TKX 138 TKW 7  slider to tr
+    TKX 12 - 154 s" g" lbl   tg  0. 1. TKX 154 TKW 8  slider to tg
+    TKX 12 - 170 s" b" lbl   tb  0. 1. TKX 170 TKW 9  slider to tb
+    TKX 12 - 186 s" n" lbl   amt 0. 1. TKX 186 TKW 10 slider to amt ;
+
+: ~demo ( - )
+    mouse my ! mx !
+    ~source ~hsl-out ~mix-out ;
+
+public
+
+: main
+    0 held !
+    vga-8x8 default-font!
+    show> ~demo ;
+
+\ main

@@ -9,6 +9,7 @@ module [supershow.core]
 	include checks               \ Validations
 	include %idir%/../lib/mersenne.vfx  \ RNG
 	include utilities            \ Math helpers, audio, and misc utilities
+	include oklab                \ OKLab/OKLCh perceptual color + mixers
 	include traits               \ Object traits
 	include asset                \ Base asset
 	include node

@@ -1,0 +1,135 @@
+\ ============================================================================
+\ OKLab / OKLCh perceptual color space
+\ ============================================================================
+\ A perceptually-uniform color space (Bjorn Ottosson, 2020) for correct color
+\ interpolation: blending in OKLab avoids the muddy desaturated midpoints that
+\ plague straight sRGB lerps, and keeps lightness perceptually even.
+\
+\ The conversion ladder (each step is its own word, all pure float-stack):
+\
+\   sRGB  <-frgb>lin/flin>rgb->  linear  <-flin>lab/flab>lin->  OKLab
+\   OKLab <-flab>lch/flch>lab->  OKLCh (polar: chroma + hue in degrees)
+\   frgb>lab / flab>rgb         compose the gamma + matrix steps (sRGB <-> OKLab)
+\
+\ All RGB floats are 0..1 sRGB-encoded (matching the pen channels). OKLab L is
+\ ~0..1; a,b are ~-0.4..0.4. OKLCh hue is degrees 0..360 (matches angof/vec).
+\
+\ Pen accessors: lab@/lab and lch@/lch read & write the current pen color.
+\ Mixers: flabmix / labmix8 blend the pen toward a destination color in OKLab.
+\
+\ Matrix constants below are Ottosson's published M1 (linear sRGB -> LMS),
+\ M2 (LMS' -> Lab), and their inverses; transcribe with care.
+
+private
+
+0e fvalue wk0  0e fvalue wk1  0e fvalue wk2    \ working color triple
+0e fvalue lm0  0e fvalue lm1  0e fvalue lm2    \ LMS / LMS' intermediate
+0e fvalue dl0  0e fvalue dl1  0e fvalue dl2    \ destination Lab (mixer)
+0e fvalue pl0  0e fvalue pl1  0e fvalue pl2    \ pen Lab (mixer)
+0e fvalue mxn  0e fvalue mxa                   \ mix amount, destination alpha
+0e fvalue lrp                                  \ flerp temp
+
+: fcbrt ( f:x - f:cuberoot )    \ x >= 0; guard exact 0 (avoids 0^k edge)
+    fdup f0= if else 0.3333333333e f** then ;
+
+: fcube ( f:x - f:x^3 )  fdup fdup f* f* ;
+
+: flerp ( f:src f:dest f:n - f:r )    \ src + (dest-src)*n
+    to lrp  fover f-  lrp f*  f+ ;
+
+: fclamp01 ( f:x - f:x )  0e fmax 1e fmin ;
+
+\ sRGB <-> linear transfer functions (per channel)
+: fs>l ( f:c - f:c )    \ sRGB -> linear
+    fdup 0.04045e f< if 12.92e f/ else
+        0.055e f+ 1.055e f/ 2.4e f** then ;
+
+: fl>s ( f:c - f:c )    \ linear -> sRGB
+    fdup 0.0031308e f< if 12.92e f* else
+        0.4166666667e f** 1.055e f* 0.055e f- then ;
+
+public
+
+\ --- gamma: sRGB <-> linear ---------------------------------------------------
+
+: frgb>lin ( f:r f:g f:b - f:r f:g f:b )
+    fs>l to wk2  fs>l to wk1  fs>l to wk0
+    wk0 wk1 wk2 ;
+
+: flin>rgb ( f:r f:g f:b - f:r f:g f:b )
+    fl>s to wk2  fl>s to wk1  fl>s to wk0
+    wk0 wk1 wk2 ;
+
+\ --- core: linear RGB <-> OKLab (matrix + cube-root) --------------------------
+
+: flin>lab ( f:r f:g f:b - f:L f:a f:b )
+    to wk2  to wk1  to wk0
+    wk0 0.4122214708e f*  wk1 0.5363325363e f* f+  wk2 0.0514459929e f* f+  fcbrt to lm0
+    wk0 0.2119034982e f*  wk1 0.6806995451e f* f+  wk2 0.1073969566e f* f+  fcbrt to lm1
+    wk0 0.0883024619e f*  wk1 0.2817188376e f* f+  wk2 0.6299787005e f* f+  fcbrt to lm2
+    lm0 0.2104542553e f*  lm1 0.7936177850e f* f+  lm2 0.0040720468e f* f-
+    lm0 1.9779984951e f*  lm1 2.4285922050e f* f-  lm2 0.4505937099e f* f+
+    lm0 0.0259040371e f*  lm1 0.7827717662e f* f+  lm2 0.8086757660e f* f- ;
+
+: flab>lin ( f:L f:a f:b - f:r f:g f:b )
+    to wk2  to wk1  to wk0
+    wk0  wk1 0.3963377774e f* f+  wk2 0.2158037573e f* f+  fcube to lm0
+    wk0  wk1 0.1055613458e f* f-  wk2 0.0638541728e f* f-  fcube to lm1
+    wk0  wk1 0.0894841775e f* f-  wk2 1.2914855480e f* f-  fcube to lm2
+    lm0 4.0767416621e f*          lm1 3.3077115913e f* f-  lm2 0.2309699292e f* f+
+    lm0 1.2684380046e f* fnegate  lm1 2.6097574011e f* f+  lm2 0.3413193965e f* f-
+    lm0 0.0041960863e f* fnegate  lm1 0.7034186147e f* f-  lm2 1.7076147010e f* f+ ;
+
+\ --- composed: sRGB <-> OKLab -------------------------------------------------
+
+: frgb>lab ( f:r f:g f:b - f:L f:a f:b )  frgb>lin flin>lab ;
+: flab>rgb ( f:L f:a f:b - f:r f:g f:b )  flab>lin flin>rgb ;
+
+\ --- polar: OKLab <-> OKLCh (hue in degrees) ----------------------------------
+
+: flab>lch ( f:L f:a f:b - f:L f:C f:h )
+    to wk2  to wk1
+    wk1 fdup f*  wk2 fdup f* f+  fsqrt        \ C = hypot(a,b)
+    wk2 wk1 fatan2 rad>deg                    \ h = atan2(b,a)
+    fdup f0< if 360e f+ then ;                \ -> 0..360
+
+: flch>lab ( f:L f:C f:h - f:L f:a f:b )
+    deg>rad to wk2  to wk1
+    wk1 wk2 fcos f*                           \ a = C*cos(h)
+    wk1 wk2 fsin f* ;                         \ b = C*sin(h)
+
+\ --- pen accessors ------------------------------------------------------------
+
+: lab@ ( - f:L f:a f:b )
+    ppenr@ p>f  ppeng@ p>f  ppenb@ p>f  frgb>lab ;
+
+: lab ( f:L f:a f:b - )    \ alpha left untouched
+    flab>rgb
+    fclamp01 f>p ppenb!
+    fclamp01 f>p ppeng!
+    fclamp01 f>p ppenr! ;
+
+: lch@ ( - f:L f:C f:h )  lab@ flab>lch ;
+: lch  ( f:L f:C f:h - )  flch>lab lab ;
+
+\ --- mixers: blend pen toward a destination in OKLab --------------------------
+\ n = amount of destination (0 = pen unchanged, 1 = fully destination).
+
+: flabmix ( f:r f:g f:b f:a f:n - )
+    to mxn  to mxa
+    frgb>lab  to dl2 to dl1 to dl0
+    lab@      to pl2 to pl1 to pl0
+    pl0 dl0 mxn flerp
+    pl1 dl1 mxn flerp
+    pl2 dl2 mxn flerp
+    lab
+    ppena@ p>f  mxa mxn flerp  fclamp01 f>p ppena! ;
+
+: labmix8 ( rgba8 n. - )
+    swap
+    dup 24 >> c>p p>f
+    dup 16 >> c>p p>f
+    dup  8 >> c>p p>f
+    c>p p>f
+    p>f
+    flabmix ;

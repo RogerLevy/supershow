@@ -1,0 +1,37 @@
+\ TEMPORARY benchmark: fixed-point hsl>rgb vs Allegro color-addon al_color_hsl_to_rgb.
+\ Run headless (or import) -- prints summed microseconds for N calls.
+
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/lib/colors.vfx
+
+\ Allegro color addon (baked into the monolith DLL). Stateless conversion.
+\ h in degrees, s/l 0..1, outputs floats 0..1.
+extern "C" void al_color_hsl_to_rgb( float hue, float saturation, float lightness,
+                                     float * red, float * green, float * blue );
+
+private
+
+create obuf 3 cells allot        \ r,g,b output cells for the FFI
+
+200000 constant N
+210. constant TH                 \ representative input: hue 210, sat 0.6, light 0.5
+0.6  constant TS
+0.5  constant TL
+
+public
+
+: bench-fixed ( - )
+    N for  TH TS TL hsl>rgb  drop drop drop  loop ;
+
+: bench-allegro ( - )
+    N for
+        TH p>f TS p>f TL p>f  obuf  obuf cell+  obuf 2 cells +  al_color_hsl_to_rgb
+    loop ;
+
+: hslperf ( - )
+    cr ." HSL->RGB x " N . ." (summed microseconds):" cr
+    ." fixed hsl>rgb : "  ['] bench-fixed    time? cr
+    ." allegro FFI   : "  ['] bench-allegro  time? cr ;
+
+hslperf
