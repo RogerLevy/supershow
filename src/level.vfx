@@ -272,8 +272,8 @@ public
     lvl i layer {
         0 0 at
         prx @ to parallax
-        camx parallax p*  visx @ >p -
-        camy parallax p*  visy @ >p -
+        camx parallax p*  visx @ >p - pfloor
+        camy parallax p*  visy @ >p - pfloor
         gamew >p  gameh >p
         this draw-view
     }
