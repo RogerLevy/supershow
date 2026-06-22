@@ -27,7 +27,7 @@ include %idir%/tiles.vfx
     2 user-zoom !
     tv off
     debug @ if                                              \ dev: open a sample level
-        s" %supershow%/gs/dat/levels/level01.json" open-level
+        s" %supershow%/gs/examples/example.json" open-level
     else                                                    \ turnkey: start a fresh level
         new-level-or-quit
     then
