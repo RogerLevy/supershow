@@ -1,0 +1,254 @@
+module
+import %supershow%/src/supershow.vfx
+import %supershow%/addons/shapes.vfx
+
+private
+
+\ Current cursor shape type (0=pt 1=rect 2=circ 3=oval 4=line 5=poly)
+variable ctype   1 ctype !
+
+\ Mouse position in integer pixels, updated each frame
+variable mx   variable my
+
+\ ============================================================
+\ One struct type describes every shape:
+\   rect / line -> the corners directly
+\   circ        -> center + half-width as radius
+\   oval        -> center + half-extents as radii
+\ ============================================================
+
+c: %box x1:p y1:p x2:p y2:p ;
+
+: box  create %box dmake { >p y2 ! >p x2 ! >p y1 ! >p x1 ! } ;
+
+: box-rect   ( box - x1. y1. x2. y2. )  >x1 @+ swap @+ swap @+ swap @ ;
+: box-line   ( box - x1. y1. x2. y2. )  box-rect ;
+: box-center ( box - cx. cy. )          box-rect 2+ 2 2 2/ ;
+: box-halfw  ( box - hw. )              { x2 @ x1 @ - 2 / } ;
+: box-halfh  ( box - hh. )              { y2 @ y1 @ - 2 / } ;
+: box-circ   ( box - cx. cy. r. )       >r  r@ box-center  r> box-halfw ;
+: box-oval   ( box - cx. cy. rx. ry. )  >r  r@ box-center  r@ box-halfw  r> box-halfh ;
+
+\ ============================================================
+\ Cursor: a single box centered on the mouse, refreshed each
+\ frame.  Every cursor probe shape is calculated from it.
+\ ============================================================
+
+18 constant cursor-halfw   \ half width  (pixels)
+28 constant cursor-halfh   \ half height (pixels)
+
+%box object cursor-box 
+
+: update-cursor ( - )
+    mx @ cursor-halfw -  my @ cursor-halfh -  2>p  cursor-box >x1 2!
+    mx @ cursor-halfw +  my @ cursor-halfh +  2>p  cursor-box >x2 2! ;
+
+update-cursor
+
+: cursor-rect   ( - x1. y1. x2. y2. )  cursor-box box-rect ;
+: cursor-line   ( - x1. y1. x2. y2. )  cursor-box box-line ;
+: cursor-center ( - cx. cy. )          cursor-box box-center ;
+: cursor-circ   ( - cx. cy. r. )       cursor-box box-circ ;
+: cursor-oval   ( - cx. cy. rx. ry. )  cursor-box box-oval ;
+
+\ Cursor triangle: relative template (drawn at the mouse) and a
+\ pre-transformed absolute copy (rebuilt each frame for collision).
+create cursor-poly-rel   3 ,
+    0. ,  -18. ,
+    18. ,   12. ,
+   -18. ,   12. ,
+
+create cursor-poly   3 ,   0 , 0 ,   0 , 0 ,   0 , 0 ,
+
+: update-cursor-poly ( - )
+    mx @ >p       my @ 18 - >p   cursor-poly 0 pg.vert 2!
+    mx @ 18 + >p  my @ 12 + >p   cursor-poly 1 pg.vert 2!
+    mx @ 18 - >p  my @ 12 + >p   cursor-poly 2 pg.vert 2! ;
+
+\ ============================================================
+\ Static shapes, each stored as a bounding box (pixels)
+\ ============================================================
+
+ 40  40 120  90 box s1      \ rect
+155  35 215  95 box s2      \ circle: center 185,65 r30
+232  47 308  83 box s3      \ oval:   center 270,65 rx38 ry18
+ 40 140 130 200 box s4      \ line:   (40,140)-(130,200)
+
+create spoly   3 ,           \ poly: triangle
+    195. ,  140. ,
+    265. ,  200. ,
+    168. ,  200. ,
+
+\ ============================================================
+\ Cursor vs. a static shape of a given kind.  Each word switches
+\ on the cursor type and calls the matching collision primitive.
+\ ============================================================
+
+: cursor-hits-rect? ( box - flag )
+    ctype @ 0 = if  >r cursor-center r> box-rect  pt-rect?    exit then
+    ctype @ 1 = if  >r cursor-rect   r> box-rect  rect-rect?  exit then
+    ctype @ 2 = if  box-rect cursor-circ          rect-circ?  exit then
+    ctype @ 3 = if  box-rect cursor-oval          rect-oval?  exit then
+    ctype @ 4 = if  >r cursor-line   r> box-rect  line-rect?  exit then
+    ctype @ 5 = if  box-rect cursor-poly          rect-poly?  exit then
+    drop false ;
+
+: cursor-hits-circ? ( box - flag )
+    ctype @ 0 = if  >r cursor-center r> box-circ  pt-circ?    exit then
+    ctype @ 1 = if  >r cursor-rect   r> box-circ  rect-circ?  exit then
+    ctype @ 2 = if  >r cursor-circ   r> box-circ  circ-circ?  exit then
+    ctype @ 3 = if  drop false  exit then
+    ctype @ 4 = if  >r cursor-line   r> box-circ  line-circ?  exit then
+    ctype @ 5 = if  box-circ cursor-poly          circ-poly?  exit then
+    drop false ;
+
+: cursor-hits-oval? ( box - flag )
+    ctype @ 0 = if  >r cursor-center r> box-oval  pt-oval?    exit then
+    ctype @ 1 = if  >r cursor-rect   r> box-oval  rect-oval?  exit then
+    ctype @ 2 = if  drop false  exit then
+    ctype @ 3 = if  drop false  exit then
+    ctype @ 4 = if  >r cursor-line   r> box-oval  line-oval?  exit then
+    ctype @ 5 = if  box-oval cursor-poly          oval-poly?  exit then
+    drop false ;
+
+: cursor-hits-line? ( box - flag )
+    ctype @ 0 = if  >r cursor-center r> box-line  pt-line?    exit then
+    ctype @ 1 = if  box-line cursor-rect          line-rect?  exit then
+    ctype @ 2 = if  box-line cursor-circ          line-circ?  exit then
+    ctype @ 3 = if  box-line cursor-oval          line-oval?  exit then
+    ctype @ 4 = if  box-line cursor-line          line-line?  exit then
+    ctype @ 5 = if  box-line cursor-poly          line-poly?  exit then
+    drop false ;
+
+: cursor-hits-poly? ( poly - flag )
+    ctype @ 0 = if  >r cursor-center r> pt-poly?    exit then
+    ctype @ 1 = if  >r cursor-rect   r> rect-poly?  exit then
+    ctype @ 2 = if  >r cursor-circ   r> circ-poly?  exit then
+    ctype @ 3 = if  >r cursor-oval   r> oval-poly?  exit then
+    ctype @ 4 = if  >r cursor-line   r> line-poly?  exit then
+    ctype @ 5 = if  cursor-poly swap     poly-poly?  exit then
+    drop false ;
+
+: hit-s1? ( - flag )  s1 cursor-hits-rect? ;
+: hit-s2? ( - flag )  s2 cursor-hits-circ? ;
+: hit-s3? ( - flag )  s3 cursor-hits-oval? ;
+: hit-s4? ( - flag )  s4 cursor-hits-line? ;
+: hit-s5? ( - flag )  spoly cursor-hits-poly? ;
+
+\ ============================================================
+\ Colors
+\ ============================================================
+: normal-col  $4488ccff rgba8 ;
+: hit-col     $ffff44ff rgba8 ;
+: cursor-col  $ff8844ff rgba8 ;
+
+: shape-col ( hit? - )  if hit-col else normal-col then ;
+
+\ ============================================================
+\ Box drawing (one drawer per shape kind)
+\ ============================================================
+
+: ~rect ( box - )
+    box-rect  2over atp  2swap 2-  rect ;
+
+: ~circ ( box - )
+    box-circ  >r  atp  r>  circ ;
+
+: ~oval ( box - )
+    box-oval  2>r  atp  2r>  oval ;
+
+: ~line ( box - )
+    box-line  2swap atp  line ;
+
+: ~poly ( poly - )
+    0 0 at  poly ;
+
+\ ============================================================
+\ Draw static shapes — highlight when hit
+\ ============================================================
+
+: ~s1 ( - )  hit-s1? shape-col  s1 ~rect ;
+: ~s2 ( - )  hit-s2? shape-col  s2 ~circ ;
+: ~s3 ( - )  hit-s3? shape-col  s3 ~oval ;
+: ~s4 ( - )  hit-s4? shape-col  s4 ~line ;
+: ~s5 ( - )  hit-s5? shape-col  spoly ~poly ;
+
+\ ============================================================
+\ Draw cursor shape
+\ ============================================================
+
+: ~cursor-pt ( - )
+    mx @ 5 - my @ at   mx @ 5 + >p my @ >p line
+    mx @ my @ 5 - at   mx @ >p my @ 5 + >p line ;
+
+: ~cursor-poly ( - )
+    mx @ my @ at  cursor-poly-rel poly ;
+
+: ~cursor ( - )
+    cursor-col
+    ctype @ 0 = if  ~cursor-pt          exit then
+    ctype @ 1 = if  cursor-box ~rect    exit then
+    ctype @ 2 = if  cursor-box ~circ    exit then
+    ctype @ 3 = if  cursor-box ~oval    exit then
+    ctype @ 4 = if  cursor-box ~line    exit then
+    ctype @ 5 = if  ~cursor-poly        exit then
+;
+
+\ ============================================================
+\ Input: switch cursor type with keys 0-5
+\ ============================================================
+
+: handle-keys ( - )
+    <0> pressed? if 0 ctype ! exit then
+    <1> pressed? if 1 ctype ! exit then
+    <2> pressed? if 2 ctype ! exit then
+    <3> pressed? if 3 ctype ! exit then
+    <4> pressed? if 4 ctype ! exit then
+    <5> pressed? if 5 ctype ! exit then
+;
+
+\ ============================================================
+\ Labels
+\ ============================================================
+
+: print+ ( addr len - )
+    2dup print  nip 8 * 0 +at ;
+
+: ~label ( n addr len - )
+    {: n addr len :}
+    n ctype @ = if $ffffffff rgba8 else $4488ccff rgba8 then
+    addr len print+ 
+;
+
+: ~labels ( - )
+    2 2 at
+    0 s" 0:pt "   ~label
+    1 s" 1:rect " ~label
+    2 s" 2:circ " ~label
+    3 s" 3:oval " ~label
+    4 s" 4:line " ~label
+    5 s" 5:poly" ~label 
+;
+
+\ ============================================================
+\ Main
+\ ============================================================
+
+public
+
+: demo ( - )
+    handle-keys
+    mouse  my !  mx !
+    update-cursor
+    update-cursor-poly
+    ~s1 ~s2 ~s3 ~s4 ~s5
+    ~cursor
+    ~labels 
+;
+
+: main ( - )
+    vga-8x8 default-font!
+    show>  demo 
+;
+
+main
