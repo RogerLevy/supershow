@@ -22,7 +22,7 @@ playfieldobj: tree2   <sprid> , x1 , y1 , x2 , y2 ,
 data;
 
 : ~forest 
-    [: a!> a@+ a@+ at a@+ draw ;] forest.list each ;
+    [: a!> @a+ @a+ at @a+ draw ;] forest.list each ;
 
 \ there is only one forest playfield, but we still need an object
 \ that can plug into the system.
@@ -33,7 +33,7 @@ c: %forest  %system w h ;
     forest.list #items ;
 
 %forest :: entity-box ( n - x1. y1. x2. y2. )
-    forest.list el@ a!> a@+ >p a@+ >p a@+ dims ;
+    forest.list el@ a!> @a+ >p @a+ >p @a+ dims ;
 
 %forest :: entity-solid? ( n - flag )
     drop true ;

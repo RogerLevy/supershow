@@ -6,7 +6,7 @@ private
 
 0 value a
 continuation: a!>  a >r swap to a execute r> to a ;
-: a@+  a @  cell +to a ;
+: @a+  a @  cell +to a ;
 
 \ : 2@+  dup cell+ swap 2@ ;   \ tried this; it's worse
 
@@ -20,7 +20,7 @@ c: %actor strat ;  \ add strat prop
 3 cells descriptor: playfield
 
     :data>actor
-        a!>   a@+ a@+ at   %actor one { a@+ strat !   this } ;
+        a!>   @a+ @a+ at   %actor one { @a+ strat !   this } ;
     
     :actor>code
         x @ >i "n," y @ >i "n," strat @ "name," ;
@@ -85,7 +85,7 @@ data;
 
 
 : ~tree ( a - )
-    a!>   a@+ a@+ at   a@+ >bmp @ cput ;
+    a!>   @a+ @a+ at   @a+ >bmp @ cput ;
 
 \ editor render: draw each inflated actor via its strategy's edit-draw
 \ it'll look exactly the same

@@ -7,7 +7,7 @@ import %supershow%/addons/shapes.vfx
 
 0 value a
 continuation: a!>  a >r swap to a execute r> to a ;
-: a@+  a @  cell +to a ;
+: @a+  a @  cell +to a ;
 
 : 4@ @+ swap @+ swap @+ swap @ ;
 : 4! >r 2swap r@ 2! r> 8 + 2! ;
@@ -40,7 +40,7 @@ playfield-entity: lock-marker  0 0 0 0 hitbox 4!
 3 cells descriptor: playfield.desc
     \ [ x , y , prototype , ]
     
-    :data>actor  a!>   a@+ a@+   a@+ one-copy { 2>p x 2!  this } ;
+    :data>actor  a!>   @a+ @a+   @a+ one-copy { 2>p x 2!  this } ;
     :actor>code  x @ >i "n,"   y @ >i "n,"   proto @ "name," ;
 
     : ?size  bmp @ ?dup if  bmpwh 2>p  else  16. 16.  then ;
@@ -130,7 +130,7 @@ data;
 private
 
 : ~tree ( a - )
-    a!>   a@+ a@+ at   a@+ >bmp @ cput ;
+    a!>   @a+ @a+ at   @a+ >bmp @ cput ;
 
 public
 
@@ -147,27 +147,27 @@ public
 %box-params    object forest-box
 %sprite-params object forest-sprite
 
-: row-size ( proto - w. h. )  >bmp @ ?dup if bmpwh 2>p else 16. 16. then ;
+: row-size ( proto - w. h. )  
+    >bmp @ ?dup if bmpwh 2>p else 16. 16. then ;
 
 \ forest row = [ x:int , y:int , proto:addr ]
-: row>box ( row - %box )
-    >r forest-box {
-        1 msk !  1 lyr !  r@ 2 cells + @ id !
-        r@ @ >p  r@ cell+ @ >p  r@ 2 cells + @ row-size  box-around
-        x2 2!  x1 2!
+: row>box ( row - %box-params )
+    a!> forest-box {
+        a id !  1 msk !  1 lyr !  
+        @a+ @a+ 2>p  @a+ row-size  box-around  x1 4!
         0. z1 !  64. z2 !
-    } r> drop  forest-box ;
+    this } ;
 
-: row>sprite ( row - %sprite )
-    >r forest-sprite {
-        r@ @ >p  r@ cell+ @ >p  x 2!   0. z !
-        r@ 2 cells + @ >bmp @  bmp !   r@ 2 cells + @ id !
-        r@ 2 cells + @ >prio @  prio !
-    } r> drop  forest-sprite ;
+: row>sprite ( row - %sprite-params )
+    a!> forest-sprite {
+        a id !
+        @a+ @a+ 2>p x 2!   0. z !
+        @a+ dup >bmp @  bmp !   >prio @  prio !
+    this } ;
 
 c: %forest %system ;
 %forest :: render  ~forest ;
 %forest :: entity-count  ( - n )          forest #items ;
-%forest :: entity-box    ( n - %box )     forest el@ row>box ;
-%forest :: entity-sprite ( n - %sprite )  forest el@ row>sprite ;
+%forest :: entity-box    ( n - %box-params )     forest el@ row>box ;
+%forest :: entity-sprite ( n - %sprite-params )  forest el@ row>sprite ;
 %forest manager: forest.sys manager;

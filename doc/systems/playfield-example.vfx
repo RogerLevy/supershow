@@ -8,13 +8,13 @@ c: %playfield  %system w h solid ;
     forest.list #items ;
 
 %playfield :: entity-box ( n - x1. y1. x2. y2. )
-    forest.list el@ a!> a@+ >p a@+ >p a@+ dims ;
+    forest.list el@ a!> @a+ >p @a+ >p @a+ dims ;
 
 %playfield :: entity-solid? ( n - flag )
     drop solid @ ;  \ playfield-wide solidity; to have mixed-solidity environments, you could stack playfields.
 
 : ~playfield
-    [: a!> a@+ a@+ at a@+ draw ;] swap each ;
+    [: a!> @a+ @a+ at @a+ draw ;] swap each ;
 
 
 \ Simplified %forest

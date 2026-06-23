@@ -69,7 +69,7 @@ create spr-order  MAX_SPRITES cells allot       \ pointers into spr-buf (what ge
     treats.sys load
     show>
         god         \ steps both systems' stages
-        treats-spew \ procedural spawning: one treat per frame
+        spew-treat
         ~ysort ;    \ forest + treats sprites, interleaved by depth
 
 main

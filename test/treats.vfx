@@ -78,33 +78,33 @@ public
 \ ---- World integration ------------------------------------------------------
 
 \ Fill and return a treat's embedded query records.
-: treat>box ( treat - %box )
+: treat>box ( treat - %box-params )
     { box {
         you >msk @ msk !   you >lyr @ lyr !   you id !
         you >x 2@  you >bmp @ bmpwh 2>p  box-around   x2 2!  x1 2!
         0. z1 !  64. z2 !
-    } box } ;
+    this } } ;
 
-: treat>sprite ( treat - %sprite )
+: treat>sprite ( treat - %sprite-params )
     { sprite {
         you >x 2@ x 2!   you >z @ z !   you >bmp @ bmp !   you id !   you >prio @ prio !
-    } sprite } ;
+    this } } ;
 
 \ Ground shadow: at the treat's x,y (z=0), background layer. Scratch record is
 \ fine because the y-sorter copies each emitted record immediately.
 %sprite-params object treat-shadow
-: treat>shadow ( treat - %sprite )
+: treat>shadow ( treat - %sprite-params )
     { treat-shadow {
         you >x 2@ 0 8. 2+ x 2!   0. z !   icon-shadow.png bmp !   1 prio !   you id !
-    } treat-shadow } ;
+    this } } ;
 
-0 value emit-xt
+|| 0 value emit-xt
 c: %treats %system ;
 %treats :: start   act>  step ;   \ just step its stage; the runner decides how to populate it
 %treats :: render  ~treats ;
 %treats :: entity-count  ( - n )          treats.stage #items ;
-%treats :: entity-box    ( n - %box )     treats.stage el@ treat>box ;
-%treats :: entity-sprite ( n - %sprite )  treats.stage el@ treat>sprite ;
+%treats :: entity-box    ( n - %box-params )     treats.stage el@ treat>box ;
+%treats :: entity-sprite ( n - %sprite-params )  treats.stage el@ treat>sprite ;
 %treats :: entity-sprites ( xt - )        \ emit the treat plus, when airborne, its shadow
     to emit-xt
     [: 
@@ -113,4 +113,4 @@ c: %treats %system ;
     ;] each-active ;
 %treats manager: treats.sys manager;
 
-: treats-spew   treats.sys as> spew ;   \ procedural: spawn one treat per call into treats' stage
+: spew-treat  treats.sys as> spew ;

@@ -8,7 +8,7 @@ descriptor: playfieldobj
     \ [ x , y , strategy , ]
 
     data>actor:
-        a!>   a@+ a@+ at   %playfieldobj-actor one { a@+ load-strategy  this } ;
+        a!>   @a+ @a+ at   %playfieldobj-actor one { @a+ load-strategy  this } ;
     
     actor>code:
         x @ >i "n," y @ >i "n," strat @ "name," ;
