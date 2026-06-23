@@ -28,5 +28,5 @@ cube-mesh vertices:
     ( orange ) grey v.e, v.g, v.c,  v.e, v.c, v.a,
     ( grey   ) grey v.a, v.b, v.e,  v.b, v.f, v.e,
     ( grey   ) grey v.c, v.g, v.d,  v.g, v.h, v.d,
-;vertices
+vertices;
 cube-mesh flip-normals      \ this cube is wound clockwise; gen-normals assumes CCW

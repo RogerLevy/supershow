@@ -38,7 +38,7 @@ public
 create grid-mesh  LINE_LIST mesh
 grid-mesh vertices:
     grid-lines
-;vertices
+vertices;
 
 \ ---- %grid: an infinite floor -- the mesh stays fixed at the origin; the camera
 \ is what scrolls. We draw the grid with a camera transform whose XZ position is
