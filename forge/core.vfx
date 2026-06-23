@@ -60,6 +60,7 @@ aka cd cwd
 : 2max rot max >r max r> ;
 : 2min rot min >r min r> ;
 : 2clamp 2swap 2>r 2min 2r> 2max ;
+: 2abs  abs swap abs swap ;
 aka d@ 2@
 aka d! 2!
 : x@ @ ;

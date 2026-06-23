@@ -11,16 +11,16 @@ ec-cell thickness
     thickness! ;
 
 : circ ( radius. - )
-    thickness@ p>f f>sf >r   at@f p>f rgba@sf r> al_draw_circle ;
+    abs  thickness@ p>f f>sf >r   at@f p>f rgba@sf r> al_draw_circle ;
 
 : circf ( radius. - )
-    at@f p>f rgba@sf al_draw_filled_circle ;
+    abs  at@f p>f rgba@sf al_draw_filled_circle ;
 
 : oval ( radiusx. radiusy. - )
-    thickness@ p>f f>sf >r   at@f 2p>f rgba@sf r> al_draw_ellipse ;
+    2abs  thickness@ p>f f>sf >r   at@f 2p>f rgba@sf r> al_draw_ellipse ;
 
 : ovalf ( radiusx. radiusy. - )
-    at@f 2p>f rgba@sf al_draw_filled_ellipse ;
+    2abs  at@f 2p>f rgba@sf al_draw_filled_ellipse ;
 
 : line ( x. y. - )
     thickness@ p>f f>sf >r   at@f   2p>f  rgba@sf r> al_draw_line ;
