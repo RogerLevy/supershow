@@ -110,21 +110,15 @@ forth-public
             then
         then
     then
-    project$ count $cwd
-    500 ms
+    \ project$ count $cwd
+    \ 500 ms
     >vfx
     cartridge ;
 
 : rldp ( - )
     project$ count nip 0= abort" No project loaded."
-    project$ count $cwd
+    \ project$ count $cwd
     cartridge ;
-
-: +project ( - <name> )
-    home$ count $cwd
-    bl preparse f" spunk\project.bat %s" cr 2dup type shellcmd
-    200 ms
-    ldp ;
 
 \ "pre-heating" gets a more reliable result
 : .perf  process-tick ['] process-tick time? ;
