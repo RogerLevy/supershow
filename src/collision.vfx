@@ -82,18 +82,18 @@ constant /poly-header
     {: ax ay ar bx by br :}
     ax ay bx by dist  ar br + <= ;
 
-\ =============================================================================
-\ Oval-Oval (approximate)
-\ Normalize space by oval A's radii, approximate B as circle
-\ =============================================================================
+\ \ =============================================================================
+\ \ Oval-Oval (approximate)
+\ \ Normalize space by oval A's radii, approximate B as circle
+\ \ =============================================================================
 
-: oval-oval? ( ax ay arx ary  bx by brx bry -- flag )
-    {: ax ay arx ary bx by brx bry | dx dy srx sry :}
-    arx 0= ary 0= or  brx 0= bry 0= or  or if false exit then
-    bx ax - arx p/ to dx
-    by ay - ary p/ to dy
-    brx arx p/ to srx   bry ary p/ to sry
-    dx dy hypot  1.  srx sry + 2 /  +  <= ;
+\ : oval-oval? ( ax ay arx ary  bx by brx bry -- flag )
+\     {: ax ay arx ary bx by brx bry | dx dy srx sry :}
+\     arx 0= ary 0= or  brx 0= bry 0= or  or if false exit then
+\     bx ax - arx p/ to dx
+\     by ay - ary p/ to dy
+\     brx arx p/ to srx   bry ary p/ to sry
+\     dx dy hypot  1.  srx sry + 2 /  +  <= ;
 
 \ =============================================================================
 \ Rect-Circ
