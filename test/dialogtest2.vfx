@@ -11,9 +11,9 @@ bitmap %idir%/assets/gfx/alfador.png
 bitmap %idir%/assets/gfx/fairgirl.png
 bitmap %idir%/assets/gfx/2200man.png
 
-alfador.png   18 20 tileset-from cat.ts
-fairgirl.png  21 28 tileset-from girl.ts
-2200man.png   21 36 tileset-from man.ts
+alfador.png   18 20 tileset cat.ts
+fairgirl.png  21 28 tileset girl.ts
+2200man.png   21 36 tileset man.ts
 
 0 value the-font
 

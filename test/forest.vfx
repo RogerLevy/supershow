@@ -57,7 +57,7 @@ descriptor;
 \ To edit visually: `design forest`
 
 bitmap %idir%\assets\gfx\trees.png
-trees.png 64 64 tileset-from trees.ts
+trees.png 64 64 tileset trees.ts
 
 bitmap %idir%\assets\gfx\path.png
 

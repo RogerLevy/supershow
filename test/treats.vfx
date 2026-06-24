@@ -5,8 +5,8 @@ bitmap %idir%/assets/gfx/icons1.png
 bitmap %idir%/assets/gfx/icons2.png
 bitmap %idir%/assets/gfx/icon-shadow.png
 
-icons1.png  16 16 tileset-from  icons1.ts
-icons2.png  16 16 tileset-from  icons2.ts
+icons1.png  16 16 tileset  icons1.ts
+icons2.png  16 16 tileset  icons2.ts
 
 \ ---- Private stage ----------------------------------------------------------
 \ treats owns its own stage; every class in this module resolves stg@ to it,

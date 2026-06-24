@@ -10,9 +10,9 @@ bitmap %idir%/assets/gfx/alfador.png
 bitmap %idir%/assets/gfx/fairgirl.png
 bitmap %idir%/assets/gfx/lyle.png
 
-2200man.png  21 36 tileset-from  man.ts
-alfador.png  18 20 tileset-from  cat.ts
-fairgirl.png 21 28 tileset-from  girl.ts
+2200man.png  21 36 tileset  man.ts
+alfador.png  18 20 tileset  cat.ts
+fairgirl.png 21 28 tileset  girl.ts
 
 \ =============================================================================
 \ Animations
@@ -117,7 +117,6 @@ class: %marker  %actor derive  class;
 0 value npc-bank
 
 : init-npc-bank ( - )
-    init-spritebank
     256 3 make-spritebank to npc-bank
     man.ts  npc-bank add-tileset-to-bank
     cat.ts  npc-bank add-tileset-to-bank

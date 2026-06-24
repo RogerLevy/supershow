@@ -75,7 +75,7 @@ class: %tileset
         this update-tileset ;
 class;
 
-: tileset-from ( bmpid tilew tileh <name> - ) ( - tileset )
+: tileset ( bmpid tilew tileh <name> - ) ( - tileset )
     bl parse 2dup sfind nip if 2drop 2drop drop exit then
     %tileset asset {
         tw 2! bmp !

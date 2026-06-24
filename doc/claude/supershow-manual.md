@@ -599,7 +599,7 @@ Assets are declared at the top level of a file (outside any word definition). Th
 bitmap %idir%/assets/gfx/mysprite.png    \ declares word `mysprite.png` → bmpid
 bitmap %idir%/assets/gfx/player.png
 
-mysprite.png 16 16 tileset-from  player-ts   \ ( bmpid tw th <name> ) → tileset
+mysprite.png 16 16 tileset  player-ts   \ ( bmpid tw th <name> ) → tileset
 20 15 tilemap the-map                         \ ( w h <name> ) → tilemap
 
 sample %idir%/assets/smp/jump.ogg       \ declares word `*jump*` → plays sample
@@ -817,7 +817,7 @@ act>
 
 ```forth
 bitmap %idir%/assets/gfx/player.png
-player.png 16 16 tileset-from player-ts
+player.png 16 16 tileset player-ts
 
 %myactor :: start ( - )
     player.png bmp !     \ set actor's sprite (bmpid)
@@ -890,7 +890,7 @@ Pattern: parent spawns children from inside `act>` using `as>` to scope them.
 
 ### crowd.vfx — classes, animations, animation control
 
-Shows: `tileset-from`, `animation`, `range,`, `frame,`, `cycle` for frame animation. The `face` helper switches animation sets. `h|` flips sprite horizontally. `sorted-actors>` for custom render order. Spritebank (`bcput`) for batched GPU sprite rendering.
+Shows: `tileset`, `animation`, `range,`, `frame,`, `cycle` for frame animation. The `face` helper switches animation sets. `h|` flips sprite horizontally. `sorted-actors>` for custom render order. Spritebank (`bcput`) for batched GPU sprite rendering.
 
 ### boxland.vfx — no actor system, collision grid
 

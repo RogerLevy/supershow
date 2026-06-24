@@ -4,7 +4,7 @@ import %supershow%/addons/shapes.vfx
 
 \ Tileset for metadata infrastructure (bitmap not rendered)
 bitmap %idir%/assets/gfx/greyzebes.png
-greyzebes.png 16 16 tileset-from the-tileset
+greyzebes.png 16 16 tileset the-tileset
 20 15 tilemap the-tilemap
 
 \ Tile indices and their metadata:

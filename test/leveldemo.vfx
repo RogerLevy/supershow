@@ -8,7 +8,7 @@ import %supershow%/src/supershow.vfx
 import %supershow%/addons/shapes.vfx
 
 bitmap %idir%/assets/gfx/greyzebes.png
-greyzebes.png 16 16 tileset-from greyzebes.ts
+greyzebes.png 16 16 tileset greyzebes.ts
 
 JSONFILE %idir%/assets/levels/leveldemo.json  
 

@@ -319,7 +319,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     path-a path-len -path evaluate to bmpid
     name-a name-len -ext f" %s.ts" sfind nip not if
         bmpid  bmpw 16 / to tw                         \ tile size = width / 16 (square)
-        bmpid  name-a name-len -ext  tw tw  f" %n %n tileset-from %s.ts" .evaluate 
+        bmpid  name-a name-len -ext  tw tw  f" %n %n tileset %s.ts" .evaluate 
     then
 ;
 

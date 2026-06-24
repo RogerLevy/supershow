@@ -4,7 +4,7 @@ import-as %supershow%/src/tilemap.vfx [tilemap]
 
 bitmap %idir%/../allegro5/vga2_8x8_allegro5.png
 
-vga2_8x8_allegro5.png 9 9 tileset-from font-ts
+vga2_8x8_allegro5.png 9 9 tileset font-ts
 
 \ Source map: 8×8 of ASCII chars ABCDEFGH in alternating rows
 8 8 tilemap src-map
