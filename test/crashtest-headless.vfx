@@ -1,0 +1,52 @@
+\ Headless driver for crashtest.vfx (the text-mode crash-handler test).
+\ Engineer is a GUI app, so its console output can't be piped; instead we
+\ redirect the output device to a log file, run the test under CATCH, then
+\ flush and write a result file. Read crashtest.log afterwards for the dumps.
+\
+\ Run (PowerShell, with bin/ on PATH so the allegro DLLs load); location-independent:
+\   & bin\engineer.exe -console include test\crashtest-headless.vfx
+\   Get-Content test\crashtest.ok    \ "err=0" = all faults handled, process alive
+\   Get-Content test\crashtest.log   \ the handler output
+\
+\ NOTE on paths: s" does NOT expand %idir% -- only include/included/require/ld
+\ and the word `expanded` do. The kernel/genio file words below take a resolved
+\ path, so each %idir% string is run through `expanded` first.
+\
+\ Under bin\engineer.exe the whole engineer layer + a 256MB dict are baked in;
+\ under plain vfxforth we load the stack ourselves (small dict overflows, so use
+\ engineer.exe).
+
+[undefined] [engineer] [if]
+    +xrefs 256 1024 * xref-kb
+    require %idir%/../lib/file.fth
+    require %idir%/../lib/configtools.fth
+    include %idir%/../forge/forge.vfx
+    include %idir%/../allegro5/allegro5.vfx
+    include %idir%/../engineer/engineer.vfx
+    ProtectedExterns
+[then]
+
+\ Redirect output to a log file so we can read it after the run.
+filedev: OutDev
+s" %idir%/crashtest.log" expanded delete-file drop
+s" %idir%/crashtest.log" expanded r/w OutDev open-gio 2drop   \ open-gio (r/w) creates+opens
+op-handle @ value SaveOut
+OutDev op-handle !
+
+0 value terr
+: run-test  s" %idir%/crashtest.vfx" included ;   \ included expands %idir% itself
+
+save-order
+' run-test catch to terr
+restore-order
+
+flushOP-gen drop                 \ ESSENTIAL: flush or the log may be empty
+SaveOut op-handle !
+OutDev close-gio drop
+
+variable fh
+: write-result
+    s" %idir%/crashtest.ok" expanded w/o create-file abort" cf" fh !
+    terr f" err=%n" fh @ write-file drop
+    fh @ close-file drop ;
+write-result bye

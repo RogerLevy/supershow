@@ -1,0 +1,37 @@
+\ Exercises the text-mode crash handler in sandbox/debug.vfx (TermCrashProc).
+\ Loads the handler, then deliberately triggers three kinds of fault, each via
+\ CATCH so the run continues. Each should print the exception code, faulting
+\ word, registers, and both annotated stacks, then recover.
+\
+\   Interactive:  ld test/crashtest
+\   Headless:     drive via engineer/_ctest.vfx (output redirect + Win32Catch)
+\
+\ Win32Catch arms SEH->THROW for the current thread (the headless `include`
+\ thread isn't armed by default; harmless interactively).
+
+validations off ld %idir%/../sandbox/debug
+Win32Catch
+
+only forth definitions
+
+variable n   0 n !
+: run  ( xt -- )
+    catch
+    1 n +!
+    cr ." [survived fault #" n @ . ." throw=" . ." ]" cr ;
+
+\ 1) access violation: fetch from null, with sentinels on the data stack
+: t1  $11111111 $22222222 $33333333 0 @ ;
+' t1 run
+
+\ 2) integer divide by zero. NOTE: literal `7 0 /` is constant-folded to a
+\    COMPILE error, so tick `/` and run it via catch with divisor (TOS) = 0.
+$AAAAAAAA $BBBBBBBB 7 0 ' / run
+
+\ 3) faulted EXTERN: allegro fn dereferences garbage -> doExternExit recovery.
+\    `^ engineer` puts the allegro words back in the search order.
+^ engineer
+: t3  $DEADBEEF al_get_bitmap_width ;
+' t3 run
+
+cr ." ===== ALL THREE EXCEPTIONS HANDLED, PROCESS ALIVE =====" cr

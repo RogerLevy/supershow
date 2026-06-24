@@ -1,7 +1,32 @@
-module [ctest]
-import %idir%/../test/allrange.vfx
-public
+\ Spin the text-mode crash handler with the forced-output-device fix.
+\ validations off, ld sandbox/debug, sentinels on the stack, then faults.
+validations off ld %idir%/../sandbox/debug
+Win32Catch
 
-\ Compile-only: importing allrange (main is NOT auto-called) compiles the whole
-\ chain incl. smoothing usage. No spawn/draw.
-." allrange compiled" cr
+only forth definitions
+
+variable n   0 n !
+: run  ( xt -- )  
+    catch  
+    1 n +!  
+    cr ." [survived fault #" n @ . ." throw=" . ." ]" cr  
+\    s0 @ sp!   \ WTF NO
+    ;
+
+\ this works
+: t1  $11111111 $22222222 $33333333 0 @ ;            \ access violation
+' t1 run
+
+\ compiler catches this and throws divide-by-constant-zero
+\ : t2  $AAAAAAAA $BBBBBBBB 7 0 / ;                    \ integer divide by zero
+
+\ divisor (TOS) must be 0: dividend 7, divisor 0 -> runtime integer divide by zero
+\ (ticking / and running via catch avoids the compiler's constant-fold of `7 0 /`)
+$AAAAAAAA $BBBBBBBB 7 0 ' / run
+
+\ this works
+^ engineer
+: t3  $DEADBEEF al_get_bitmap_width ;               \ faulted EXTERN
+' t3 run
+
+cr ." ===== ALL THREE EXCEPTIONS HANDLED, PROCESS ALIVE =====" cr

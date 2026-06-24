@@ -1,0 +1,97 @@
+expose-module  ExpandException
+
+also system 
+also forth
+
+fast{
+
+protectedexterns
+
+: (.dword)  ( n -- caddr len )
+    base @ >r hex
+    s>d <# # # # # # # # # #>
+    r> base !
+;
+
+: .regs  ( -- )
+    cr  ." EAX=" _CONTEXT context.Eax @ (.dword) type
+        ."  EBX=" _CONTEXT context.Ebx @ (.dword) type
+        ."  ECX=" _CONTEXT context.Ecx @ (.dword) type
+        ."  EDX=" _CONTEXT context.Edx @ (.dword) type
+    cr  ." ESI=" _CONTEXT context.Esi @ (.dword) type
+        ."  EDI=" _CONTEXT context.Edi @ (.dword) type
+        ."  EBP=" _CONTEXT context.Ebp @ (.dword) type
+        ."  ESP=" _CONTEXT context.Esp @ (.dword) type
+    cr  ." EIP=" _CONTEXT context.Eip @ (.dword) type
+        ."  EFL=" _CONTEXT context.EFlags @ (.dword) type
+    cr
+;
+
+redef cstring buf
+
+: row$  {: slotaddr +name? -- caddr len :}
+    slotaddr @ dup (.dword) buf place
+    0= if
+        \ stale/empty slot — hex only, no annotation (value already consumed by 0=)
+    else
+        +name? if
+            s"  -- " buf append
+            slotaddr @ ip>nfa
+            dup ['] to-callback ip>nfa = if
+                drop
+            else
+                count buf append
+            then
+        else
+            slotaddr @ f"  (%n)" buf append
+        then
+    then
+    buf count
+;
+
+: .padded  {: caddr len width -- :}
+    caddr len type
+    width len - 0 max spaces
+;
+
+: .stacks  ( -- )
+    cr ." Data Stack                  Return Stack" cr
+    _CONTEXT context.Ebx @ dup (.dword) type f"  (%n)" type cr
+    16 for
+        _CONTEXT context.Ebp @ i cells+ false row$  28 .padded
+        _CONTEXT context.Esp @ i cells+ true  row$  type
+        cr
+    loop
+;
+
+op-handle @ value the-handle
+
+: TermCrashProc      \ err context -- filter?
+    op-handle @ >r
+    the-handle op-handle !
+
+    dup to ^Context
+    _CONTEXT __CONTEXT__ move
+    XcallBuffer scb.xt @ dup XcallFlag !
+    if  Xcall>ECB  else  SCB>ECB  then
+    exception-code !
+
+    cr ." Exception code: " exception-code @ . cr
+    ." Faulting word: " _CONTEXT context.EIP @ ip>nfa count type cr
+
+    .regs
+    .stacks
+
+    XcallFlag @
+    if
+        doExternExit drop
+        ." (recovered past faulted EXTERN)" cr
+    then
+
+    r> op-handle !
+    true
+;
+
+' TermCrashProc to-callback debugger
+
+fast}

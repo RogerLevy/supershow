@@ -43,3 +43,5 @@ allegro.log
 
 tmp
 session.ini
+
+test/crashtest.ok

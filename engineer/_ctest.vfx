@@ -23,7 +23,10 @@ OutDev op-handle !
 
 0 value terr
 : load-body  s" _ctest_body.vfx" included ;
-['] load-body catch to terr
+
+save-order
+' load-body catch to terr
+restore-order
 
 flushOP-gen drop
 SaveOut op-handle !
