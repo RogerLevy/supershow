@@ -1060,9 +1060,11 @@ redef : ; ( - )
         my-name s" destroy" :method destructor-xt !
     } ;
 
+: destruct ( object - )
+    { cla @ -> destructor-xt @ ?dup if execute then } ;
+
 : destroy ( object - )
-    dup { cla @ -> destructor-xt @ ?dup if execute then }
-    free drop ;
+    dup destruct   free drop ;
 
 : derive ( class - )
     {: source-class | dest-class :}
