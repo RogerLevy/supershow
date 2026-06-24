@@ -25,26 +25,19 @@ protectedexterns
     cr
 ;
 
-redef cstring buf
-
-: row$  {: slotaddr +name? -- caddr len :}
-    slotaddr @ dup (.dword) buf place
-    0= if
-        \ stale/empty slot — hex only, no annotation (value already consumed by 0=)
-    else
-        +name? if
-            s"  -- " buf append
-            slotaddr @ ip>nfa
-            ['] to-callback ip>nfa = if
-                drop
-            else
-                slotaddr @ ['] .ip pad strout buf append
-            then
+: type-row  {: slotaddr +name? -- :}
+    slotaddr @ dup (.dword) type  -exit
+    +name? if
+        ."  -- " 
+        slotaddr @ ip>nfa
+        ['] to-callback ip>nfa = if
+            drop
         else
-            slotaddr @ f"  (%n)" buf append
+            slotaddr @ .ip 
         then
+    else
+        slotaddr @ f"  (%n)" type
     then
-    buf count
 ;
 
 : .padded  {: caddr len width -- :}
@@ -56,8 +49,8 @@ redef cstring buf
     cr ." Data Stack                  Return Stack" cr
     _CONTEXT context.Ebx @ dup (.dword) type  ?dup if f"  (%n)" type then  cr
     16 for
-        _CONTEXT context.Ebp @ i cells+ false row$  28 .padded
-        _CONTEXT context.Esp @ i cells+ true  row$  type
+        _CONTEXT context.Ebp @ i cells+ false ['] type-row pad strout 28 .padded
+        _CONTEXT context.Esp @ i cells+ true  ['] type-row pad strout type
         cr
     loop
 ;
