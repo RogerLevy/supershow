@@ -18,17 +18,17 @@ fairgirl.png 21 28 tileset  girl.ts
 \ Animations
 \ =============================================================================
 
-man.ts  animation: man-down   1 4 range, animation;
-man.ts  animation: man-up     8 11 range, animation;
-man.ts  animation: man-left   5 , 6 , 5 , 7 , animation;
+man.ts  flipbook: man-down   1 4 range, flipbook;
+man.ts  flipbook: man-up     8 11 range, flipbook;
+man.ts  flipbook: man-left   5 , 6 , 5 , 7 , flipbook;
 
-cat.ts  animation: cat-down   1 , 2 , 3 , 4 , animation;
-cat.ts  animation: cat-up     10 , 11 , 12 , 13 , animation;
-cat.ts  animation: cat-left   6 , 7 , 8 , 7 , animation;
+cat.ts  flipbook: cat-down   1 , 2 , 3 , 4 , flipbook;
+cat.ts  flipbook: cat-up     10 , 11 , 12 , 13 , flipbook;
+cat.ts  flipbook: cat-left   6 , 7 , 8 , 7 , flipbook;
 
-girl.ts animation: girl-down  0 , 1 , 0 , 2 , animation;
-girl.ts animation: girl-up    5 , 6 , 5 , 7 , animation;
-girl.ts animation: girl-left  3 , 4 , 3 , 4 , animation;
+girl.ts flipbook: girl-down  0 , 1 , 0 , 2 , flipbook;
+girl.ts flipbook: girl-up    5 , 6 , 5 , 7 , flipbook;
+girl.ts flipbook: girl-left  3 , 4 , 3 , 4 , flipbook;
 
 \ =============================================================================
 \ NPC class
