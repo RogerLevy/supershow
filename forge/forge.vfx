@@ -25,6 +25,7 @@ include %idir%/module.vfx
 
 include %idir%/fixed.vfx          \ 16.16 fixed-point math
 include %idir%/format.vfx         \ Printf-style string formatting
+include %idir%/debug.vfx          \ Traditional exception handler
 include %idir%/logging.vfx        \ Printf-style string formatting
 include %idir%/../lib/fstools.vfx    \ Filesystem utilities
 include %idir%/../lib/lstring.vfx    \ Cell-counted strings

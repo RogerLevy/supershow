@@ -1,0 +1,115 @@
+expose-module  ExpandException
+
+also system 
+also forth
+
+protectedexterns
+
+: (.dword)  ( n -- caddr len )
+    base @ >r hex
+    s>d <# # # # # # # # # #>
+    r> base !
+;
+
+: .regs  ( -- )
+    cr  ." EAX=" _CONTEXT context.Eax @ (.dword) type
+        ."  EBX=" _CONTEXT context.Ebx @ (.dword) type
+        ."  ECX=" _CONTEXT context.Ecx @ (.dword) type
+        ."  EDX=" _CONTEXT context.Edx @ (.dword) type
+    cr  ." ESI=" _CONTEXT context.Esi @ (.dword) type
+        ."  EDI=" _CONTEXT context.Edi @ (.dword) type
+        ."  EBP=" _CONTEXT context.Ebp @ (.dword) type
+        ."  ESP=" _CONTEXT context.Esp @ (.dword) type
+    cr  ." EIP=" _CONTEXT context.Eip @ (.dword) type
+        ."  EFL=" _CONTEXT context.EFlags @ (.dword) type
+    cr
+;
+
+redef cstring buf
+
+: row$  {: slotaddr +name? -- caddr len :}
+    slotaddr @ dup (.dword) buf place
+    0= if
+        \ stale/empty slot — hex only, no annotation (value already consumed by 0=)
+    else
+        +name? if
+            s"  -- " buf append
+            slotaddr @ ip>nfa
+            ['] to-callback ip>nfa = if
+                drop
+            else
+                slotaddr @ ['] .ip pad strout buf append
+            then
+        else
+            slotaddr @ f"  (%n)" buf append
+        then
+    then
+    buf count
+;
+
+: .padded  {: caddr len width -- :}
+    caddr len type
+    width len - 0 max spaces
+;
+
+: .stacks  ( -- )
+    cr ." Data Stack                  Return Stack" cr
+    _CONTEXT context.Ebx @ dup (.dword) type  ?dup if f"  (%n)" type then  cr
+    16 for
+        _CONTEXT context.Ebp @ i cells+ false row$  28 .padded
+        _CONTEXT context.Esp @ i cells+ true  row$  type
+        cr
+    loop
+;
+
+: lookup-exception  ( n - z$ )
+    case  
+        EXCEPTION_DATATYPE_MISALIGNMENT     of Z" Misaligned data type" endof
+        EXCEPTION_BREAKPOINT                of Z" Breakpoint encountered" endof
+        EXCEPTION_SINGLE_STEP               of Z" Single step exception" endof
+        EXCEPTION_ACCESS_VIOLATION          of Z" Access violation" endof
+        EXCEPTION_IN_PAGE_ERROR             of Z" Page violation" endof
+        EXCEPTION_ILLEGAL_INSTRUCTION       of Z" Illegal Instruction" endof
+        EXCEPTION_ARRAY_BOUNDS_EXCEEDED     of Z" Array Bounds Exceeded" endof
+        EXCEPTION_FLT_DENORMAL_OPERAND      of Z" Floating point operard is denormal" endof
+        EXCEPTION_FLT_DIVIDE_BY_ZERO        of Z" Floating point divide by zero" endof
+        EXCEPTION_FLT_INEXACT_RESULT        of Z" Floating point operation cannot be expressed exactly" endof
+        EXCEPTION_FLT_INVALID_OPERATION     of Z" Undefined floating point exception" endof
+        EXCEPTION_FLT_OVERFLOW              of Z" Floating point overflow" endof
+        EXCEPTION_FLT_STACK_CHECK           of Z" Stack failure due to floating point operation" endof
+        EXCEPTION_FLT_UNDERFLOW             of Z" Floating point underflow" endof
+        EXCEPTION_INT_DIVIDE_BY_ZERO        of Z" Integer divide by zero" endof
+        EXCEPTION_INT_OVERFLOW              of Z" Integer overflow" endof
+        EXCEPTION_PRIV_INSTRUCTION          of Z" Cannot execute privileged instruction" endof
+        EXCEPTION_STACK_OVERFLOW            of Z" Windows stack overflow" endof
+        $-DEAD                              of Z" Translated to THROW" endof	\ MPE004
+        drop Z" Undefined"
+    end-case ;
+
+: TermCrashProc      \ err context -- filter?
+    op-handle @ >r
+    [ op-handle @ ] literal op-handle !
+
+    dup to ^Context
+    _CONTEXT __CONTEXT__ move
+    XcallBuffer scb.xt @ dup XcallFlag !
+    if  Xcall>ECB  else  SCB>ECB  then
+    exception-code !
+
+    cr ." Exception code: " exception-code @ .   exception-code @ lookup-exception zcount type cr 
+    ." Faulting word: " _CONTEXT context.EIP @ .ip cr
+
+    .regs
+    .stacks
+
+    XcallFlag @
+    if
+        doExternExit drop
+        ." (recovered past faulted EXTERN)" cr
+    then
+
+    r> op-handle !
+    true
+;
+
+' TermCrashProc to-callback debugger
