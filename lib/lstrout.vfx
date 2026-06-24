@@ -51,7 +51,7 @@ forth-public
     ' drop ,          \ 23
     ' drop ,          \ 24
 
-|| create strdev   0 , string-vectors ,
+|| create lstrdev   0 , string-vectors ,
 
 \ --- Main API ---
 
@@ -61,7 +61,7 @@ forth-public
     >r
     op-handle @ ss-push
     r@ ss-push
-    strdev op-handle !
+    lstrdev op-handle !
     xt catch
     ss-pop drop
     ss-pop op-handle !

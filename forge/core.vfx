@@ -166,12 +166,64 @@ include %idir%/../textmode/textmode-tools.vfx
         pop-attribute
     else . then ;
 
+\ --- Strout ---
+
+0 value str
+0 value len
+variable cbuf
+
+: +str ( a len - ) >r str len + r@ move r> +to len ;
+: strout-emit ( c ? - ) drop  cbuf c!  cbuf 1 +str ;
+: strout-type ( a len ? - ) drop  +str ;
+: strout-cr ( ? - ) drop  10 cbuf c!  cbuf 1 +str ;
+
+create strout-vectors
+    ' drop ,          \ 0
+    ' drop ,          \ 1
+    ' drop ,          \ 2
+    ' drop ,          \ 3
+    ' drop ,          \ 4
+    ' drop ,          \ 5
+    ' drop ,          \ 6
+    ' drop ,          \ 7
+    ' drop ,          \ 8
+    ' strout-emit ,   \ 9  - emit
+    ' drop ,          \ 10
+    ' strout-type ,   \ 11 - type
+    ' strout-cr ,     \ 12 - cr
+    ' drop ,          \ 13
+    ' drop ,          \ 14
+    ' drop ,          \ 15
+    ' drop ,          \ 16
+    ' drop ,          \ 17
+    ' drop ,          \ 18
+    ' drop ,          \ 19
+    ' drop ,          \ 20
+    ' drop ,          \ 21
+    ' drop ,          \ 22
+    ' drop ,          \ 23
+    ' drop ,          \ 24
+
+create strout-dev   0 , strout-vectors ,
+
+: strout ( xt a - a len )  \ user-supplied buffer
+    str len {: xt a _str _len | __str __len :}
+    a to str   0 to len
+    op-handle @ >r
+    strout-dev op-handle !
+    xt catch
+    r> op-handle ! 
+    str to __str  len to __len 
+    _str to str   _len to len 
+    throw 
+    __str __len ;
+
 : .ip ( a - )
     dup body> inForth? if
         11 push-foreground
         dup ip>nfa dup count lctype
         name> - ?dup if
-            ." +" .
+            ."  +" .
         else
             space
         then
