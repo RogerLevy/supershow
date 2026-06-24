@@ -243,7 +243,6 @@ redef : >pos  -> pos ;
 || false value uModel-cached?
 : model-matrix! ( transform - )            \ transform = object->world (modelmtx)
     uModel-cached? not if
-        init-gl-extensions
         GL_CURRENT_PROGRAM _prog glGetIntegerv
         "uModel" _prog @ glGetUniformLocation  to uModel-loc
         true to uModel-cached?

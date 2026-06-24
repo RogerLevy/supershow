@@ -59,8 +59,7 @@ fast{ optimising on
 
 public
 
-: init-spritebank ( - )
-    init-gl-extensions
+: init-spritebank-shader ( - )
     _sb-vs  _sb-fs  load-shader  to _sb-shader ;
 
 : make-spritebank ( layer-size max-layers - bank )

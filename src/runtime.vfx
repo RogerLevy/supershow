@@ -47,13 +47,17 @@ public
 
 : init-supershow ( - )
     ." Initializing Supershow..." cr
-    init-rsort
     hold off
     user-zoom off
     refit
+
+    init-gl-extensions
+    init-rsort
     reinit-task-actors
     init-tilemap-renderer
     init-autoloads
+    init-spritebank-shader
+
     \ init-crt
     debug @ if
 \        ['] supershow-process-dirchange is process-dirchange
@@ -69,10 +73,3 @@ init-supershow
     run-main ;
 
 ' boot-supershow is boot
-
-\ : load-project ( - )
-\     create-autoclasses
-\     ['] load-default-dir script-classes each
-\     %scene load-default-dir
-\     s" modes.vfx" ?included ;
-
