@@ -258,13 +258,13 @@ create strout-dev   0 , strout-vectors ,
     depth 8 min {: d :}
     d 0< -4 ?throw
     3 push-attribute
-    d if ."     DS( " depth . ." ):[ " else ."     DS:[ " then
+    d if ."  (" depth (.) type ." ) " then
     d if
         d 0 ?do d 1 - i - pick . loop 
     else
-        ." Empty! "
+        ." Data-stack empty! "
     then
-    ." ] "
+    \ ." ] "
     pop-attribute ;
 
 : .s  _.s cr ;
@@ -273,11 +273,11 @@ create strout-dev   0 , strout-vectors ,
     fdepth {: d :}
     d 0< -400 ?throw
     3 push-attribute
-    ."     FS:[ " 
+    ."   F:[ " 
     d if
         d 0 ?do d 1 - i - fpick f. loop 
     else
-        ." Empty! "
+        ." Float-stack empty! "
     then
     ." ] "
     pop-attribute ;
@@ -338,7 +338,7 @@ aka parse' parse
 : (.rs) ( a -- )
     {: rp :}
     3 push-attribute
-    ."     RS:[ " 
+    ."  R:[ " 
     \ Walk from bottom (r0) to top (rp@), going downward
     rp r0 @ over 9 cells + min  ?do
         i @ .name                    \ Print return address
