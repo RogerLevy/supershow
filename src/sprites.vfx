@@ -50,38 +50,44 @@ trait: %animator
     prop anm :addr <readonly
     prop a.ts :ref %tileset <readonly
     prop a.spd :fixed
-    prop a.len
     prop a.ofs :fixed
     prop a.done 
     prop a.flp
 trait;
 
-class: %actor
-    is-a %animator
-class;
+c: %actor %animator ;
+c: %animation ts:%tileset data:a len spd:p flp ;
 
-|| variable alen \ pointer to len in animation header
-|| : >frames ( anim - a ) cell+ cell+ ;
-|| : ?baseid  a.ts @ dup if 0 tile then ;
-|| : the-frame  a.ofs @ >i cells anm @ >frames + @ ?baseid + a.flp @ xor ;
-|| : ?done  a.ofs @ a.spd @ + a.len @ >p >= -exit  a.done on ;
+private
+: anm-spd  a.spd @  anm @ >spd @ p* ;
+: anm-len  anm @ >len @ ;
+: anm-ts   a.ts @ ;
+: anm-flp  a.flp @  anm @ >flp @ xor ;
+: anm-data anm @ >data @ ;
+: ?baseid  anm-ts dup if 0 tile then ;
+: the-frame  a.ofs @ >i cells  anm-data + @  ?baseid +  anm-flp xor ;
+: ?done  a.ofs @ anm-spd + anm-len >p >= -exit  a.done on ;
+public
 
 : cycle ( anim spd. - ) \ to stop, say `anm off`
-    a.spd !  dup anm !  @+ a.ts ! @ a.len !  0 a.ofs !  a.done off  
+    a.spd !  dup anm !  { ts @ } a.ts !  0 a.ofs !  a.done off  
     the-frame bmp ! ;
 
-: animation ( ts <name> - )  \ tileset , len , ofs , ofs , ofs , ... ofs ,
-    create , here alen ! 0 , ;
+: animation: ( ts <name> - )  
+    create %animation dmake { ts !  1.0 spd !  here data ! ;
 
-: frame, ( n - )
-    , 1 alen @ +! ;
+: animation; ( - )
+    here data @ - cell / len ! } ;
 
-: range, ( n n - )
-    2dup < if 1 + swap do i frame, loop
-    else swap do i frame, -1 +loop then ;
+: ,, ( n # - )
+    for dup , loop drop ;
+
+: range, ( from to - )
+    2dup < if 1 + swap do i , loop
+    else swap do i , -1 +loop then ;
 
 : advance-animation ( spd. - bmpid )    
-    a.spd @ p* a.ofs @ + a.len @ >p mod a.ofs !
+    anm-spd p*  a.ofs @ +  anm-len >p mod a.ofs !
     ?done  the-frame ;
 
 : animate ( - )
