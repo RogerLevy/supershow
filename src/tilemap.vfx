@@ -17,7 +17,7 @@ class: %tilemap
 class;
 
 %tilemap :destruct
-    ta @ destroy ;
+    ta @ destruct ;
 
 private
 
@@ -309,6 +309,8 @@ public
 \ : cr>xy ( col row %tilemap - x. y. )
 \     { ts @ if >ts @ >tw 2@ 2* else 2drop 0 0 then } ; 
 
+: teardown-tilemap-renderer
+    vbuf free drop ;
 
 : init-tilemap-renderer ( - )
     2 MB allocate throw  to vbuf

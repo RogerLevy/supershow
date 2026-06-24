@@ -107,6 +107,8 @@ class: %sample
 
 class;
 
+%sample :destruct  alsmp @ al_destroy_sample ;
+
 : sample ( <path> - ) ( - )
     \ oggs only for now
     bl parse 
@@ -147,6 +149,8 @@ class: %font
         size @ if _load-ttf else _load-bitmap-font then ;
 
 class;
+
+%font :destruct  alfont @ al_destroy_font ;
 
 : ttf-font ( size <path> - ) ( - )
     {: sz :}
@@ -195,6 +199,9 @@ class: %shader
 
 class;
 
+%shader :destruct  handle @ al_destroy_shader ;
+
+
 : shader ( <name> <vs-path> <fs-path> - ) ( - )
     bl parse  bl parse  bl parse
     {: nm-a nm-n vs-a vs-n fs-a fs-n :}
@@ -228,6 +235,9 @@ class;
     2dup fexists? not abort" File not found"
     2dup -path sfind nip if 2drop exit then
     2dup -path %jsonfile asset { embed _load-json } ;
+
+%jsonfile :destruct  json @ destroy-json ;
+
 [then]
 
 [defined] %tilemap [if]
@@ -258,3 +268,20 @@ class;
     } ;
 
 [then]
+
+: teardown-autoload ( autoload - )
+    dup body>name f" Tearing down %s..." .info 
+    destruct 
+;
+
+: teardown-autoloads ( - )
+    s" Tearing down registered autoloads..." .info
+    \ Get everything on the stack:
+    autoloads list-count for
+        list-next swap 
+    loop drop 
+    \ So that we can destroy them in reverse order, for safety:
+    autoloads list-count nip for 
+        teardown-autoload 
+    loop 
+;

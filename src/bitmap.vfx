@@ -14,6 +14,8 @@ class: %bitmap
     prop mtime :int          \ last-checked source-file mtime (hot-reload)
 class;
 
+%bitmap :destruct   albmp @ -albmp ;
+
 %bitmap object dummy.bmp
 || : dummies,  #bitmaps for dummy.bmp , loop ;
 

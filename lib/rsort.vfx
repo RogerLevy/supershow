@@ -80,6 +80,9 @@ public
     src dest!  !result
 ; 
 
+: teardown-rsort
+  table0 free drop table1 free drop ;
+
 fast}
 
 \\ 

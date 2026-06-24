@@ -89,3 +89,10 @@ include %idir%/tools.vfx                \ Development tools
 
 import %supershow%/sketchpad/sketchpad.vfx  \ Table/stage editor
 reexport [sketchpad]
+
+\ =============================================================================
+\ Dev-time cleanup on EMPTY
+\ =============================================================================
+
+prune: ( start end - start end )
+    cleanup-supershow ;

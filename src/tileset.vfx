@@ -21,11 +21,12 @@ class: %tileset
 
 class;
 
-|| : /metas ( - )
-    0 %int %array make metas-array ! ;
+%tileset :destruct  
+    [: id>bmp destruct ;] metas-array @ each 
+    metas-array @ destruct ;
 
 0 %tileset :construct ( - )
-    /metas ;
+    0 %int %array make metas-array ! ;
 
 : _slice-tileset ( - )
     \ slice up the source %bitmap into tile sub-bitmaps.
