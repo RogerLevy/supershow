@@ -25,18 +25,17 @@ protectedexterns
     cr
 ;
 
-: type-row  {: slotaddr +name? -- :}
-    slotaddr @ dup (.dword) type  -exit
-    +name? if
-        ."  -- " 
-        slotaddr @ ip>nfa
-        ['] to-callback ip>nfa = if
-            drop
-        else
-            slotaddr @ .ip 
-        then
+: type-ds-row  ( slotaddr - )
+    @ dup (.dword) type   space .data ;
+
+: type-rs-row  {: slotaddr -- :}
+    slotaddr @ (.dword) type 
+    ."  -- " 
+    slotaddr @ ip>nfa
+    ['] to-callback ip>nfa = if
+        drop
     else
-        slotaddr @ f"  (%n)" type
+        slotaddr @ .ip 
     then
 ;
 
@@ -47,10 +46,10 @@ protectedexterns
 
 : .stacks  ( -- )
     cr ." Data Stack                  Return Stack" cr
-    _CONTEXT context.Ebx @ dup (.dword) type  ?dup if f"  (%n)" type then  cr
+    _CONTEXT context.Ebx @ dup (.dword) type  space  .  cr
     16 for
-        _CONTEXT context.Ebp @ i cells+ false ['] type-row pad strout 28 .padded
-        _CONTEXT context.Esp @ i cells+ true  ['] type-row pad strout type
+        _CONTEXT context.Ebp @ i cells+ ['] type-ds-row pad strout 28 .padded
+        _CONTEXT context.Esp @ i cells+ ['] type-rs-row pad strout type
         cr
     loop
 ;
@@ -92,8 +91,8 @@ protectedexterns
     cr ." Exception code: " exception-code @ .   exception-code @ lookup-exception zcount type cr 
     ." Faulting word: " _CONTEXT context.EIP @ .ip cr
 
-    .regs
     .stacks
+    .regs
 
     XcallFlag @
     if
