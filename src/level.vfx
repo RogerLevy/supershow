@@ -179,6 +179,8 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
     } 
 ;
 
+public
+
 : layer ( level i - tilemap )  
     swap >layers @ el@ ;
 

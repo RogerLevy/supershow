@@ -1,6 +1,5 @@
 module
 import %supershow%/src/supershow.vfx
-import-as %supershow%/src/tilemap.vfx [tilemap]
 
 bitmap %idir%/assets/gfx/greyzebes.png
 
