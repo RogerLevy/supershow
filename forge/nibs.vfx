@@ -569,7 +569,9 @@ create %protocol  %class dmake {
     then ;
 
 : ?accessor ( name len - )
-    2dup f" >%s" sfind nip if 2drop exit then
+    warnings? if
+        2dup f" >%s" sfind nip abort" Illegal property name; accessor form already exists."
+    then
     save-order  only forth definitions
     2dup fe" s\" -> %s\" evaluator >%s" evaluate 
     restore-order ;

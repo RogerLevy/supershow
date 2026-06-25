@@ -10,7 +10,8 @@ class: %dialog
     derive %actor
 
     prop zstr :addr         \ allocated z-string (full text)
-    prop pos :fixed         \ glyph position (fractional for sub-frame speed)
+
+    redef prop pos :fixed         \ glyph position (fractional for sub-frame speed)
     redef prop #lines :int
     DLG-MAX-LINES 4 * nprop linetbl       \ 32 x (u16 offset, u16 length)
     prop w :fixed
