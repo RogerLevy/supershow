@@ -55,7 +55,7 @@ private
 
 public
 
-: string>tilemap ( a u tm - )
+: parse-tilemap ( a u tm - )
     {: a u tm | tokend :}
     tm >ta @ >data @ to dst
     tm >w 2@ * to room
@@ -184,7 +184,7 @@ public
 : layer ( level i - tilemap )  
     swap >layers @ el@ ;
 
-\ ---- tilemap -> token-string encoder (inverse of string>tilemap) -------------
+\ ---- tilemap -> token-string encoder (inverse of parse-tilemap) -------------
 
 private
 
@@ -230,11 +230,13 @@ public
     loop
     lvl >src @ >json @ path len write-json ;
 
-|| : refill-layer ( tilemap layerj - )  "tiles" j>s rot string>tilemap ;
+|| : refill-layer ( tilemap layerj - )  
+    2dup swap layer-view!  
+    "tiles" j>s rot parse-tilemap ;
 
-\ Refill the layer tilemaps from the master cjson (tile data only — no actors,
-\ no stage reset). Use this on its own when you just need the tiles loaded
-\ (e.g. an editor that doesn't instantiate the level's actors).
+\ Refill the layer tilemaps from the master cjson — tiles + view props (no
+\ actors, no stage reset). Use this on its own when you just need the layers
+\ restored (e.g. an editor that doesn't instantiate the level's actors).
 : refill-tilemaps ( level - )
     {: lvl | layersj :}
     lvl >src @ >json @ "layers" j>j to layersj

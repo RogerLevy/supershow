@@ -371,7 +371,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
         layerj layer-tileset  ts !
         layerj n layer-name$  name$ place
         layerj this layer-view!
-        layerj "tiles" j>s  this string>tilemap
+        layerj "tiles" j>s  this parse-tilemap
         en on
     }
 ;
