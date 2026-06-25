@@ -127,8 +127,8 @@ fast{
     ts @ to cur-ts
     cur-ts >baseid @ to the-id
     m{
-    at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
-    w @ h @ _draw-tiles
+        at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
+        w @ h @ _draw-tiles
     m} ;
 
 : draw-wrapped ( sx. sy. w. h. - ) \ tiles infinitely
@@ -142,11 +142,11 @@ fast{
     sx >i vpw >i + 1 - _tw / 1 + to sc1
     sy >i vph >i + 1 - _th / 1 + to sr1
     at@p  vpw  vph  clip{
-    m{
-    at@f  sy p>f f-  fswap  sx p>f f-  fswap
-    _tw s>f  _th s>f  0e  transform
-    sc0 sr0 sc1 sr1 _draw-tiles-wrap
-    m}
+        m{
+            at@f  sy p>f f-  fswap  sx p>f f-  fswap
+            _tw s>f  _th s>f  0e  transform
+            sc0 sr0 sc1 sr1 _draw-tiles-wrap
+        m}
     clip} ;
 
 public
@@ -163,11 +163,11 @@ public
     sx >i vpw >i + 1 - _tw / 1 + w @ min to sc1
     sy >i vph >i + 1 - _th / 1 + h @ min to sr1
     at@p  vpw  vph  clip{
-    m{
-    at@f  sy p>f f-  fswap  sx p>f f-  fswap
-    _tw s>f  _th s>f  0e  transform
-    sc0 sr0 sc1 sr1 _draw-tiles-view
-    m}
+        m{
+            at@f  sy p>f f-  fswap  sx p>f f-  fswap
+            _tw s>f  _th s>f  0e  transform
+            sc0 sr0 sc1 sr1 _draw-tiles-view
+        m}
     clip} ;
 
 

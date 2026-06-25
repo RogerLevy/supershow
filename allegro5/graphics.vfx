@@ -87,11 +87,11 @@ redef : cls ( - )
 || variable tx variable ty
 || : m mp @ 15 and 16 cells * mstk + ; 
 
-: m{ ( - )
-    m 1 mp +! m swap al_copy_transform ;
+: m{ ( - a )
+    m dup   1 mp +!   m swap al_copy_transform ;
 
-: m} ( - )
-    -1 mp +!  m al_use_transform ;
+: m} ( a - )
+    mstk - 16 cells / mp !   m al_use_transform ;
 
 : transform ( f:x f:y f:sx f:sy f:a - )
     m2 al_build_transform  m2 m al_compose_transform  m m2 al_copy_transform

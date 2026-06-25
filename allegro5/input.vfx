@@ -64,5 +64,5 @@ create mickeyx 0 , 0 , here cell- constant mickeyy
     rmb? <rmb> kbs0 al_set_key_down
     mmb? <mmb> kbs0 al_set_key_down
     mousex 2@
-    ms0 ALLEGRO_MOUSE_STATE.x 2@ 2>p m{ inverse 2p*m m} mousex 2!
+    ms0 ALLEGRO_MOUSE_STATE.x 2@ 2>p m{ >r inverse 2p*m r> m} mousex 2!
     mousex 2@ 2swap 2- mickeyx 2! ;

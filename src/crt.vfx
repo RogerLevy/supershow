@@ -25,17 +25,18 @@ require %idir%/shader.vfx
 
 continuation: crt>
     ( xt ) >r
-    m{
-    buf:bmp al_set_target_bitmap
-    cls  0 0 at 
-    identity
-    0e 0e 2e 1e 0e transform
-    r> execute
-    ['] filter catch
-    0 al_use_shader drop
-    display al_get_backbuffer al_set_target_bitmap
-    throw
+    m{ ( old-m )
+        buf:bmp al_set_target_bitmap
+        cls  0 0 at 
+        identity
+        0e 0e 2e 1e 0e transform
+        r> execute
+        ['] filter catch
+        0 al_use_shader drop
+        display al_get_backbuffer al_set_target_bitmap
+        ( old-m err ) swap
     m}
+    throw
     tv:bmp 0e 0e 0e 0e 0.25e 0.25e 0e 0 al_draw_scaled_rotated_bitmap
 ;
 : init-crt ( - )
