@@ -76,8 +76,10 @@ module [supershow]
 
 	include tweak                \ Persistent variable control
 	\ include crt                \ CRT shader  \ TODO: Shader doesn't compile on OpenGL 3.0?
-	include autoload
+	include jsonfile
 	include level                \ JSON level loader (tilemap layers + scene actors)
+
+	include autoload
 	include runtime
 
 

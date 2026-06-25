@@ -215,12 +215,11 @@ class;
     } ;
 
 
-[defined] parse-json [if]
+[defined] %jsonfile [if]
+    
 class: %jsonfile
-    %asset derive
     is-a %autoload
-    is-a %loadable
-    prop json :addr
+    \ is-a %loadable
 
     || : _load-json ( - )
         this @data parse-json json ! ;
@@ -259,13 +258,12 @@ class;
 
 : tilemap ( w h <name> )
     {: def-w def-h :}
-    create
-    %tilemap dmake
-    {
+    create %tilemap dmake {
         def-w def-h * %int %array hmake ta !
         def-w w !   def-h h !
         this autoloads add-to
-    } ;
+    } 
+;
 
 [then]
 
@@ -285,3 +283,14 @@ class;
         teardown-autoload 
     loop 
 ;
+
+[defined] %level [if]
+
+class: %level
+    is-a %autoload
+class;
+
+: level ( jsonfile <name> - ) ( - level )
+    create %level dmake build-level ;
+
+[then]

@@ -12,9 +12,10 @@ greyzebes.png 16 16 tileset greyzebes.ts
 
 JSONFILE %idir%/assets/levels/leveldemo.json  
 
-0 value the-level
 0 value camx        \ camera origin (fixed pixels)
 0 value camy
+
+leveldemo.json level the-level
 
 class: %blip  %actor derive  class;
 
@@ -37,9 +38,6 @@ class: %blip  %actor derive  class;
 ;
 
 : main ( - )
-    the-level 0= if
-        leveldemo.json build-level to the-level
-    then
     the-level reset
     show> think ~render
 ;

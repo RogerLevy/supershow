@@ -1,0 +1,6 @@
+public
+
+class: %jsonfile 
+    %asset derive
+    prop json :addr
+class;

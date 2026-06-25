@@ -75,7 +75,7 @@ public
 private
 
 \ Create a named %tilemap (mirrors the `tilemap` defining word in autoload.vfx)
-: new-layer-tm ( cols rows a u - tilemap )
+: define-layer-tm ( cols rows a u - tilemap )
     f" tilemap %s" .evaluate   lastbody ;
 
 public
@@ -96,9 +96,9 @@ class;
 class: %level
     32 nprop name$ :cstring
     prop layers  :ref %array
-    prop src     :addr           \ resident cjson root (the master)
     prop pxw     :int            \ level pixel bounds (for camera clamp)
     prop pxh     :int
+    prop src :ref %jsonfile
 class;
 
 \ JSON int defaulting to ON (-1) when the key is absent, so layers with no "vis"
@@ -139,7 +139,7 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
     \ "<level>-<layer>" and to fill its name$ — so stash it in lname-buf (a stable
     \ copy, since the f" below would otherwise reuse its rotating buffer).
     layerj idx layer-name$  lname-buf place
-    lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  new-layer-tm to tm
+    lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  define-layer-tm to tm
     \ name$ on the runtime tilemap mirrors what the editor round-trips to JSON,
     \ so a level loaded at runtime reports the same layer names it was saved with.
     lname-buf count  tm >name$ place
@@ -149,31 +149,26 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
     tm
 ;
 
-public
+: build-level ( jsonfile level - )
+    {: jf lvl | root layersj n mw mh :}
+    lvl { 
+        jf src !
+        jf >json @ to root
+        jf body>name -ext name$ place
 
-: build-level ( cjson|jsonfile - level )
-    {: param | lvl root layersj n mw mh :}
-    %level dmake to lvl
-    param dup %jsonfile is? if  -> json @  then  to root
-    lvl {
-        root src !
-        param %jsonfile is? if
-            param body>name -ext name$ place
-        else
-            root "name" ?j>z ?dup 0= abort" Level JSON has no name field."
-            zcount name$ place
-        then
         root "layers" j>j to layersj
         layersj jsize to n
-        n %int %array hmake layers !
-        n 0 ?do
+        n %int %array dmake layers !
+
+        n for
             name$ count  i  layersj i j>j  build-layer   ( tilemap )
             i layers @ el!
         loop
-        \ camera bounds: default to the largest layer's pixel extent, then let
-        \ the level override with explicit "w"/"h" (pixels), if present.
+
+        \ find size of the level for camera bounds
+        \ let the level override with explicit "w"/"h" (pixels), if present.
         0 to mw  0 to mh
-        n 0 ?do
+        n for
             i layers @ el@            ( tilemap )
             dup tm-pxw mw max to mw
                 tm-pxh mh max to mh
@@ -181,11 +176,11 @@ public
         mw pxw !  mh pxh !
         root "w" ?j>n ?dup if pxw ! then
         root "h" ?j>n ?dup if pxh ! then    
-    }
-    lvl
+    } 
 ;
 
-: layer ( level i - tilemap )  swap >layers @ el@ ;
+: layer ( level i - tilemap )  
+    swap >layers @ el@ ;
 
 \ ---- tilemap -> token-string encoder (inverse of string>tilemap) -------------
 
@@ -225,13 +220,13 @@ public
 \ is preserved untouched.
 : save-level ( level path len - )
     {: lvl path len | layersj :}
-    lvl >src @ "layers" j>j to layersj
+    lvl >src @ >json @ "layers" j>j to layersj
     layersj jsize 0 ?do
         lvl i layer  encode-tiles              ( zstr )
         layersj i j>j "tiles" j>j  swap        ( tiles-item zstr )
         jset-string
     loop
-    lvl >src @ path len write-json ;
+    lvl >src @ >json @ path len write-json ;
 
 || : refill-layer ( tilemap layerj - )  "tiles" j>s rot string>tilemap ;
 
@@ -240,7 +235,7 @@ public
 \ (e.g. an editor that doesn't instantiate the level's actors).
 : refill-tilemaps ( level - )
     {: lvl | layersj :}
-    lvl >src @ "layers" j>j to layersj
+    lvl >src @ >json @ "layers" j>j to layersj
     layersj jsize 0 ?do
         lvl i layer
         layersj i j>j
@@ -254,12 +249,14 @@ public
     {: lvl :}
     lvl refill-tilemaps
     clear-stage
-    lvl >src @ "actors" ?j>j ?dup if j>many then
+    lvl >src @ >json @ "actors" ?j>j ?dup if j>many then
 ;
 
-: action! ( - ) actives> this start ;
+: action ( - ) 
+    actives> this start ;
 
-: reset ( level - )  enter  action! ;
+: reset ( level - )  
+    enter  action ;
 
 : clamp-cam ( level camx. camy. - camx. camy. )
     {: lvl camx camy :}
