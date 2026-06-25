@@ -8,7 +8,7 @@ public
 ec-cell pile
 
 class: %tileset
-    %asset derive
+    derive %asset
 
     is-a %usable
 

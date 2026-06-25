@@ -86,7 +86,7 @@ class;
 
 [defined] [supershow.waveplay] [if]
 class: %sample
-    %asset derive
+    derive %asset
     is-a %autoload
     prop id :int
     prop alsmp
@@ -124,7 +124,7 @@ class;
 [then]
 
 class: %font
-    %asset derive
+    derive %asset
     is-a %autoload
     prop alfont :addr         \ ALLEGRO_FONT*
     prop size :int            \ TTF point size; 0 = bitmap font
@@ -178,7 +178,7 @@ class;
 0 value active-shader
 
 class: %shader
-    %asset derive
+    derive %asset
     is-a %autoload
     prop handle :addr   \ ALLEGRO_SHADER*
     prop data2 :lstring

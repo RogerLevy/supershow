@@ -1,6 +1,6 @@
 public
 
 class: %jsonfile 
-    %asset derive
+    derive %asset
     prop json :addr
 class;

@@ -28,7 +28,7 @@ fairgirl.png  21 28 tileset girl.ts
 10 constant DLG_PAD
 
 class: %fancydlg
-    %dialog derive
+    derive %dialog
     prop bgclr :int         \ background RGBA
     prop anim :fixed        \ 0..1. animation progress
     prop closing
@@ -102,7 +102,7 @@ create ind-poly  3 ,  0. , 0. ,  6. , 0. ,  3. , 5. ,
 \ =============================================================================
 
 class: %clicksprite
-    %actor derive
+    derive %actor
     prop msg :addr          \ counted string
     prop dlg :addr          \ associated dialog (0 = none open)
 class;

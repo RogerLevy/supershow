@@ -1080,7 +1080,7 @@ redef : ; ( - )
 : destroy ( object - )
     dup destruct   free drop ;
 
-: derive ( class - )
+: derive-class ( class - )
     {: source-class | dest-class :}
 
     classifier 0= abort" DERIVE : Can only be called inside a class definition."
@@ -1144,7 +1144,8 @@ redef : ; ( - )
     then
 ;
 
-: subclass:  class: derive ;
+: derive ( <class> - )
+    ' >body derive-class ;
 
 : :apply ( trait  - ) ( trait dest-class - )
     dup >cla @ %trait <> 

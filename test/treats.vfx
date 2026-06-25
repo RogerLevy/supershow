@@ -17,7 +17,7 @@ treats.stage use-stage
 
 \ ---- Treat ------------------------------------------------------------------
 
-class: %treat  %actor derive
+class: %treat  derive %actor
     prop z  :fixed
     prop vz :fixed
     %box-params    sizeof nprop box       \ embedded query records (class ptr stamped via template)
@@ -55,7 +55,7 @@ class;
 
 \ ---- Spewer -----------------------------------------------------------------
 
-class: %spewer  %actor derive  class;
+class: %spewer  derive %actor  class;
 
 : spew
     gamew rnd  gameh rnd  at

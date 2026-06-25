@@ -310,7 +310,7 @@ redef : array ( #slots element-class <name> - )
 \ trait;
 
 class: %stack
-    %array derive
+    derive %array
 class;
 
 2 %stack :construct ( max-slots element-class - )

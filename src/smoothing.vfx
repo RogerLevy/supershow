@@ -25,7 +25,7 @@ class: %actor
 class;
 
 \ ---- the smoother actor ----
-class: %smoother  %actor derive
+class: %smoother  derive %actor
     prop sowner :addr                          \ the owner being smoothed
     prop #sentries :int
     max-smoothers /sentry * nprop sentries     \ entry array

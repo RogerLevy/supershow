@@ -131,7 +131,7 @@ forth-public
         drop 0 exit
         \ consume -1 abort" Classifier not a class."
     then
-    derive consume -1 ;
+    derive-class consume -1 ;
 
 : "trait" ( $ - a len )
     {: $ :}

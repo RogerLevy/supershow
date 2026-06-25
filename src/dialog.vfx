@@ -7,7 +7,7 @@
 public
 
 class: %dialog
-    %actor derive
+    derive %actor
 
     prop zstr :addr         \ allocated z-string (full text)
     prop pos :fixed         \ glyph position (fractional for sub-frame speed)

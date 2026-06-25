@@ -57,7 +57,7 @@ create xs  #bars cells allot \ current x of each dot (fixed), tween targets
         tween
     loop ;
 
-class: %director  %actor derive  class;
+class: %director  derive %actor  class;
 
 %director :: start ( - )
     0 task>

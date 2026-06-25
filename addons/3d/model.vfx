@@ -192,7 +192,7 @@ create axis s/v3d allot
 
 
 \ ---- model object ----
-class: %model  %actor derive
+class: %model  derive %actor
     v3d-prop pos
     v3d-prop scl
     v3d-prop vel        \ 3D velocity (3D physics adds this to pos)

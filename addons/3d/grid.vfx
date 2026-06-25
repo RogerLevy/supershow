@@ -43,7 +43,7 @@ vertices;
 \ ---- %grid: an infinite floor -- the mesh stays fixed at the origin; the camera
 \ is what scrolls. We draw the grid with a camera transform whose XZ position is
 \ wrapped by the grid's world cell size (its scl), so it tiles seamlessly. ----
-class: %grid  %model derive  class;
+class: %grid  derive %model  class;
 
 %grid :: render ( - )
     camt-save

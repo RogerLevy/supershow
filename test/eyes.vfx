@@ -7,7 +7,7 @@ bitmap %idir%/assets/gfx/sparkle.png
 
 0 value cursor       \ orbiting target actor
 
-class: %eyeball  %actor derive
+class: %eyeball  derive %actor
     prop clr :int  \ iris color (rgba8 value)
     prop kxt :xt   \ xt: ( - flag ) button/key test
     prop lid :int  \ 0=open .. 15=closed
@@ -87,7 +87,7 @@ public
 : blink-13?  <J> held? ;
 : blink-14?  <K> held? ;
 
-class: %sparkle  %actor derive class;
+class: %sparkle  derive %actor class;
 
 %sparkle :: start 
     sparkle.png bmp !
@@ -95,7 +95,7 @@ class: %sparkle  %actor derive class;
         time 0.23 0.2 rnd + >= if me unload exit then
         0.09 vy +! ;
 
-class: %cursor  %actor derive class;
+class: %cursor  derive %actor class;
 
 %cursor :: start ( - )
     act>

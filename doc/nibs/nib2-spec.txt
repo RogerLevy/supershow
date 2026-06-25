@@ -141,8 +141,13 @@ trait: object
     \ similar to IS? but checks capabilities rather than identity.
     \ accepts either traits or protocol XTs as second parameter.
 
-: derive ( class - )
-    \ copy the given class (statics and defaults template) to the current class.
+: derive ( <class> - )
+    \ parse the following class name and copy that class (statics and defaults
+    \ template) into the current class.
+
+: derive-class ( class - )
+    \ stack-based form of DERIVE: copy the given class (statics and defaults
+    \ template) to the current class.
     \ if given item is any other data type, throw an error.
     
 : :: ( [classifier] <name> - ) ( ... object - ... )
@@ -291,7 +296,7 @@ actor :: draw ( - )
     sprite ;
 
 class: ship
-    actor derive
+    derive actor
     property energy
     property lives
 class;
@@ -310,8 +315,8 @@ kinetic :: on-bounce ( object - )
 require kinetic.vfx  \ more likely to be in common.vfx to avoid repetition and false cross-app modularity, but this is just an example
 
 class: enemy1
-    actor derive
-    enemy1 is-a kinetic   
+    derive actor
+    enemy1 is-a kinetic
 class;
 
 \ derive hook defined outside

@@ -25,7 +25,7 @@ def expand_class_definition(match):
         
         # Handle derive class (%classname)
         if token.startswith('%'):
-            result += f"    {token[1:]} derive\n"
+            result += f"    derive {token[1:]}\n"
             
         # Handle works-with traits (+"traitname")
         elif token.startswith('"') and token.endswith('"'):

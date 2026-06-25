@@ -17,7 +17,7 @@ JSONFILE %idir%/assets/levels/leveldemo.json
 
 leveldemo.json level the-level
 
-class: %blip  %actor derive  class;
+class: %blip  derive %actor  class;
 
 %blip :: draw ( - )
     0 batch> $ff3030ff rgba8  6. circf ;

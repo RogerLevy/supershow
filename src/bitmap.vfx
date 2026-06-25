@@ -6,7 +6,7 @@ public
 65536 ?constant #bitmaps
 
 class: %bitmap
-    %asset derive
+    derive %asset
     is-a %saveable
     is-a %_bitmap
     prop albmp

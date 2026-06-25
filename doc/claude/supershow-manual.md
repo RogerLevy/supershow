@@ -140,7 +140,7 @@ class: %myclass
     prop addr :addr      \ raw address property (1 cell)
 class;
 
-class: %child  %parent derive   \ copy parent layout + protocols
+class: %child  derive %parent   \ copy parent layout + protocols (parses the class name)
     prop extra :int
 class;
 
@@ -293,7 +293,7 @@ The `simple-motion` physics (default): each frame adds `(vx, vy)` to `(x, y)`.
 ### Starting and scripting actors
 
 ```forth
-class: %myactor  %actor derive
+class: %myactor  derive %actor
     prop mydata :int
 class;
 
@@ -773,7 +773,7 @@ main
 ### Actor with custom draw
 
 ```forth
-class: %ball  %actor derive  class;
+class: %ball  derive %actor  class;
 
 %ball :: draw ( - )         \ pen is already at actor position (set by render)
     $ff4400ff rgba8

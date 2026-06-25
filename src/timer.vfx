@@ -5,7 +5,7 @@
 public
 
 class: %timer 
-    %actor derive 
+    derive %actor
     prop xt1 :addr
     prop dur :fixed 
 class;

@@ -69,7 +69,7 @@ shader flatshade.s %supershow%/glsl/flatshade.vs %supershow%/glsl/flatshade.fs
 %grid :: draw  active-shader  0 shade  ~model  shade ;
 
 \ ===== city =====
-class: %building  %model derive  class;
+class: %building  derive %model  class;
 
 : /scale
     50. 50. 50. scl v.xyz!              \ uniform scale 50
@@ -113,7 +113,7 @@ class: %building  %model derive  class;
     vel v.y!
 ;
 
-class: %ship  %model derive  class;
+class: %ship  derive %model  class;
 
 0 value it-pos
 variable collided
@@ -200,7 +200,7 @@ variable orbith  50 orbith !        \ camera height above the ship
     the-ship 200. tilt-towards tilt toward
 ;
 
-class: %camera  %model derive  class;
+class: %camera  derive %model  class;
 
 %camera :: start ( - )
     pan  0.06 ang-linearly smooth

@@ -8,7 +8,7 @@ trait: %denizen
 trait;
 
 class: %system
-    %actor derive
+    derive %actor
     is-a %loadable
     is-a %denizen
     prop cohorts :ref %stack

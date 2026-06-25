@@ -38,7 +38,7 @@ constant EASE-IN-OUT
 \ Tween object
 
 class: %tween
-    %actor derive
+    derive %actor
     prop d :xt
     prop adr :addr
     prop ease :int
