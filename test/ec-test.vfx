@@ -1,0 +1,111 @@
+\ ==============================================================================
+\ EC (Execution Context) System Tests
+\ ==============================================================================
+\ Load after forge.vfx (baked into engineer.exe):
+\
+\   include test/ec-test.vfx
+\
+\ All lines should print [OK]. A [FAIL] line indicates a regression.
+
+ec-cell ec.a    \ isolated test field A
+ec-cell ec.b    \ isolated test field B
+
+: chk= ( actual expected a n - )
+    2>r = if 2r> ." [OK]  " else 2r> ." [FAIL] " then type cr ;
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 1: basic set/get ---" cr
+
+42 ec.a!
+ec.a@ 42 s" set/get roundtrip" chk=
+
+99 ec.b!
+ec.b@ 99 s" second field roundtrip" chk=
+
+ec.a@ 42 s" fields are independent" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 2: zero is not the sentinel ---" cr
+
+0 ec.a!
+ec.a@ 0 s" zero stored/read correctly" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 3: e{ e} discards inner writes ---" cr
+
+42 ec.a!
+e{  99 ec.a!  e}
+ec.a@ 42 s" e{ e} isolates write" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 4: e{ copies outer value ---" cr
+
+42 ec.a!
+e{
+    ec.a@ 42 s" e{ body sees outer value" chk=
+e}
+
+0 ec.a!
+e{
+    ec.a@ 0 s" e{ copies zero (not sentinel)" chk=
+e}
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 5: nested e{ e} ---" cr
+
+10 ec.a!
+e{
+    20 ec.a!
+    e{
+        ec.a@ 20 s" inner sees level-1 value" chk=
+        30 ec.a!
+        ec.a@ 30 s" inner write visible inside" chk=
+    e}
+    ec.a@ 20 s" level-1 restored after inner e}" chk=
+e}
+ec.a@ 10 s" outer restored after both e}" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 6: NAME> saver ---" cr
+
+: save-and-modify   ec.a>  99 ec.a! ;
+: save-a-touch-b    ec.a>  55 ec.a!  66 ec.b! ;
+
+42 ec.a!
+save-and-modify
+ec.a@ 42 s" NAME> restores on word exit" chk=
+
+42 ec.a!  77 ec.b!
+save-a-touch-b
+ec.a@ 42 s" NAME> restores only its own field" chk=
+ec.b@ 66 s" NAME> leaves other field as written" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 7: ec> continuation ---" cr
+
+: ec>-read   ec>  ec.a@ 42 s" ec> body sees outer value" chk= ;
+: ec>-write  ec>  99 ec.a! ;
+
+42 ec.a!
+ec>-read
+ec>-write
+ec.a@ 42 s" ec> discards inner write" chk=
+
+\ ------------------------------------------------------------------------------
+cr ." --- Group 8: stack-token safety ---" cr
+
+\ The token e{ leaves on the stack can cross word boundaries.
+: close-scope ( ecsp - )  99 ec.a!  e} ;
+
+42 ec.a!
+e{ close-scope
+ec.a@ 42 s" e}/token survives call boundary" chk=
+
+\ ec> is catch-safe: EC is restored even when the body throws.
+: thrower  ec>  99 ec.a!  -1 throw ;
+
+42 ec.a!
+['] thrower catch drop
+ec.a@ 42 s" ec> restores EC on throw" chk=
+
+cr ." --- Done ---" cr

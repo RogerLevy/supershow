@@ -192,7 +192,7 @@ ecs ecsp !     \ ecsp starts at the bottom
     state @ if  postpone literal  ['] ec-save compile,
     else  ec-save  then ;
 
-: ec-cell ( <name> - ) ( - n ) ( n - )
+: ec-cell ( <name> - ) ( - n ) ( n - ) ( - )
     \ Creates getter ( MYVAR@ ), setter ( MYVAR! ), saver ( MYVAR> )
     bl parse 2dup 2dup
     f" %s@" screate s/ec , does-ec-getter
@@ -216,23 +216,24 @@ ecs ecsp !     \ ecsp starts at the bottom
 
 variable tcsp  tcs tcsp !
 
-|| : _e{  ( ec - )
+|| : epush  ( n - )
     4 ecsp c+!  ecsp @ ! ;
 
-|| : _e}  ( - )
-    -4 ecsp c+! ;
+|| : epop  ( - n )
+    ecsp @ @    -4 ecsp c+! ;
 
-: e{ ( - )
-    ecp@
-    tcsp @ ( old-ec new-ec ) dup _e{  tcs - 256 + 4095 and tcs + tcsp !
-    ( old-ec ) ecp@ s/ec move ;
+: e{ ( - ecsp ) 
+    ecp@ tcsp @ ( old-ec new-ec ) tcs - 256 + 4095 and tcs + tcsp !
+    tcsp @ epush
+    ( old-ec ) ecp@ s/ec move 
+    ecsp @
+;
 
-: e} ( - )
-    _e}
-    tcsp @ tcs - 256 - 4095 and tcs + tcsp ! ;
+: e} ( ecsp - )
+    ecsp !  epop tcs - 256 - 4095 and tcs + tcsp ! ;
 
 continuation: ec> ( - ) ( - )
-    e{ execute e} ;
+    e{ >r catch r> e} throw ;
 
 : reset-ec-stack
     rootec ecs !
@@ -254,7 +255,7 @@ s/magicbase
     /bit-table field id-table           \ Classification table
     /bit-table field can-table          \ Capability table
     /list field property-list
-    /list field protocol-list
+    /list field protocol-list   
     cell field class-template
     cell field constructor-xt
     cell field constructor-#params
