@@ -25,8 +25,8 @@ trait: %usable
 trait;
 
 trait: %drawable
-    :: draw ( - ) ;       \ pen-relative; caller positions, object draws
-    :: render ( - ) draw ; \ engine-facing; object positions itself, manages batch state
+    :: draw ( - ) ;             \ pen-relative; caller positions, object draws
+    :: render ( - ) this draw ; \ engine-facing; object positions itself, manages batch state
     :: draw-view ( sx. sy. w. h. - )
         {: sx sy vpw vph :}
         at@p  vpw  vph  clip{

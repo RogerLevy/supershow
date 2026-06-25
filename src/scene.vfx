@@ -37,12 +37,12 @@ public
     dup cjson swap read-props ;
 
 \ Instantiate every actor in a JSON array, without starting them.
-: j>many ( jarray - )
+: jmany ( jarray - )
     [: json>actor drop ;] jeach-fast ;
 
 : load-scene ( path len - )
     {: path len :}
     path len load-json 
     dup 0= abort" load-scene: File not found or parse error"
-    dup "actors" j>j j>many
+    dup "actors" j>j jmany
     destroy-json ;

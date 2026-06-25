@@ -140,7 +140,8 @@ private
 ;
 
 : ~edit ( - )
-    m{  camx negate p>f  camy negate p>f  1e 1e 0e transform
+    m{  
+        camx negate p>f  camy negate p>f  1e 1e 0e transform
         ~actors  ~selection
     m}
 ;

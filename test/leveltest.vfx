@@ -27,14 +27,17 @@ class: %blip  %actor derive  class;
     <left>  held? if  -4. +to camx  then
     <down>  held? if  4. +to camy  then
     <up>    held? if  -4. +to camy  then
-    the-level camx camy clamp-cam  to camy to camx
+    camx camy the-level clamp-cam  to camy to camx
 ;
 
 : think ( - )  step  scroll ;
 
+: scrolled  camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
+
 : ~render ( - )
-    the-level camx camy ~level
-    camx camy ~actors
+    camx camx!  camy camy!
+    the-level render
+    m{ scrolled sprites m}
 ;
 
 : main ( - )

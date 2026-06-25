@@ -2,7 +2,7 @@
 \ JSON level loader
 \   - tile-grid string codec (custom token format)
 \   - %level: named layer tilemaps built from a resident cjson "master"
-\   - build / enter (instantiate) / start-level / reset / draw
+\   - build / load (instantiate) / start-level / reset / draw
 \ A level's "actors" array is a scene actors array (see scene.vfx) — objects
 \ are reused as-is; the only new data is the tilemap layers.
 \ =============================================================================
@@ -95,6 +95,8 @@ class;
 
 class: %level
     32 nprop name$ :cstring
+    is-a %loadable
+    is-a %drawable
     prop layers  :ref %array
     prop pxw     :int            \ level pixel bounds (for camera clamp)
     prop pxh     :int
@@ -209,12 +211,14 @@ public
     enc-buf lclear
     tm >ta @ >data @ to d
     tm >w 2@ * to n
-    n 0 ?do
+    n for
         i if  s"  " enc-buf lappend  then
         d i cells + @  enc-buf cell>tok
     loop
     nul 1 enc-buf lappend                 \ NUL terminator
     enc-buf ldata@ ;
+
+|| : json@  >src @ >json @ ;
 
 \ Overwrite each layer's "tiles" string in the level's source cjson from the
 \ live tilemaps, then write the whole document to disk. Everything the editor
@@ -222,78 +226,69 @@ public
 \ is preserved untouched.
 : save-level ( level path len - )
     {: lvl path len | layersj :}
-    lvl >src @ >json @ "layers" j>j to layersj
-    layersj jsize 0 ?do
+    lvl json@ "layers" j>j to layersj
+    layersj jsize for
         lvl i layer  encode-tiles              ( zstr )
         layersj i j>j "tiles" j>j  swap        ( tiles-item zstr )
         jset-string
     loop
-    lvl >src @ >json @ path len write-json ;
+    lvl json@ path len write-json ;
 
-|| : refill-layer ( tilemap layerj - )  
-    2dup swap layer-view!  
-    "tiles" j>s rot parse-tilemap ;
+|| : refill-layer ( layerj tilemap - )
+    2dup layer-view!  
+    swap "tiles" j>s rot parse-tilemap ;
 
 \ Refill the layer tilemaps from the master cjson — tiles + view props (no
 \ actors, no stage reset). Use this on its own when you just need the layers
 \ restored (e.g. an editor that doesn't instantiate the level's actors).
 : refill-tilemaps ( level - )
     {: lvl | layersj :}
-    lvl >src @ >json @ "layers" j>j to layersj
-    layersj jsize 0 ?do
-        lvl i layer
-        layersj i j>j
-        refill-layer
+    lvl json@ "layers" j>j to layersj
+    layersj jsize for
+        layersj i j>j   lvl i layer refill-layer
     loop
 ;
 
-\ Instantiate the level: fill tilemaps from the master cjson, clear the stage,
+\ Instantiate the level: fill tilemaps from the master cjson, 
 \ and instantiate (but do NOT start) the level's actors.
-: enter ( level - )
-    {: lvl :}
-    lvl refill-tilemaps
-    clear-stage
-    lvl >src @ >json @ "actors" ?j>j ?dup if j>many then
+%level :: load
+    this refill-tilemaps
+    src @ >json @ "actors" ?j>j ?dup if jmany then
 ;
 
 : action ( - ) 
     actives> this start ;
 
 : reset ( level - )  
-    enter  action ;
+    clear-stage  load  action ;
 
-: clamp-cam ( level camx. camy. - camx. camy. )
-    {: lvl camx camy :}
-    camx  0  lvl >pxw @ gamew - 0 max >p  clamp
-    camy  0  lvl >pxh @ gameh - 0 max >p  clamp
-;
+: clamp-cam ( camx. camy. level - camx. camy. )
+    { 0 0``  pxw 2@ gamew gameh 2- 0 0 2max 2>p``  2clamp } ;
 
-: draw-layer ( level i camx. camy. - )      \ draw one layer; caller decides visibility
-    {: lvl i camx camy | parallax :}
-    lvl i layer {
-        0 0 at
-        prx @ to parallax
-        camx parallax p*  visx @ >p - pfloor
-        camy parallax p*  visy @ >p - pfloor
+ec-cell camx
+ec-cell camy
+
+: draw-layer ( level i - )      \ draw one layer; caller decides visibility
+    layer {
+        camx@ prx @  p*  visx @ >p - pfloor
+        camy@ prx @  p*  visy @ >p - pfloor
         gamew >p  gameh >p
         this draw-view
     }
 ;
 
-: ~level ( level camx. camy. - )
-    {: lvl camx camy :}
-    lvl >layers @ #items 0 ?do
-        lvl i layer { en @ vis @ and } if
-            lvl i camx camy draw-layer
-        then
+: ?draw-layer ( level i - )
+    {: lvl n :}
+    lvl n layer { en @ vis @ and } if
+        lvl n draw-layer
+    then
+;
+
+%level :: draw
+    layers @ #items for
+        this i ?draw-layer 
     loop
 ;
 
-\ Draw all actors offset by the camera (so actors and tiles scroll together).
-: ~actors ( camx. camy. - )
-    {: camx camy :}
-    m{
-        camx negate p>f  camy negate p>f  1e 1e 0e  transform
-        sprites
-    m}
-;
+%level :: render
+    0 0 at  this draw ;
