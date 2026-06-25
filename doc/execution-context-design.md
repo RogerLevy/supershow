@@ -12,9 +12,9 @@ Each object has an `ecp` (execution context pointer) field:
 0
     cell field cla   \ class pointer
     cell field ecp   \ execution context pointer
-dup constant /object-base
+dup constant s/objectbase
     cell field magic
-constant /magical-base
+constant s/magicbase
 ```
 
 ### EC Fields

@@ -57,7 +57,7 @@ class;
 || : _small-box ( - x1. y1. x2. y2. )     \ default clickable area: 16x16 centered on pos
     x 2@ 16. 16. box-around ;
 
-%descriptor >template {
+%descriptor template {
     ['] stub 'data>actor !
     ['] drop 'editor !
     ['] noop 'edit !

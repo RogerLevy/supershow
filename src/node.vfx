@@ -13,8 +13,6 @@ class;
 \ Node pool
 %node object free-nodes
 
-\ %node >template { free-nodes pool ! }
-
 : recycle ( node - )
     dup dlremove  dup >pool @ dup if push else 2drop then ;
 

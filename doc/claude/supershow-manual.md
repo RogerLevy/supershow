@@ -477,7 +477,7 @@ The rectangle and line words treat the pen as the top-left / start point respect
 | `*` | prefix | create/instantiate (`*stacks`, `*zbuf`) |
 | `-` | prefix | destroy, negate, clear, remove (`-albmp`, `-exit`) |
 | `+` | prefix | add, increment, push (`+at`, `+gametime`) |
-| `/` | prefix | initialize/setup (`/object-base`) |
+| `/` | prefix | initialize/setup (`s/objectbase`) |
 | `s/` | prefix | size of in bytes (`s/node`, `s/ec`) |
 | `?` | prefix | conditional execution (`?exit`, `?execute`, `?dup`) |
 | `?` | suffix | returns a boolean (`free?`, `exists?`, `held?`) |

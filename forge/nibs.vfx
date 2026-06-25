@@ -48,9 +48,9 @@ redef : field ( ofs size <name> - n ) ( a - a )
 
 0
     cell field cla
-dup constant /object-base
+dup constant s/objectbase
     cell field magic
-constant /magical-base
+constant s/magicbase
 
 ' cla >body 2 cells + @ constant cla-offset
 
@@ -246,7 +246,7 @@ continuation: ec> ( - ) ( - )
 \ Classes
 \ ==============================================================================
 
-/magical-base
+s/magicbase
     cell field instance-size            \ Size of this class
     cell field next-ofs                 \ Next field offset for this class
     cell field field-space-size
@@ -395,7 +395,7 @@ here to this 0 ,
 
 create %property  %class dmake {
     (add-object-system-trait-bit)
-    /magical-base
+    s/magicbase
         cell field offset
     dup instance-size ! next-ofs !
 }
@@ -814,29 +814,43 @@ create %protocol  %class dmake {
     %class begin-classifier
     classifier {
         (init-class) 
-        /object-base instance-size !
-        /object-base next-ofs !
+        s/objectbase instance-size !
+        s/objectbase next-ofs !
         %object classifier -1 apply-trait 
     } ;
     
 : datatype ( size <name> - )
     class: classifier { is-datatype on  field-space } ;
 
-: >template ( class - a )
-    {: class0 :}
-    class0 >cla @ %trait = abort" template : Traits cannot have templates, only classes."
-    class0 -> class-template @ ?dup 0= if
-        class0 dmake class0 -> class-template !
-        class0 -> class-template @ class0 sizeof cell /string erase
-        1024 allot&erase
-        class0 -> class-template @
-    then ;
+\ template: [ size , <base address> data ... ]
 
-: template ( [class] - a )
-    classifier dup 0= if drop then >template ;
+: template>size ( template - size ) cell- @ ;
+
+: *template ( src-class dest-class - template )
+    {: class0 class1 | template0 :}
+    class1 >cla @ %trait = abort" Traits cannot have templates, only classes."
+    class1 sizeof ,
+    here to template0
+    class1 , class1 sizeof cell- allot&erase   
+    class0 -> class-template @ ?dup if      \ ( old-template )
+        dup template>size s/objectbase -    \ ( old len )  property bytes to copy
+        swap s/objectbase +                 \ ( len src )  skip class ptr on source
+        template0 s/objectbase +            \ ( len src dst )  ...and destination
+        rot move
+    then
+    template0 dup class1 -> class-template ! 
+;
+
+: template ( [class] - template )
+    classifier dup 0= if drop then   dup *template ;
+
+: >template ( class - template )
+    dup -> class-template @ ?dup if nip else dup *template then ;
 
 : class; ( - )
-    template drop
+    classifier -> class-template @ if              \ keep an existing template right-sized
+        classifier dup *template drop              \ (props added since last build, incl. on reopen)
+    then
     classifier -> origin-module @ 0= if            \ stamp once; reopening from another module keeps the original
         current-module classifier -> origin-module !
     then
@@ -1097,14 +1111,9 @@ redef : ; ( - )
     dest-class -> classifier# @  dest-class -> id-table set-bit
     dest-class -> classifier# @  dest-class -> can-table set-bit
         
-    \ Copy template if one exists, updating its class
-    source-class -> class-template @ ?dup if
-        here dest-class -> class-template !
-        ( source-template ) 
-        source-class -> instance-size @` dest-class sizeof` max
-        move,
-        1024 allot&erase
-        dest-class dup -> class-template @ >cla !
+    \ Copy template if the source has one (stay lazy otherwise)
+    source-class -> class-template @ if
+        source-class dest-class *template drop
     then
     
     \ Copy constructor/destructor
