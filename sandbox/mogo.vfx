@@ -1,0 +1,108 @@
+module
+import %supershow%/src/supershow.vfx
+include %supershow%/src/tilemap-compact.vfx
+
+0 value mogo
+
+bitmap %idir%/assets/mogo1.png
+mogo1.png 32 32 tileset mogo.ts
+
+bitmap %idir%/assets/mogo_bg.png
+mogo_bg.png 20 20 tileset MOGO_BG.TS
+jsonfile %idir%/assets/mogo_01.json
+mogo_01.json level w1-1
+
+: the-level ( - level ) w1-1 ;
+: the-layer ( - tilemap ) w1-1-layer0 ;
+: the-spawnlayer ( - tilemap ) w1-1-spawns ;
+
+: fast  1. 2 / ;
+: med   1. 3 / ;
+: slow  1. 4 / ;
+: flipbook:  flipbook: spd ! ;
+: pose ( flipbook - ) a.spd @ cycle ;
+
+slow mogo.ts flipbook: idle-fd.anm 0 , flipbook;
+slow mogo.ts flipbook: idle-rt.anm 30 , flipbook;
+slow mogo.ts flipbook: walk-rt.anm 1 12 range, flipbook;
+slow mogo.ts flipbook: jump-up.anm 13 21 range, flipbook;
+slow mogo.ts flipbook: jump-rt.anm 22 30 range, flipbook;
+slow mogo.ts flipbook: die.anm 31 38 range, flipbook;
+
+: tile-meta! ( val tileset i - )
+    swap >baseid @ + global-metas el! ;
+
+: setup-metas ( - )
+    MOGO_BG.TS >#tiles @ for 
+        $0F MOGO_BG.TS i tile-meta!
+    loop
+;
+
+c: %mogo %actor ;
+%mogo :: start  
+    walk-rt.anm pose 
+    act>
+        0. vx !  0. vy !
+        <left>  held? if -2. vx ! then
+        <right> held? if  2. vx ! then
+        <up>    held? if -2. vy ! then
+        <down>  held? if  2. vy ! then
+    physics>
+        -7 -8 7 9   the-layer  ['] solid?  0  tmslide 
+        -7 -8 7 9   3  cut-corners 
+        \ 0 0 15 15  the-layer  tread>
+        \     4 = if  $FFFFFFFF rot rot the-layer tile!
+        \     else  2drop  then 
+;
+
+: att ( col row - ) 
+    20 20 2* 10 10 2+ at ;
+
+: ?.  dup -1 <> if dup . then ;
+
+: spawn-tiles ( - )
+    the-spawnlayer tilemap-count {: a w h :}
+    h for w for 
+        a @ ?. 22 = if i j att %mogo one to mogo  -1 a ! then
+        cell +to a
+    loop loop 
+;
+
+: scrolled ( - ) 
+    camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
+
+: ~background ( - )
+    the-level render ;
+
+: enter ( - )
+    just
+    the-level load
+    setup-metas
+    spawn-tiles
+    .stage
+    action 
+;
+
+0 value camx
+0 value camy
+: follow ( actor - )
+    >x 2@ gamew gameh 2 2 2/ 2>p 2- to camy to camx ;
+
+: main
+    \ %mogo spawn to mogo
+    enter
+
+    show>
+        mogo follow
+        camx camy camy! camx!
+        m{ scrolled ~backsprites m}
+        ~background
+        m{ scrolled ~sprites m}
+        step animate 
+;
+
+$f0e0d0ff backdrop !  
+fullscreen winmode
+main
+
+mogo as
