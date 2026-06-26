@@ -41,7 +41,9 @@ class: %blip  derive %actor  class;
 ;
 
 : main ( - )
-    the-level reset
+    just
+    the-level load  
+    action
     show> think ~render
 ;
 

@@ -75,8 +75,8 @@ public
 private
 
 \ Create a named %tilemap (mirrors the `tilemap` defining word in autoload.vfx)
-: define-layer-tm ( cols rows a u - tilemap )
-    f" tilemap %s" .evaluate   lastbody ;
+: define-layer-tm ( levelname len cols rows - tilemap )
+    swap f" %n %n tilemap %s" .evaluate   lastbody ;
 
 public
 
@@ -117,7 +117,7 @@ class;
     zcount -path -ext f" %s.ts" evaluate ;
 
 \ A layer's name: its "name", else "layer<idx>".
-: layer-name$ ( layerj idx - a u )
+: layer-name ( layerj idx - a u )
     swap "name" ?j>z ?dup if  nip zcount  else  f" layer%n"  then ;
 
 \ Apply a layer's view props (parallax / offsets / repeat / visibility) to tm.
@@ -131,20 +131,14 @@ class;
 
 private
 
-create lname-buf 64 allot       \ scratch for a layer's bare name (see build-layer)
-
 : build-layer ( lev-name lev-len idx layerj - tilemap )
     {: lev-name lev-len idx layerj | cols rows tm :}
     layerj "cols" j>n to cols
     layerj "rows" j>n to rows
-    \ The bare name is used twice — to mint the tilemap's dict word
-    \ "<level>-<layer>" and to fill its name$ — so stash it in lname-buf (a stable
-    \ copy, since the f" below would otherwise reuse its rotating buffer).
-    layerj idx layer-name$  lname-buf place
-    lname-buf count  lev-name lev-len  f" %s-%s"  cols rows 2swap  define-layer-tm to tm
+    layerj idx layer-name lev-name lev-len  f" %s-%s"  cols rows define-layer-tm to tm
     \ name$ on the runtime tilemap mirrors what the editor round-trips to JSON,
     \ so a level loaded at runtime reports the same layer names it was saved with.
-    lname-buf count  tm >name$ place
+    layerj idx layer-name tm >name$ place
     layerj layer-tileset  tm >ts !
     layerj tm layer-view!
     tm >en on
@@ -163,7 +157,7 @@ create lname-buf 64 allot       \ scratch for a layer's bare name (see build-lay
         n %int %array dmake layers !
 
         n for
-            name$ count  i  layersj i j>j  build-layer   ( tilemap )
+            this body>name  i  layersj i j>j  build-layer   ( tilemap )
             i layers @ el!
         loop
 
@@ -258,9 +252,6 @@ public
 
 : action ( - ) 
     actives> this start ;
-
-: reset ( level - )  
-    clear-stage  load  action ;
 
 : clamp-cam ( camx. camy. level - camx. camy. )
     { 0 0``  pxw 2@ gamew gameh 2- 0 0 2max 2>p``  2clamp } ;

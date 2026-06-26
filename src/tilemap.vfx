@@ -1,4 +1,4 @@
-module
+module [supershow.tilemap]
 import supershow.core
 import supershow.tileset
 import supershow.bitmap
@@ -8,11 +8,11 @@ import array
 class: %tilemap
     is-a %drawable
     is-a %dimensional
-    is-a %iterable
+    \ is-a %iterable
     prop ta :ref %array
     prop ts :ref %tileset
-    prop data-snapshot :addr
-    prop snapshot-cells :int
+    prop snapshot-data :addr
+    prop snapshot-size :int
     prop rpt
 class;
 
@@ -31,7 +31,7 @@ create vdecl-arr
 24 constant s/vertex
 6  constant v/tile   \ TRIANGLE_LIST: 2 tris per quad
 
-0  value vbuf
+0  value tmvbuf
 0  value prim-decl
 0  value cur-ts
 variable #drawn
@@ -40,20 +40,17 @@ fast{
 \ Store int16 n at address a, return a+2
 : sw!+ ( a n - a' )  over w!  2 + ;
 
-\ Write one vertex — positions in tile units, UVs in texture pixels, color white
-: +vert ( a x y u v - a' )
-    {: a x y u v :}
-    a x sw!+ y sw!+ u sw!+ v sw!+  16 + ;
-
+0 value x0 0 value y0 0 value x1 0 value y1 
+0 value u0 0 value v0 0 value u1 0 value v1 
 \ Write 6 vertices for one tile quad (TRIANGLE_LIST, CCW)
 : +quad ( a x0 y0 x1 y1 u0 v0 u1 v1 - a' )
-    {: a x0 y0 x1 y1 u0 v0 u1 v1 :}
-    a  x0 y0 u0 v0 +vert    \ TL
-       x1 y0 u1 v0 +vert    \ TR
-       x1 y1 u1 v1 +vert    \ BR
-       x0 y0 u0 v0 +vert    \ TL
-       x1 y1 u1 v1 +vert    \ BR
-       x0 y1 u0 v1 +vert ;  \ BL
+    to v1 to u1 to v0 to u0 to y1 to x1 to y0 to x0
+    x0 sw!+ y0 sw!+ u0 sw!+ v0 sw!+ 16 +    \ TL
+    x1 sw!+ y0 sw!+ u1 sw!+ v0 sw!+ 16 +    \ TR
+    x1 sw!+ y1 sw!+ u1 sw!+ v1 sw!+ 16 +    \ BR
+    x0 sw!+ y0 sw!+ u0 sw!+ v0 sw!+ 16 +    \ TL
+    x1 sw!+ y1 sw!+ u1 sw!+ v1 sw!+ 16 +    \ BR
+    x0 sw!+ y1 sw!+ u0 sw!+ v1 sw!+ 16 + ;  \ BL
 
 : albmpxy  $164 + 2@ ;
 \ : albmpx  $164 + @ ;
@@ -67,37 +64,23 @@ fast{
 \ Upper byte of tile-rel: flip flags (bit 0 = H flip, bit 1 = V flip)
 : tile-verts ( a col row tile-rel - a' )
     {: a col row tile-rel | albmp u0 v0 u1 v1 :}
-    the-id  tile-rel $FFFFFF and  +  id>albmp  to albmp
-    albmp albmpxy  to v0 to u0
+    the-id  tile-rel $FFFFFF and  +  id>albmp albmpxy  to v0 to u0
     u0 v0 cur-ts >tw 2@ 2+  to v1 to u1
     tile-rel $01000000 and if  u1 u0 to u1 to u0  then   \ H flip
     tile-rel $02000000 and if  v1 v0 to v1 to v0  then   \ V flip
-    a  col row  col 1+  row 1+  u0 v0  u1 v1  +quad ;
+    a  col row``  2dup 1 1 2+``  u0 v0``  u1 v1``  +quad ;
 
 : _flush-tiles ( ptr - )
-    vbuf - s/vertex / #drawn !
+    tmvbuf - s/vertex / #drawn !
     #drawn @ if
-        vbuf` prim-decl` cur-ts >bmp @ id>albmp` 
+        tmvbuf` prim-decl` cur-ts >bmp @ id>albmp` 
         0` #drawn @` ALLEGRO_PRIM_TRIANGLE_LIST` al_draw_prim drop
     then ;
-
-: _draw-tiles ( cols rows - )
-    {: cols rows | src :}
-    vbuf
-    rows 0 do
-        i cols * ta @ slot to src
-        cols 0 do
-            src @
-            dup $FFFFFFFF = if drop else i j rot tile-verts then
-            cell +to src
-        loop
-    loop
-    _flush-tiles ;
 
 : _draw-tiles-view ( sc0 sr0 sc1 sr1 - )
     {: sc0 sr0 sc1 sr1 | src :}
     sc0 sc1 >=  sr0 sr1 >= or  ?exit   \ nothing visible (off either edge)
-    vbuf
+    tmvbuf 
     sr1 sr0 ?do
         sc0 i w @ * + ta @ slot to src
         sc1 sc0 ?do
@@ -114,7 +97,7 @@ fast{
 : _draw-tiles-wrap ( sc0 sr0 sc1 sr1 - )
     {: sc0 sr0 sc1 sr1 :}
     sc0 sc1 >=  sr0 sr1 >= or  ?exit
-    vbuf
+    tmvbuf
     sr1 sr0 ?do
         sc1 sc0 ?do
             i w @ umod  j h @ umod w @ * +  ta @ slot @
@@ -123,29 +106,23 @@ fast{
     loop
     _flush-tiles ;
 
-%tilemap :: draw
-    ts @ to cur-ts
-    cur-ts >baseid @ to the-id
-    m{
-        at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
-        w @ h @ _draw-tiles
-    m} ;
+: cur-tw cur-ts >tw @ ;
+: cur-th cur-ts >th @ ;
 
 : draw-wrapped ( sx. sy. w. h. - ) \ tiles infinitely
-    {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
+    {: sx sy pvw pvh :}
     ts @ -exit
     ts @ to cur-ts
     cur-ts >baseid @ to the-id
-    cur-ts >tw @ to _tw   cur-ts >th @ to _th
-    sx >i _tw / 1 - to sc0                      \ no clamp; extend low edge by 1
-    sy >i _th / 1 - to sr0
-    sx >i vpw >i + 1 - _tw / 1 + to sc1
-    sy >i vph >i + 1 - _th / 1 + to sr1
-    at@p  vpw  vph  clip{
+    at@p  pvw  pvh  clip{
         m{
-            at@f  sy p>f f-  fswap  sx p>f f-  fswap
-            _tw s>f  _th s>f  0e  transform
-            sc0 sr0 sc1 sr1 _draw-tiles-wrap
+            at@p  sx sy 2-  2p>f
+            cur-tw s>f  cur-th s>f  0e  transform
+            sx >i cur-tw / 1 -                      \ no clamp; extend low edge by 1
+            sy >i cur-th / 1 -
+            sx >i pvw >i + 1 - cur-tw / 1 + 
+            sy >i pvh >i + 1 - cur-th / 1 + 
+            _draw-tiles-wrap
         m}
     clip} ;
 
@@ -153,22 +130,32 @@ public
 
 %tilemap :: draw-view  ( sx. sy. w. h. - )
     rpt @ if draw-wrapped exit then
-    {: sx sy vpw vph | _tw _th sc0 sr0 sc1 sr1 :}
+    {: sx sy pvw pvh | _tw _th sc0 sr0 sc1 sr1 :}
     ts @ -exit
     ts @ to cur-ts
     cur-ts >baseid @ to the-id
     cur-ts >tw @ to _tw   cur-ts >th @ to _th
     sx >i _tw / 0 max to sc0
     sy >i _th / 0 max to sr0
-    sx >i vpw >i + 1 - _tw / 1 + w @ min to sc1
-    sy >i vph >i + 1 - _th / 1 + h @ min to sr1
-    at@p  vpw  vph  clip{
+    sx >i pvw >i + 1 - _tw / 1 + w @ min to sc1
+    sy >i pvh >i + 1 - _th / 1 + h @ min to sr1
+    at@p  pvw  pvh  clip{
         m{
             at@f  sy p>f f-  fswap  sx p>f f-  fswap
             _tw s>f  _th s>f  0e  transform
             sc0 sr0 sc1 sr1 _draw-tiles-view
         m}
     clip} ;
+
+%tilemap :: draw ( - )
+    0 0  w 2@  ts @ >tw 2@ 2*   2>p this draw-view ;
+
+    \ ts @ to cur-ts
+    \ cur-ts >baseid @ to the-id
+    \ m{
+    \     at@f  cur-ts >tw @ s>f  cur-ts >th @ s>f  0e  transform
+    \     0 0 w @ h @ _draw-tiles-view
+    \ m} ;
 
 
 : resize-tilemap ( new-w new-h tilemap - )
@@ -204,7 +191,7 @@ public
 : clear-tilemap ( tilemap - )
     $FFFFFFFF swap fill-tilemap ;
 
-: tilemap>data ( tilemap - addr w h )
+: tilemap-count ( tilemap - addr w h )
     { ta @ >data @  w @  h @ } ;
 
 \ Cell address for (col,row): wraps when the map repeats, else clamps to edges.
@@ -310,26 +297,26 @@ public
 \     { ts @ if >ts @ >tw 2@ 2* else 2drop 0 0 then } ; 
 
 : teardown-tilemap-renderer
-    vbuf free drop ;
+    tmvbuf free drop ;
 
 : init-tilemap-renderer ( - )
-    2 MB allocate throw  to vbuf
-    vbuf
+    s" Initializing tilemap renderer..." .info
+    2 MB allocate throw  to tmvbuf
+    tmvbuf
     2 MB s/vertex / 0 do
         1e 1e 1e 1e dup 8 + 4f!
         s/vertex +
     loop drop
     vdecl-arr  s/vertex  al_create_vertex_decl  to prim-decl ;
 
-%tilemap :: each ( xt - ) ( ... ? - ... ) 
-    ta @ each ;
+\ %tilemap :: each ( xt - ) ( ... ? - ... ) 
+\     ta @ each ;
 
-%tilemap :: !each ( xt - ) ( ... ? - ?' ... ) 
-    ta @ !each ;
+\ %tilemap :: !each ( xt - ) ( ... ? - ?' ... ) 
+\     ta @ !each ;
 
-%tilemap :: .items ( - )
-    ta @ .items ;
-
+\ %tilemap :: .items ( - )
+\     ta @ .items ;
 
 fast}
 

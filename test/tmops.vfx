@@ -68,7 +68,7 @@ variable t
 
 : ~data-panel
     0  2 panel-y  at
-    src-map tilemap>data
+    src-map tilemap-count
     [:
         swap f" tdata w:%n h:%n " type
         8 for @+ . loop drop
@@ -113,7 +113,6 @@ variable resize-phase
 public
 
 : main
-    init-tilemap-renderer
     vga-8x8 default-font!
 
     \ Assign tileset to all tilemaps
