@@ -174,7 +174,7 @@ create msg2 ," Hmm, you look familiar. Have we met in another game before?"
 
 : ~test ( - )
     $555577ff rgba8 screen
-    sprites ;
+    ~sprites ;
 
 : close-dialogs
     actives> this %clicksprite is? if close-dialog then ;

@@ -28,6 +28,6 @@ items using the same symbol on both sides of the diagram don't necessarily mean 
 
 ( - <name>) this denotes reading the input stream for a space-delimeted string.
 
-( - <code> ;) this denotes the remainder of the caller, which is popped from the return stack.  it inspired by does> and is convenient in game scripting.  example: : game show> bg sprites ;
+( - <code> ;) this denotes the remainder of the caller, which is popped from the return stack.  it inspired by does> and is convenient in game scripting.  example: : game show> bg ~sprites ;
 
 

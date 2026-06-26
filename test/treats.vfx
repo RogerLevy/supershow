@@ -71,7 +71,7 @@ class: %spewer  derive %actor  class;
 
 public
 
-: ~treats    sprites ;
+: ~treats    ~sprites ;
 : treats-think   step ;
 : treats-load   %spewer treats.stage one-in start ;   \ OOP: one spewer actor (into treats' stage) that spews
 

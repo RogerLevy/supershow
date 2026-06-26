@@ -6,7 +6,7 @@ reexport [model]    \ render's API is built on the model pack; expose it to impo
 public
 
 \ Stage-based 3D renderer: draws the %model actors on the stage, depth-sorted
-\ front-to-back. Reuses the same sorted-actors> machinery SPRITES uses, 
+\ front-to-back. Reuses the same sorted-actors> machinery ~SPRITES uses, 
 \ keyed on distance from the camera.
 
 \ ---- camera ----

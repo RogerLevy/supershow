@@ -70,7 +70,7 @@ public
     else
         display al_hide_mouse_cursor
     then 
-    show> sprites step ;
+    show> ~sprites animate step ;
 
 init-supershow
 

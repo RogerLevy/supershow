@@ -399,7 +399,7 @@ Actual removal is deferred to `sweep` (called at end of each `step`).
 Typical main:
 ```forth
 : think  step animate ;
-: ~render  sprites ;
+: ~render  ~sprites ;
 : main
     just
     ... spawn actors ...
@@ -411,7 +411,7 @@ Wait — `show>` alone means think AND render run together. `work>` + `show>` sp
 
 Actually the simplest pattern (from `treats.vfx`):
 ```forth
-: ~test  sprites ;
+: ~test  ~sprites ;
 : think  step ;
 : main
     just
@@ -765,7 +765,7 @@ module
 import %supershow%/src/supershow.vfx
 
 : main
-    show> sprites ;   \ sprites draws all actors every frame
+    show> ~sprites ;   \ sprites draws all actors every frame
 
 main
 ```

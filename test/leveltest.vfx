@@ -37,7 +37,7 @@ class: %blip  derive %actor  class;
 : ~render ( - )
     camx camx!  camy camy!
     the-level render
-    m{ scrolled sprites m}
+    m{ scrolled ~sprites m}
 ;
 
 : main ( - )
