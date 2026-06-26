@@ -122,7 +122,8 @@ redef : cls ( - )
 \ Requires display created with ALLEGRO_STENCIL_SIZE set (e.g., 8)
 
 : clip{ ( x. y. w. h. - )
-    e{ 2swap atp 
+    ec>
+    2swap atp 
     \ Clear stencil to 0 (enable writes first, reset clipping rect)
     $FF glStencilMask
     al_reset_clipping_rectangle
@@ -146,8 +147,7 @@ redef : cls ( - )
     0 glStencilMask ;
 
 : clip} ( - )
-    GL_STENCIL_TEST glDisable
-    e} ;
+    GL_STENCIL_TEST glDisable ;
 
 \ =============================================================================
 \ Text

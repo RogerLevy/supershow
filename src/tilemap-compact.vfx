@@ -1,5 +1,7 @@
-module [supershow.tilemap-compact]
-import supershow.tilemap
+\ module [supershow.tilemap-compact]
+\ import %idir%/tilemap.vfx
+
+public
 
 aka t!      tile!
 aka t@      tile@
@@ -12,4 +14,4 @@ aka tput    put-tilemap
 aka tpaste  paste-tilemap
 aka tslice  slice-tilemap
 aka tshift  shift-tilemap
-aka tdata   tilemap>data
+aka tcount  tilemap-count

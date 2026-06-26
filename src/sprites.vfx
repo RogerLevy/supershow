@@ -58,6 +58,10 @@ trait;
 c: %actor %animator ;
 c: %flipbook ts:%tileset data:a len spd:p flp ;
 
+%actor template {
+    1.0 a.spd !
+}
+
 private
 : anm-spd  a.spd @  anm @ >spd @ p* ;
 : anm-len  anm @ >len @ ;
@@ -92,5 +96,4 @@ public
 
 : animate ( - )
     hold @ ?exit actives> anm @ -exit 1.0 advance-animation bmp ! ;
-
 

@@ -30,8 +30,6 @@ array} drop
 
 %actor object player
 
-private
-
 : setup-metas ( - )
     $0F  the-tileset -> baseid @ 1 +  global-metas el!
     $0F  the-tileset -> baseid @ 2 +  global-metas el!
@@ -73,7 +71,7 @@ public
     map-data >data @  300  20  the-tilemap  set-tilemap
     setup-metas
     32 32 at  player init-actor
-    work> think
+    work>  think
     show>  0 0 at  the-tilemap draw  ~player ;
 
 main

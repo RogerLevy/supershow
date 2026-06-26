@@ -10,7 +10,7 @@ redef : help ( - )
     begin @ ?dup while
         dup cell+ 
             count 
-            2dup 2 /string 15 atype
+            2dup 15 atype
             50 out @ - spaces            
             + count 6 /string type cr 
     repeat ;

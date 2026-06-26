@@ -224,7 +224,7 @@ create strout-dev   0 , strout-vectors ,
         11 push-foreground
         dup ip>nfa dup count lctype
         name> - ?dup if
-            ."  +" .
+            ." (+" (.) type  ." ) "
         else
             space
         then
@@ -239,7 +239,7 @@ create strout-dev   0 , strout-vectors ,
         dup body>name lctype
         dup a>nfa name> >body - ?dup if
             dup 0 > if 
-                ."  +" .
+                ." (+" (.) type  ." ) "
             else
                 .
             then
@@ -262,7 +262,7 @@ create strout-dev   0 , strout-vectors ,
     begin @ ?dup while dup cell+ @ execute repeat ;
 
 : _.s
-    depth 8 min {: d :}
+    depth 12 min {: d :}
     d 0< -4 ?throw
     3 push-attribute
     d if ."  (" depth (.) type ." ) " then

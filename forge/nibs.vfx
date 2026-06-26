@@ -232,7 +232,7 @@ variable tcsp  tcs tcsp !
 : e} ( ecsp - )
     ecsp !  epop tcs - 256 - 4095 and tcs + tcsp ! ;
 
-continuation: ec> ( - ) ( - )
+continuation: ec> ( - ) ( ... - ... )
     e{ >r catch r> e} throw ;
 
 : reset-ec-stack

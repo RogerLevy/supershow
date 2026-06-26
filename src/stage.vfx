@@ -131,7 +131,9 @@ continuation: who> ( - actor|0 ) ( - f )
 \ =============================================================================
 
 : clear-stage ( - )
-    ['] unload stg@ each sweep ;
+    ['] unload stg@ each sweep 
+    stg@ body>name f" Stage %s cleared." .info 
+;
 
 : transfer ( actor stage - )
     push ;

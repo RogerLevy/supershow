@@ -245,14 +245,16 @@ class: %tilemap
 
     :: on-startup ( - )
         w @ h @ * %int %array hmake  ta !
-        snapshot-cells @ if
-            data-snapshot @  ta @ >data @  snapshot-cells @ cells  move
-        then ;
+        snapshot-size @ if
+            snapshot-data @  ta @ >data @  snapshot-size @ move
+        then 
+    ;
 
     :: on-turnkey-save ( - )
-        align here data-snapshot !
-        ta @ >data @  w @ h @ * dup snapshot-cells !
-        cells  dup allot  here over -  swap move ;
+        align here snapshot-data !
+        w @ h @ * cells snapshot-size !
+        ta @ >data @  snapshot-size @  move, 
+    ;
 
 class;
 

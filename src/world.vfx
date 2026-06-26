@@ -61,6 +61,7 @@ public
 : clear-world ( - )
     ['] withdraw  staff each
     ['] unload  world each
+    s" World cleared." .info 
 ;
 
 : active-cohorts ( xt system - ) ( system - )
@@ -93,7 +94,6 @@ public
     clear-stage 
     clear-world
     gamew 2 / gameh 2 / at  
-    ." JUST : Stage and world cleared." cr
 ;
 
 : manager: ( class <name> - ) ( - system )
