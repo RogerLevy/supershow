@@ -1,4 +1,9 @@
 {
+	"hitlayer":"layer0",
+	"treadlayer": "layer0",
+	"spritelayer": "layer0",
+	"spawnlayer": "spawns",
+	"maintileset": "mogo_bg.ts",
 	"layers":	[{
 			"name":	"layer1",
 			"tileset":	"MOGO_BG.TS",

@@ -173,7 +173,7 @@ class;
     setup-metas
     spawn-tiles
     .stage
-    action 
+    action
 ;
 
 0 value camx

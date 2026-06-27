@@ -13,14 +13,6 @@ mogo_bg.png 20 20 tileset mogo_bg.ts
 jsonfile %idir%/assets/mogo_01.json
 mogo_01.json level 1-1
 
-1-1 {
-    1-1-layer0 hitlayer !
-    1-1-layer0 treadlayer !
-    1-1-spawns spawnlayer !
-    1-1-layer0 spritelayer !
-    mogo_bg.ts main-ts !
-}
-
 slow mogo.ts flipbook: idle-fd.anm 0 , flipbook;
 slow mogo.ts flipbook: idle-rt.anm 30 , flipbook;
 slow mogo.ts flipbook: walk-rt.anm 1 12 range, flipbook;
@@ -30,7 +22,9 @@ slow mogo.ts flipbook: die.anm 31 38 range, flipbook;
 
 c: %mogo %actor ;
 %mogo :: start  
-    walk-rt.anm pose  
+    walk-rt.anm pose 
+    -7 -8 7 9 hitbox!
+    -6 -7 6 8 hurtbox! 
     act>
         0. vx !  0. vy !
         <left>  held? if -2. vx ! then
@@ -39,7 +33,7 @@ c: %mogo %actor ;
         <down>  held? if  2. vy ! then
 ;
 
-: spawn-mogo  spawn to mogo  -1 &spawntile !  mogo to subject ;
+: spawn-mogo  one to mogo  -1 &spawntile !  mogo to subject ;
 
 mogo_bg.ts spawners:
     22 spawns-with %mogo spawn-mogo
