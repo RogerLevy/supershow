@@ -91,7 +91,7 @@ continuation: who> ( - actor|0 ) ( - f )
     sp@ >r
     ['] behave catch if
         dup err_bailed = if drop else
-            this swap bench
+            ( err ) this bench
         then
     then
     r> restore-sp ;
@@ -101,7 +101,7 @@ continuation: who> ( - actor|0 ) ( - f )
     sp@ >r
     ['] physics catch if
         dup err_bailed = if drop else
-            this swap bench
+            ( err ) this bench
         then
     then
     r> restore-sp ;

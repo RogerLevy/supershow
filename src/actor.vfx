@@ -59,8 +59,8 @@ class;
 c: %actor benched ;  \ controls behavior and physics
 : benched? ( actor - ) -> benched @ ;
 
-: bench ( actor errcode - )
-    {: actor errcode | ls :}
+: bench ( errcode actor - )
+    {: errcode actor  | ls :}
     actor [: .summary ;] lstrout to ls
     ls lcount  errcode   f" Benched actor (error %n): %s" .warn
     ls lfree
