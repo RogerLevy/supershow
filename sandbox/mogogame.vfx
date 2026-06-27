@@ -14,7 +14,7 @@ class: %level
 class;
 
 class: %tileset
-    prop spawners :ref %array   \ [ tile# , class , xt , tile# , class , xt , ... ] ( tile-a class - )
+    prop spawners :ref %array   \ [ tile# , class , xt , tile# , class , xt , ... ] ( tile class - tile' )
 class;
 
 : the-hitlayer   ( - tilemap ) the-level >hitlayer @ ;
@@ -102,14 +102,11 @@ class: %actor
     }
 class;
 
-
 : att ( col row tileset - ) 
     { tw 2@ 2*``  tw 2@ 2 2 2/`` 2+ at } ;
 
-0 value &spawntile  \ use this to re-read the tile or overwrite it
-
-: default-spawner ( class - )
-    one drop  -1 &spawntile ! ;
+: default-spawner ( tile class - tile' )
+    one drop drop -1 ;
     
 : the-spawners ( - array ) 
     the-spawnlayer >ts @ >spawners @ ;
@@ -121,9 +118,10 @@ class;
         the-spawners >data @
         the-spawners #items 3 / for
             @+ ta @ $ffff and = if 
-                ta to &spawntile  
                 j k the-tileset att
-                @+ swap @+ swap >r ( class xt ) catch if drop then
+                ta @ 
+                swap @+ swap @+ swap >r ( tile class xt ) 
+                catch if 2drop else ta ! then
                 r> ( a )
                 leave
             else
@@ -135,15 +133,27 @@ class;
     loop loop 
 ;
 
+: ?spawner ( - xt )
+    s" with" keyword? if ' else ['] default-spawner then ;
+
 \ these are to be used within an array{ array} block.  
 \ then you set the tileset's spawners property to it.
-: spawns ( n - <class> )  ,  ' >body ,   ['] default-spawner , ;
-: spawns-with ( n - <class> <spawner> )  ,  ' >body ,  ' , ;
+: spawns ( n - <class> [with <spawner>] )  ,  ' >body ,   ?spawner , ;
 
 \ these utility words make it friendlier
 : spawners:  %int array{ ;
 : spawners;  array} swap >spawners ! ;
 
+: debug-controls
+    0. vx !  0. vy !
+    <left>  held? if -2. vx ! then
+    <right> held? if  2. vx ! then
+    <up>    held? if -2. vy ! then
+    <down>  held? if  2. vy ! then    
+;
+
+: debug ( actor - )
+    as act> debug-controls ;
 
 : scrolled ( - ) 
     camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
@@ -194,7 +204,7 @@ class;
     the-level render 
 ;
 
-: mogogame
+: mogogame ( - )
     show>
         ~level
     work>

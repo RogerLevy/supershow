@@ -25,18 +25,12 @@ c: %mogo %actor ;
     walk-rt.anm pose 
     -7 -8 7 9 hitbox!
     -6 -7 6 8 hurtbox! 
-    act>
-        0. vx !  0. vy !
-        <left>  held? if -2. vx ! then
-        <right> held? if  2. vx ! then
-        <up>    held? if -2. vy ! then
-        <down>  held? if  2. vy ! then
 ;
 
-: spawn-mogo  one to mogo  -1 &spawntile !  mogo to subject ;
+: spawn-mogo  one to mogo  mogo to subject  drop -1 ;
 
 mogo_bg.ts spawners:
-    22 spawns-with %mogo spawn-mogo
+    22 spawns %mogo with spawn-mogo
 spawners;
 
 : main
@@ -47,4 +41,4 @@ spawners;
 
 fullscreen winmode
 main
-mogo ?dup [if] as [then]
+mogo ?dup [if] debug [then]

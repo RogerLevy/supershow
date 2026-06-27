@@ -49,6 +49,8 @@ redef : file-position ( fileid -- ud ior )
 
 synonym aka synonym
 aka not 0=
+: s= compare 0= ;
+: z$= zcount rot zcount s= ;
 : udup  over swap ;
 : >zpad  ( a n - z$ ) pad zplace pad ;
 : >pad   ( a n - $ ) pad place pad ;
@@ -478,11 +480,12 @@ cstring lastword
 
 aka save-exe save
 
-: s= compare 0= ;
-: z$= zcount rot zcount s= ;
 : ext? ( fn len ext len - flag ) 2swap '.' ending s= ;
 : ['] ( <name> - xt ) state @ if postpone ['] else ' then ; immediate
 : u+  rot + swap ;
+
+: keyword? ( a len - flag )
+    bl preparse s= dup if bl parse 2drop then ;
 
 \ Search order stack
 here dup 65535 and 65536 swap - allot 
