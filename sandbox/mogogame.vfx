@@ -162,8 +162,7 @@ class;
     m{ scrolled ~backsprites m}                 \ behind everything
     layers @ #items for
         this i ?draw-layer
-        this i layer  spritelayer @ = 
-        spritelayer @ 0<> and if                \ reached the marker layer
+        this i layer  spritelayer @ = if        \ reached the marker layer (only reachable if it's non-zero)
             m{ scrolled ~sprites m}             \ inject front sprites here
         then
     loop 
