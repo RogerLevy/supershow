@@ -9,9 +9,6 @@ import %supershow%/addons/shapes.vfx
 continuation: a!>  a >r swap to a execute r> to a ;
 : @a+  a @  cell +to a ;
 
-: 4@ @+ swap @+ swap @+ swap @ ;
-: 4! >r 2swap r@ 2! r> 8 + 2! ;
-
 c: %prototype  %actor proto:%prototype ;
 
 : prototype: ( class <name> - ) create dmake as  this proto ! ;

@@ -9,6 +9,7 @@ trait;
 
 trait: %loadable
     :: load ( - ) ;
+    :: on-built ( - ) ;   \ called at compile time right after embedding/initialization
 trait;
 
 trait: %unloadable

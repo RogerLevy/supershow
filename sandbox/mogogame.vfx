@@ -1,0 +1,202 @@
+module
+import %supershow%/src/supershow.vfx
+include %supershow%/src/tilemap-compact.vfx
+public
+
+0 value the-level 
+
+class: %level
+    prop hitlayer :ref %tilemap
+    prop treadlayer :ref %tilemap
+    prop spawnlayer :ref %tilemap
+    prop spritelayer :ref %tilemap
+    prop main-ts :ref %tileset
+class;
+
+class: %tileset
+    prop spawners :ref %array   \ [ tile# , class , xt , tile# , class , xt , ... ] ( tile-a class - )
+class;
+
+: the-hitlayer   ( - tilemap ) the-level >hitlayer @ ;
+: the-treadlayer ( - tilemap ) the-level >treadlayer @ ;
+: the-spawnlayer ( - tilemap ) the-level >spawnlayer @ ;
+\ : the-spritelayer ( - tilemap ) the-level >spritelayer @ ;
+: the-tileset    ( - tileset ) the-level >main-ts @ ;
+
+0 value flipbook-speed
+: fast  1. 2 / to flipbook-speed ;
+: med   1. 3 / to flipbook-speed ;
+: slow  1. 4 / to flipbook-speed ;
+: flipbook:  flipbook:  flipbook-speed spd ! ;
+: pose ( flipbook - ) a.spd @ cycle ;
+
+: tile-meta! ( val tileset i - )
+    swap >baseid @ + global-metas el! ;
+
+: setup-metas ( - )
+    the-tileset >#tiles @ for 
+        $0F the-tileset i tile-meta!
+    loop
+;
+
+: find-layer ( name len level - tilemap|0 )
+    body>name f" %s-%s"
+    sfind not if drop 0 exit then
+    execute 
+;
+
+|| : _?layer ( z$ - tilemap|0 ) 
+    zcount this find-layer ;
+
+|| : _first-tileset ( - tileset )
+    this 0 layer >ts @ ;
+
+|| : _?tileset ( z$ - tileset )
+    zcount sfind if execute else drop _first-tileset then ;
+
+%level :: on-built
+    {: | lvl-json :}
+    src @ >json @ to lvl-json
+    lvl-json "hitlayer"    ?j>z ?dup if _?layer hitlayer ! then
+    lvl-json "treadlayer"  ?j>z ?dup if _?layer treadlayer ! then
+    lvl-json "spawnlayer"  ?j>z ?dup if _?layer spawnlayer ! then
+    lvl-json "spritelayer" ?j>z ?dup if _?layer spritelayer ! then
+    lvl-json "maintileset" ?j>z ?dup if _?tileset else _first-tileset then main-ts !
+;
+
+trait: %character
+
+    4 cells nprop hitbox
+    4 cells nprop hurtbox
+
+    : hitbox!  hitbox 4! ;
+    : hurtbox!  hurtbox 4! ;
+
+    prop fudge :int  \ >0 = cut corners by pixels
+
+    prop 'tread :xt ( col row tile# - )
+
+trait;
+
+: ?hit-layer
+    the-hitlayer -exit
+    hitbox 4@   the-hitlayer  ['] solid?  0  tmslide 
+    fudge @ -exit
+    hitbox 4@   fudge @  cut-corners 
+;
+
+: ?tread-layer
+    the-treadlayer -exit
+    'tread @ -exit
+    hitbox 4@   the-treadlayer  tread>
+        'tread @ execute
+;
+
+class: %actor
+    works-with %character
+
+    template {
+        -8 -8 7 7 hitbox!
+        -8 -8 7 7 hurtbox!
+        [: ?hit-layer ?tread-layer ;] phys !
+    }
+class;
+
+
+: att ( col row tileset - ) 
+    { tw 2@ 2*``  tw 2@ 2 2 2/`` 2+ at } ;
+
+0 value &spawntile  \ use this to re-read the tile or overwrite it
+
+: default-spawner ( class - )
+    one drop  -1 &spawntile ! ;
+    
+: the-spawners ( - array ) 
+    the-spawnlayer >ts @ >spawners @ ;
+
+: spawn-tiles ( - )
+    the-spawners -exit
+    the-spawnlayer tilemap-count {: ta w h :}
+    h for w for 
+        the-spawners >data @
+        the-spawners #items 3 / for
+            @+ ta @ $ffff and = if 
+                ta to &spawntile  
+                j k the-tileset att
+                @+ swap @+ swap >r ( class xt ) catch if drop then
+                r> ( a )
+                leave
+            else
+                cell+ cell+
+            then
+        loop
+        drop
+        cell +to ta
+    loop loop 
+;
+
+\ these are to be used within an array{ array} block.  
+\ then you set the tileset's spawners property to it.
+: spawns ( n - <class> )  ,  ' >body ,   ['] default-spawner , ;
+: spawns-with ( n - <class> <spawner> )  ,  ' >body ,  ' , ;
+
+\ these utility words make it friendlier
+: spawners:  %int array{ ;
+: spawners;  array} swap >spawners ! ;
+
+
+: scrolled ( - ) 
+    camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
+
+%level :: draw
+    m{ scrolled ~backsprites m}                 \ behind everything
+    layers @ #items for
+        this i ?draw-layer
+        this i layer  spritelayer @ = 
+        spritelayer @ 0<> and if                \ reached the marker layer
+            m{ scrolled ~sprites m}             \ inject front sprites here
+        then
+    loop 
+    spritelayer @ 0= if
+        \ render front-sprites over everything if no spritelayer defined
+        m{ scrolled ~sprites m}                 
+    then
+;
+
+0 value subject  \ actor
+
+: enter ( level - )
+    to the-level
+    0 to subject
+    just
+    the-level load
+    setup-metas
+    spawn-tiles
+    .stage
+    action 
+;
+
+0 value camx
+0 value camy
+
+: follow ( %xy - )
+    dup %xy is? not if drop exit then
+    >x 2@ gamew gameh 2 2 2/ 2>p 2- to camy to camx 
+;
+
+: ?subject ( - actor|0 )
+    subject ?dup 0= if  actors >lowest @  then ;
+
+: ~level ( - )
+    ?subject follow
+    camx camy camy! camx!
+    the-level -exit
+    the-level render 
+;
+
+: mogogame
+    show>
+        ~level
+    work>
+        step sweep animate 
+;

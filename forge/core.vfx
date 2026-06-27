@@ -85,6 +85,8 @@ aka f>n f>s
 \ aka unnext unloop
 : @+  ( a - a' n ) dup cell+ swap @ ;
 : c@+ ( a - a' n )  dup 1 + swap c@ ;
+: 4@ @+ swap @+ swap @+ swap @ ;
+: 4! >r 2swap r@ 2! r> 8 + 2! ;
 : lc  ( n - n ) dup 'A' 'Z' within? if $20 or then ;
 : lctype  ( a n - ) for c@+ lc emit loop drop ;      
 : pagealign ( - )  here $ff and 256 swap - allot ;
@@ -106,6 +108,7 @@ aka >> rshift
 : ftrunc4 ( f - f ) 10000e f* ftrunc 10000e f/ ;
 : fround4 ( f: n - f: n' ) 10000e f* fround 10000e f/ ;
 : (tf.) fround4 -1 (f.) ;
+: k  7 rpick ;
 
 : creplace ( a len from-char to-char - )
     {: a len from-char to-char :}

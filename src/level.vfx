@@ -173,6 +173,7 @@ private
         root "w" ?j>n ?dup if pxw ! then
         root "h" ?j>n ?dup if pxh ! then    
     } 
+    lvl on-built
 ;
 
 public
