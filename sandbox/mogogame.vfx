@@ -214,6 +214,9 @@ class;
 ;
 
 : mogogame ( - )
+    320 to appw   240 to apph  
+    320 to gamew  240 to gameh
+    user-zoom off  tv on
     show>
         ~level
     work>

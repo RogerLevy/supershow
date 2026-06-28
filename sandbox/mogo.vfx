@@ -39,6 +39,6 @@ spawners;
     1-1 enter
 ;
 
-fullscreen winmode
+\ fullscreen winmode
 main
 mogo ?dup [if] debug [then]
