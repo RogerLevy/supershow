@@ -142,6 +142,9 @@ public
     15 color  brushw tilew *  brushh tileh *  2>p rect
 ;
 
+\ Drawn by ~world right after the active layer, so foreground layers occlude it.
+' ~brush-ghost to ~over-active
+
 : ~selection ( - )
     $ffffff80 rgba8
     selc selr cell-screen-xy atp
@@ -216,7 +219,6 @@ public
 
 : ~maped ( - )
     ~world
-    ~brush-ghost
     ~info
     ~grid
     ~border
