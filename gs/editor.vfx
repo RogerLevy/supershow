@@ -168,13 +168,16 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 
 : level-center ( - x. y. )  the-level >pxw @ 2 /  the-level >pxh @ 2 /  2>p ;
 
+\ Active layer's static pixel offset (visual only) as a fixed pair.
+: layer-vis ( - x. y. )  the-layer { visx @ >p  visy @ >p } ;
+
 \ Mirror the engine (draw-layer): parallax pivots on the LEVEL centre and the
 \ half-viewport shift is flat, so measure world + camera from the level centre.
-\ screen = (world - lc) - (cam - lc)*prx + center.
+\ screen = (world - lc) - (cam - lc)*prx + center + vis.
 : parallax+ ( x. y. - x. y. )   \ screen -> world
-    center 2>p 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2+  level-center 2+ ;
+    layer-vis 2-  center 2>p 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2+  level-center 2+ ;
 : parallax- ( x. y. - x. y. )   \ world -> screen
-    level-center 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2-  center 2>p 2+ ;
+    level-center 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2-  center 2>p 2+  layer-vis 2+ ;
 
 \ Screen mouse -> the-layer cell (col,row), accounting for the layer's
 \ parallax: world = mouse + cam * parallax.
