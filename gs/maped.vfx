@@ -25,17 +25,28 @@ public
     clamp-camera  -1 
 ;
 
-\ Round a fixed pixel coord to a multiple of t pixels (t = a tile dimension).
+\ Round a fixed pixel coord to a multiple of t pixels (t = a grid dimension).
 : down-tile ( n. t - n'. )  >p tuck p/ pfloor p* ;
 : up-tile   ( n. t - n'. )  swap negate swap  down-tile  negate ;
 : near-tile ( n. t - n'. )  dup 2 / >p  rot +  swap  down-tile ;
 
-: cam-aligned? ( - flag )   \ camera sitting on the current layer's tile grid?
-    camx tilew down-tile camx =  camy tileh down-tile camy =  and ;
+\ The camera shows the world point at the viewport centre, so we align it to a
+\ grid-cell CENTRE (k*t + t/2), not a grid line. Round in cell-centre space:
+\ shift by -t/2, round to a multiple of t, shift back.
+: centered ( n. t xt - n'. )
+    {: n t xt | h :}  t 2 / >p to h
+    n h -  t  xt execute  h + ;
 
-\ shift+arrow: if the camera is off the current layer's tile grid, snap it onto
-\ the grid -- toward the arrow on its axis, nearest on the other to finish the
-\ alignment. If already aligned, step one grid cell as before.
+: down-cell ( n. t - n'. )  ['] down-tile centered ;
+: up-cell   ( n. t - n'. )  ['] up-tile   centered ;
+: near-cell ( n. t - n'. )  ['] near-tile centered ;
+
+: cam-aligned? ( - flag )   \ camera sitting on a grid-cell centre?
+    camx gridw down-cell camx =  camy gridh down-cell camy =  and ;
+
+\ shift+arrow: if the camera is off a grid-cell centre, snap it onto one --
+\ toward the arrow on its axis, nearest on the other to finish the alignment.
+\ If already aligned, step one grid cell as before.
 : ?grid-move ( - )
     shift? -exit
     cam-aligned? if
@@ -44,10 +55,10 @@ public
         <up>    pressed? if  gridh negate >p  camy +  camy!  then
         <down>  pressed? if  gridh        >p  camy +  camy!  then
     else
-        <left>  pressed? if  camx tilew down-tile camx!  camy tileh near-tile camy!  then
-        <right> pressed? if  camx tilew up-tile   camx!  camy tileh near-tile camy!  then
-        <up>    pressed? if  camy tileh down-tile camy!  camx tilew near-tile camx!  then
-        <down>  pressed? if  camy tileh up-tile   camy!  camx tilew near-tile camx!  then
+        <left>  pressed? if  camx gridw down-cell camx!  camy gridh near-cell camy!  then
+        <right> pressed? if  camx gridw up-cell   camx!  camy gridh near-cell camy!  then
+        <up>    pressed? if  camy gridh down-cell camy!  camx gridw near-cell camx!  then
+        <down>  pressed? if  camy gridh up-cell   camy!  camx gridw near-cell camx!  then
     then
     clamp-camera
 ;
