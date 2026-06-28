@@ -121,9 +121,26 @@ redef : cls ( - )
 \ =============================================================================
 \ Requires display created with ALLEGRO_STENCIL_SIZE set (e.g., 8)
 
+\ Stencil clipping resets the Allegro clip rect for a clean mask setup, so clip{
+\ stashes the ambient rect (e.g. the TV border's scissor) and clip} restores it
+\ -- otherwise drawing after the scope (sprites) escapes the border. A stack, not
+\ one slot, because clip scopes nest (workzone): each scope restores the rect that
+\ was ambient at ITS entry.
+|| aligned-page clipstk
+|| variable clipsp   clipstk clipsp !
+
+|| : save-cliprect ( - )      \ push the current Allegro clip rect
+    clipsp @ dup cell+ dup cell+ dup cell+ al_get_clipping_rectangle
+    4 cells clipsp c+! ;
+
+|| : restore-cliprect ( - )   \ pop and reinstate the saved clip rect
+    -4 cells clipsp c+!
+    clipsp @ 4@ al_set_clipping_rectangle ;
+
 : clip{ ( x. y. w. h. - )
     ec>
-    2swap atp 
+    2swap atp
+    save-cliprect
     \ Clear stencil to 0 (enable writes first, reset clipping rect)
     $FF glStencilMask
     al_reset_clipping_rectangle
@@ -147,7 +164,8 @@ redef : cls ( - )
     0 glStencilMask ;
 
 : clip} ( - )
-    GL_STENCIL_TEST glDisable ;
+    GL_STENCIL_TEST glDisable
+    restore-cliprect ;
 
 \ =============================================================================
 \ Text
