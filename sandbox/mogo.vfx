@@ -20,7 +20,7 @@ slow mogo.ts flipbook: jump-up.anm 13 21 range, flipbook;
 slow mogo.ts flipbook: jump-rt.anm 22 30 range, flipbook;
 slow mogo.ts flipbook: die.anm 31 38 range, flipbook;
 
-c: %mogo %actor ;
+c: %mogo %character ;
 %mogo :: start  
     walk-rt.anm pose 
     -7 -8 7 9 hitbox!

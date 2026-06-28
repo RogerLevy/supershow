@@ -6,11 +6,11 @@ public
 0 value the-level 
 
 class: %level
-    prop hitlayer :ref %tilemap
-    prop treadlayer :ref %tilemap
-    prop spawnlayer :ref %tilemap
+    prop hitlayer    :ref %tilemap
+    prop treadlayer  :ref %tilemap
+    prop spawnlayer  :ref %tilemap
     prop spritelayer :ref %tilemap
-    prop main-ts :ref %tileset
+    prop main-ts     :ref %tileset
 class;
 
 class: %tileset
@@ -64,7 +64,7 @@ class;
     lvl-json "maintileset" ?j>z ?dup if _?tileset else _first-tileset then main-ts !
 ;
 
-trait: %character
+trait: %collidable
 
     4 cells nprop hitbox
     4 cells nprop hurtbox
@@ -78,27 +78,36 @@ trait: %character
 
 trait;
 
-: ?hit-layer
+$80000000 constant LAYER_BG
+
+: or! ( n a - ) dup @ rot or swap ! ;
+
+|| : ?hit-bg
     the-hitlayer -exit
+    msk @ LAYER_BG and -exit
     hitbox 4@   the-hitlayer  ['] solid?  0  tmslide 
     fudge @ -exit
     hitbox 4@   fudge @  cut-corners 
 ;
 
-: ?tread-layer
+|| : ?tread-bg
     the-treadlayer -exit
     'tread @ -exit
+    msk @ LAYER_BG and -exit
     hitbox 4@   the-treadlayer  tread>
         'tread @ execute
 ;
 
-class: %actor
-    works-with %character
+c: %actor  "%collidable" ;  \ Lets actors gracefully work with members of %collidable
+
+class: %character  derive %actor
+    is-a %collidable
 
     template {
+        LAYER_BG msk or!    \ By default, characters collide with the background.
         -8 -8 7 7 hitbox!
         -8 -8 7 7 hurtbox!
-        [: ?hit-layer ?tread-layer ;] phys !
+        [: ?hit-bg ?tread-bg ;] phys !
     }
 class;
 
@@ -108,8 +117,8 @@ class;
 : default-spawner ( tile class - tile' )
     one drop drop -1 ;
     
-: the-spawners ( - array ) 
-    the-spawnlayer >ts @ >spawners @ ;
+: the-spawners ( - array|0 ) 
+    the-spawnlayer ?dup if >ts @ >spawners @ then ;
 
 : spawn-tiles ( - )
     the-spawners -exit
@@ -190,7 +199,8 @@ class;
 
 : follow ( %xy - )
     dup %xy is? not if drop exit then
-    >x 2@ gamew gameh 2 2 2/ 2>p 2- to camy to camx 
+    >x 2@ center 2>p 2- to camy to camx 
+    camx camy the-level clamp-camera to camy to camx
 ;
 
 : ?subject ( - actor|0 )
