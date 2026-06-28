@@ -164,8 +164,8 @@ class;
 : debug ( actor - )
     as act> debug-controls ;
 
-: scrolled ( - ) 
-    camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
+: scrolled ( - )
+    scrollx@ scrolly@ 2negate 2p>f  1e 1e 0e  transform ;
 
 %level :: draw
     m{ scrolled ~backsprites m}                 \ behind everything
@@ -208,7 +208,7 @@ class;
 
 : ~level ( - )
     ?subject follow
-    camx camy camy! camx!
+    camx camy scrolly! scrollx!
     the-level -exit
     the-level render 
 ;

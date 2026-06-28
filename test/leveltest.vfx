@@ -32,10 +32,10 @@ class: %blip  derive %actor  class;
 
 : think ( - )  step  scroll ;
 
-: scrolled  camx@ camy@ 2negate 2p>f  1e 1e 0e  transform ;
+: scrolled  scrollx@ scrolly@ 2negate 2p>f  1e 1e 0e  transform ;
 
 : ~render ( - )
-    camx camx!  camy camy!
+    camx scrollx!  camy scrolly!
     the-level render
     m{ scrolled ~sprites m}
 ;

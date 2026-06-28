@@ -192,7 +192,7 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 \ Draw the level for editing: on the scratch pad show only it (its own camera);
 \ otherwise show all visible layers, blinking the freshly-selected one.
 : ~world ( - )
-    camx camx! camy camy!
+    camx scrollx! camy scrolly!
     layer# scratch# = if  the-level scratch# draw-layer  exit  then
     blink-hide? if
         the-layer >vis @ >r  the-layer >vis off

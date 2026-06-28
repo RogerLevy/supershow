@@ -257,13 +257,13 @@ public
 : clamp-camera ( camx. camy. level - camx. camy. )
     { 0 0``  pxw 2@ gamew gameh 2- 0 0 2max 2>p``  2clamp } ;
 
-ec-cell camx
-ec-cell camy
+ec-cell scrollx
+ec-cell scrolly
 
 : draw-layer ( level i - )      \ draw one layer; caller decides visibility
     layer {
-        camx@ prx @  p*  visx @ >p - pfloor
-        camy@ prx @  p*  visy @ >p - pfloor
+        scrollx@ prx @  p*  visx @ >p - pfloor
+        scrolly@ prx @  p*  visy @ >p - pfloor
         gamew >p  gameh >p
         this draw-view
     }

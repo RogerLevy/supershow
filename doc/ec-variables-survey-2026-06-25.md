@@ -48,8 +48,8 @@ Default: `vga13h pal!`.
 
 | Variable | Type | Set by | Purpose |
 |---|---|---|---|
-| `camx` | fixed | `camx!` | camera X scroll offset |
-| `camy` | fixed | `camy!` | camera Y scroll offset |
+| `scrollx` | fixed | `scrollx!` | camera X scroll offset |
+| `scrolly` | fixed | `scrolly!` | camera Y scroll offset |
 
 ---
 
@@ -71,14 +71,14 @@ Used by:
 
 ### 2. `VAR>` savers — single-field save onto return stack (defined, never used)
 
-`ec-cell` generates an immediate word `VAR>` (e.g. `ppenr>`, `camx>`) that saves the
+`ec-cell` generates an immediate word `VAR>` (e.g. `ppenr>`, `scrollx>`) that saves the
 field's value on the return stack and restores it when the enclosing word returns, via
 `ec-save` / `ec-restore`. The mechanism compiles correctly but **no word in the codebase
 calls any of these savers**. Dead infrastructure.
 
 ### 3. Direct overwrite — no save/restore (the common case)
 
-Most callers (`rgba8`, `at`, `camx!`, `pile!`, etc.) write EC fields directly without
+Most callers (`rgba8`, `at`, `scrollx!`, `pile!`, etc.) write EC fields directly without
 saving. State persists until the next write. The `e{`/`e}` around `process-tick` is the
 only systematic guard — everything within a frame can mutate freely and the snapshot
 undoes it at frame end.
