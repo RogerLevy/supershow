@@ -370,7 +370,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     n slot {
         layerj "cols" j>n  layerj "rows" j>n  this resize-tilemap
         layerj layer-tileset  ts !
-        layerj n layer-name$  name$ place
+        layerj n layer-name  name$ place
         layerj this layer-view!
         layerj "tiles" j>s  this parse-tilemap
         en on
@@ -433,7 +433,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     cjson load-editor
     set-bounds
     cjson "w" ?j>n ?dup if the-level >pxw ! then
-    cjson "h" ?j>n ?dup if the-level >pxh ! then ;
+    cjson "h" ?j>n ?dup if the-level >pxh ! then
+    cjson the-level read-props ;                \ middleware <save props (e.g. mogogame's)
 
 \ ---- open / new / save -------------------------------------------------------
 
@@ -544,6 +545,8 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     arr  "layers"  root cjson-add-array
     scratch# slot >en @ if  scratch# slot layer>json  "scratchlayer"  root cjson-add-item  then
     *editor-json  "editor"  root cjson-add-item
+    the-level root add-properties-to            \ middleware <save props (editor knows the class)
+    the-level >src @ ?dup if  root merge-missing  then   \ carry over keys gs doesn't model
     root ;
 
 || : .json? ( a u - flag )   \ does the path already end in ".json"?

@@ -96,12 +96,12 @@ public
         exit
     then
     shift? if
+        ?grid-move
         do-rmb-marquee
         do-marquee exit
     then
     try-pan ?exit
     <'> pressed? if  grid? not to grid?  then   \ toggle screen grid
-    ?grid-move
     ?scroll
     <E> pressed? if eraser then
     <H> pressed? if fliph then
@@ -188,7 +188,7 @@ public
 
 : ~grid ( - )
     grid? 0= ?exit
-    $ffff00a0 rgba8
+    $ffff0080 rgba8
     fixed-grid @ if  ~fixed-vgrid  ~fixed-hgrid
                else  view-pxh ~vgrid  view-pxw ~hgrid
     then

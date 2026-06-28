@@ -56,6 +56,7 @@ extern: bool STDCALL _cJSON_AddItemToArray@8( void * array, void * item );
 extern: void * STDCALL _cJSON_CreateNumber@8( double num );
 extern: void * STDCALL _cJSON_CreateString@4( char * zstr );
 extern: char * STDCALL _cJSON_SetValuestring@8( void * item, char * zstr );
+extern: void * STDCALL _cJSON_Duplicate@8( void * item, int recurse );
 
 public
 : destroy-json ( cjson - ) _cJSON_Delete@4 ;
@@ -146,6 +147,27 @@ aka j>j get-item
 \ In-place overwrite of a string item's value (copies zstr internally).
 : jset-string ( item zstr - ) _cJSON_SetValuestring@8 drop ;
 
+\ ---- structural utilities ----------------------------------------------------
+
+: jname  ( item - zkey )   -> namestring @ ;       \ an object-child's key
+: jclone ( item - item' )  1 _cJSON_Duplicate@8 ;  \ deep (recursive) copy
+
+\ Copy every top-level key of src that dest lacks, deep-cloning the values.
+\ Lets a writer regenerate the fields it models, then carry forward any others
+\ verbatim (e.g. data a tool doesn't understand), so they survive a roundtrip.
+|| : ?carry ( child dest - )
+    {: child dest :}
+    child jname dest swap ?get-item if exit then   \ already present -> leave it
+    child jclone  child jname  dest  add-item ;
+
+: merge-missing ( src dest - )
+    {: src dest :}
+    src -> child @
+    begin ?dup while
+        dup dest ?carry
+        -> jnext @
+    repeat ;
+
 : jsize ( jarray - n ) _cJSON_GetArraySize@4 ;
 : jcount ( jarray - array-json n ) dup _cJSON_GetArraySize@4 ;
 
@@ -197,5 +219,5 @@ aka j>j get-item
 : serjson ( path len xt - ) ( cjson - ) 
     {: path len xt | cjson :}
     new-object to cjson
-    cjson xt ?execute 
+    cjson xt execute 
     cjson path len save-json ;
