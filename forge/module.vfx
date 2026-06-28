@@ -379,7 +379,7 @@ redef : global ( - )
         r> to current-module restore-order
         mod 0= if abort" ^ : file did not declare a module." then
     then
-    mod dup open-module
+    mod open-module
     ." Current module: " current-module .name cr ;
 
 redef : public ( - )

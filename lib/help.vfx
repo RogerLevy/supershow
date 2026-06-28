@@ -4,16 +4,24 @@ public
 
 || redef variable commands
 
+: ?(). ( a len - )
+    '(' scan dup if 
+        ')' up-to 1 + 15 atype space 
+    else 2drop then 
+;
+
 redef : help ( - )
     cr 
     commands
     begin @ ?dup while
         dup cell+ 
             count 
-            2dup 15 atype
-            50 out @ - spaces            
-            + count 6 /string type cr 
-    repeat ;
+            2dup '(' up-to 15 atype     \ print word 
+            25 out @ - spaces           \ align to column 30
+            2dup ?().                   \ print stack-diagram if any
+            + count 6 /string type cr   \ print comment 
+    repeat 
+;
 
 || redef : command ( - )
     save-input

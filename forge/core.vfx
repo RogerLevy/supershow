@@ -7,6 +7,8 @@
 : redef ( - )
     warnings? >r postpone -warnings 0 parse evaluate r> to warnings? ;
 
+: type ( a len - ) 0 max dup if type else 2drop then ;
+
 \ =============================================================================
 \ File error fixes (VFX returns -1 instead of actual OS error)
 \ =============================================================================
@@ -316,6 +318,9 @@ create strout-dev   0 , strout-vectors ,
         i c@ c = if 1 - exit then 
         1 - 
     -1 +loop ;
+
+: up-to ( a len - a' len' )
+    >r 2dup r> scan nip - 0 max ;
 
 aka parse' parse
 
