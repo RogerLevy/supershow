@@ -8,8 +8,6 @@ private
 
 0    value the-level           \ the one open %level (v1: single level)
 0    value layer#              \ active layer index
-0    value camx                \ camera origin, fixed pixels
-0    value camy
 0    value scratch-camx        \ scratch-pad camera, stashed while a normal layer is active
 0    value scratch-camy
 0    value main-camx           \ normal camera, stashed while the scratch pad is active
@@ -129,16 +127,21 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
         128 128 this resize-tilemap   ts !
         1.0 prx !  this clear-tilemap  en on  vis off } ;
 
-\ The scratch pad keeps its own camera; swap it in/out of camx/camy on entry/exit.
-: enter-scratch ( - )  camx to main-camx  camy to main-camy  scratch-camx to camx  scratch-camy to camy ;
-: leave-scratch ( - )  camx to scratch-camx  camy to scratch-camy  main-camx to camx  main-camy to camy ;
+: scratching? ( - flag ) layer# scratch# = ;
+: camx ( - n. ) scratching? if scratch-camx else main-camx then ; 
+: camy ( - n. ) scratching? if scratch-camy else main-camy then ;
+: camx! ( n. - ) scratching? if to scratch-camx else to main-camx then ;
+: camy! ( n. - ) scratching? if to scratch-camy else to main-camy then ;
+\ The engine centres the view now (draw-layer applies the half-viewport shift
+\ flat), so the camera IS the world point at screen centre -- viewx/viewy just
+\ pass it through. (Vestigial seam; could be inlined to camx/camy.)
+: viewx ( - n. ) camx ;
+: viewy ( - n. ) camy ;
 
 : set-layer ( n - )
     0 max  scratch# min  {: n :}
     n scratch# = if  ensure-scratch  scratch# slot >en @ 0= ?exit
                 else n slot >en @ 0= ?exit  then
-    layer# scratch# =  n scratch# =  <> if
-        n scratch# = if enter-scratch else leave-scratch then  then
     n to layer#  blink! ;
 
 : ?layer-keys ( - )
@@ -163,8 +166,15 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 
 \ ---- camera / mouse mapping --------------------------------------------------
 
-: parallax+ ( x. y. - x. y. )  camx camy  layer-parallax dup  2p* 2+ ;
-: parallax- ( x. y. - x. y. )  camx camy  layer-parallax dup  2p* 2- ;
+: level-center ( - x. y. )  the-level >pxw @ 2 /  the-level >pxh @ 2 /  2>p ;
+
+\ Mirror the engine (draw-layer): parallax pivots on the LEVEL centre and the
+\ half-viewport shift is flat, so measure world + camera from the level centre.
+\ screen = (world - lc) - (cam - lc)*prx + center.
+: parallax+ ( x. y. - x. y. )   \ screen -> world
+    center 2>p 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2+  level-center 2+ ;
+: parallax- ( x. y. - x. y. )   \ world -> screen
+    level-center 2-  viewx viewy level-center 2-  layer-parallax dup 2p* 2-  center 2>p 2+ ;
 
 \ Screen mouse -> the-layer cell (col,row), accounting for the layer's
 \ parallax: world = mouse + cam * parallax.
@@ -181,9 +191,9 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 \ viewport in either direction (works whether the level is larger OR smaller
 \ than the viewport, so panning is never pinned). Units are logical pixels —
 \ gamew is the post-zoom logical viewport, matching camx's units.
-: clamp-camera ( - )
-    camx  gamew negate >p  the-level >pxw @ >p  clamp to camx
-    camy  gameh negate >p  the-level >pxh @ >p  clamp to camy ;
+: clamp-camera ( - )   \ centre-based bounds (camera is the screen-centre world point)
+    camx  gamew 2 / negate >p  the-level >pxw @ gamew 2 / + >p  clamp camx!
+    camy  gameh 2 / negate >p  the-level >pxh @ gameh 2 / + >p  clamp camy! ;
 
 \ ---- editor view -------------------------------------------------------------
 
@@ -192,7 +202,7 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 \ Draw the level for editing: on the scratch pad show only it (its own camera);
 \ otherwise show all visible layers, blinking the freshly-selected one.
 : ~world ( - )
-    camx scrollx! camy scrolly!
+    viewx scrollx! viewy scrolly!
     layer# scratch# = if  the-level scratch# draw-layer  exit  then
     blink-hide? if
         the-layer >vis @ >r  the-layer >vis off
@@ -392,6 +402,27 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     loop
     the-level { mw pxw !  mh pxh ! } ;
 
+\ Recompute bounds (which moves the parallax pivot = level centre), then nudge
+\ each layer's visx/visy by (1-prx)*Δ(pxw/2) so its alignment with the prx=1
+\ layers survives the resize. prx=1 lands on zero, so regular layers don't move.
+\ Editing paths use this; load stays on bare set-bounds (visx already matches).
+: rebound ( - )
+    {: | opxw opxh dhw dhh :}
+    the-level >pxw @ to opxw  the-level >pxh @ to opxh
+    set-bounds
+    the-level >pxw @ opxw -  2 /  to dhw
+    the-level >pxh @ opxh -  2 /  to dhh
+    dhw dhh or 0= ?exit
+    scratch# for
+        i slot >en @ if
+            i slot {
+                1.0 prx @ -
+                dup  dhw >p p* >i  visx @ +  visx !
+                     dhh >p p* >i  visy @ +  visy !
+            }
+        then
+    loop ;
+
 : load-scratch ( cjson - )   \ slot 9 from the separate "scratchlayer" field (hidden in games)
     "scratchlayer" ?get-item ?dup if
         scratch# build-layer-slot  scratch# slot >vis off
@@ -405,12 +436,12 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     cjson "editor" ?get-item to ej
     ej 0= if
         0 to version
-        0 to camx  0 to camy  0 to main-camx  0 to main-camy
+        0 to main-camx  0 to main-camy
         0 to scratch-camx  0 to scratch-camy  exit
     then
     ej "version"     ?j>n          to version
-    ej "camx"        ?j>n >p  dup  to camx  to main-camx
-    ej "camy"        ?j>n >p  dup  to camy  to main-camy
+    ej "camx"        ?j>n >p       to main-camx
+    ej "camy"        ?j>n >p       to main-camy
     ej "scratchcamx" ?j>n >p       to scratch-camx
     ej "scratchcamy" ?j>n >p       to scratch-camy
     ej "grid"        ?j>j if 
@@ -515,10 +546,6 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     }
     json ;
 
-: save-cams ( - )   \ sync the inactive camera stash from the live camera
-    layer# scratch# = if  camx to scratch-camx  camy to scratch-camy
-                     else  camx to main-camx     camy to main-camy  then ;
-
 : *editor-json ( - cjson )
     {: | ej :}
     cjson-new-object to ej
@@ -533,9 +560,9 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     fixed-grid @    "fixed-grid"   ej cjson-add-int
     ej ;
 
-: *level-json ( - cjson )   \ serialize live layers; bumps version + syncs cameras
+: *level-json ( - cjson )   \ serialize live layers; bumps version
     {: | root arr :}
-    save-cams  1 +to version
+    1 +to version
     cjson-new-object to root
     cjson-new-array  to arr
     \ No root "name": the level's name is its file's base name (see build-level).
@@ -585,9 +612,9 @@ command : add-layer ( w h - )
         en on  vis on
     }
     n to layer#
-    set-bounds ;
+    rebound ;
 
-command : delete-layer ( - )   
+command : delete-layer ( - )
     \ Clear the active layer and free its slot
     the-layer {  this clear-tilemap  en off  } ;
 
@@ -603,5 +630,5 @@ command : reorder ( n - )
 command : resize-layer ( cols rows - )
     \ Resize active layer
     the-layer resize-tilemap
-    set-bounds ;
+    rebound ;
 

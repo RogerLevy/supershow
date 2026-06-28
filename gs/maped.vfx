@@ -19,27 +19,27 @@ public
     <space> held? <lmb> held? and 0= if  0 to panning?  0 exit  then
     mouse to my to mx
     panning? not if  mx to pan-lastx  my to pan-lasty  -1 to panning?  then
-    pan-lastx mx -  >p  +to camx
-    pan-lasty my -  >p  +to camy
+    pan-lastx mx -  >p  camx +  camx!
+    pan-lasty my -  >p  camy +  camy!
     mx to pan-lastx  my to pan-lasty
     clamp-camera  -1 
 ;
 
 : ?grid-move ( - )   \ arrow keys nudge the camera by one grid cell
     shift? -exit
-    <left>  pressed? if  gridw negate >p  +to camx  then
-    <right> pressed? if  gridw        >p  +to camx  then
-    <up>    pressed? if  gridh negate >p  +to camy  then
-    <down>  pressed? if  gridh        >p  +to camy  then
+    <left>  pressed? if  gridw negate >p  camx +  camx!  then
+    <right> pressed? if  gridw        >p  camx +  camx!  then
+    <up>    pressed? if  gridh negate >p  camy +  camy!  then
+    <down>  pressed? if  gridh        >p  camy +  camy!  then
     clamp-camera 
 ;
 
 : ?scroll ( - )
     shift? ?exit
-    <left> held? if  -2. +to camx  then
-    <right> held? if  2. +to camx  then
-    <up> held? if  -2. +to camy  then
-    <down> held? if  2. +to camy  then
+    <left> held? if  camx -2. +  camx!  then
+    <right> held? if  camx 2. +  camx!  then
+    <up> held? if  camy -2. +  camy!  then
+    <down> held? if  camy 2. +  camy!  then
 ;
 
 -1 value rmb-startc
@@ -141,12 +141,13 @@ public
 ;
 
 : ~border
-    camx camy 2negate atp  14 color  view-pxw view-pxh 2>p rect ;
+    viewx viewy 2negate  center 2>p 2+  atp  14 color  view-pxw view-pxh 2>p rect ;
 
 || : ~layer-bound ( n - )
     {: n | par :}
     n slot { prx @ } to par
-    n slot { visx @ >p  camx par p*  -  visy @ >p  camy par p*  -  atp }
+    \ pivot on the level centre, like draw-layer: visx + (0 - lc) - (cam - lc)*par + center
+    n slot { visx @ >p  visy @ >p  level-center 2-  viewx viewy level-center 2-  par dup 2p*  2-  center 2>p 2+  atp }
     n layer-px  2>p rect ;
 
 : ~layer-bounds ( - )
@@ -159,15 +160,15 @@ public
 : ~vgrid ( pxh - )
     {: pxh :}
     view-pxw gridw /  1 +  for
-        i gridw * >p camx -  dup  camy negate  atp
-        pxh >p camy -  line
+        i gridw * >p viewx -  dup  viewy negate  atp
+        pxh >p viewy -  line
     loop ;
 
 : ~hgrid ( pxw - )
     {: pxw :}
     view-pxh gridh /  1 +  for
-        i gridh * >p camy -  camx negate  over  atp
-        pxw >p camx -  swap  line
+        i gridh * >p viewy -  viewx negate  over  atp
+        pxw >p viewx -  swap  line
     loop ;
 
 : ~fixed-vgrid ( - )
@@ -190,7 +191,8 @@ public
     grid? 0= ?exit
     $ffff0080 rgba8
     fixed-grid @ if  ~fixed-vgrid  ~fixed-hgrid
-               else  view-pxh ~vgrid  view-pxw ~hgrid
+               else  m{ center 2>p 2p>f 1e 1e 0e transform  \ scrolling grid follows the centred content
+                        view-pxh ~vgrid  view-pxw ~hgrid  m}
     then
 ;
 

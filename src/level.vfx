@@ -254,16 +254,23 @@ public
 : action ( - ) 
     actives> this start ;
 
+\ The camera (scrollx@/scrolly@) is the world point shown at the viewport CENTRE.
+\ Bounds keep that centre within the level, so the edges line up.
 : clamp-camera ( camx. camy. level - camx. camy. )
-    { 0 0``  pxw 2@ gamew gameh 2- 0 0 2max 2>p``  2clamp } ;
+    { center 2>p``  pxw 2@ gamew gameh 2- 0 0 2max center 2+ 2>p``  2clamp } ;
 
 ec-cell scrollx
 ec-cell scrolly
 
 : draw-layer ( level i - )      \ draw one layer; caller decides visibility
-    layer {
-        scrollx@ prx @  p*  visx @ >p - pfloor
-        scrolly@ prx @  p*  visy @ >p - pfloor
+    \ Parallax pivots on the LEVEL centre (pxw/2, pxh/2), not the world origin,
+    \ and the half-viewport shift stays flat. So relative positioning is still
+    \ gamew-independent, AND a non-wrapping layer that spans the level reaches
+    \ both edges without per-layer visx. prx=1 reduces to the plain camera.
+    {: lvl n :}
+    lvl n layer {
+        scrollx@ lvl >pxw @ 2 / >p -  prx @ p*  lvl >pxw @ 2 / >p +  gamew 2 / >p -  visx @ >p - pfloor
+        scrolly@ lvl >pxh @ 2 / >p -  prx @ p*  lvl >pxh @ 2 / >p +  gameh 2 / >p -  visy @ >p - pfloor
         gamew >p  gameh >p
         this draw-view
     }

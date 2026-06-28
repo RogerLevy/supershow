@@ -165,7 +165,7 @@ class;
     as act> debug-controls ;
 
 : scrolled ( - )
-    scrollx@ scrolly@ 2negate 2p>f  1e 1e 0e  transform ;
+    center 2>p  scrollx@ scrolly@  2-  2p>f  1e 1e 0e  transform ;
 
 %level :: draw
     m{ scrolled ~backsprites m}                 \ behind everything
@@ -199,7 +199,7 @@ class;
 
 : follow ( %xy - )
     dup %xy is? not if drop exit then
-    >x 2@ center 2>p 2- to camy to camx 
+    >x 2@ to camy to camx
     camx camy the-level clamp-camera to camy to camx
 ;
 
