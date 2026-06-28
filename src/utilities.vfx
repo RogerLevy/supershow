@@ -32,6 +32,9 @@ continuation: batch> ( flag -- )
 : >asset-path ( a n - a n )
     s" dat" dir-exists? if s" " else s" ..\" then f" %sdat\%s" ;
 
+: center ( - x y )
+    gamew 2 / gameh 2 / ;
+
 \ =============================================================================
 \ Trigonometry
 \ =============================================================================

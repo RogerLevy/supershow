@@ -81,12 +81,12 @@ private
 public
 
 trait: %layer
+    32 nprop name$ :cstring      \ layer name (preserved across editor save/load)
     prop prx     :fixed          \ parallax
     prop en                      \ free-slot (editor pool)
     prop vis                     \ visible (games + editor honor this)
     prop visx    :int            \ static pixel x offset (visual only)
     prop visy    :int            \ static pixel y offset (visual only)
-    32 nprop name$ :cstring      \ layer name (preserved across editor save/load)
 trait;
 
 class: %tilemap
@@ -254,7 +254,7 @@ public
 : action ( - ) 
     actives> this start ;
 
-: clamp-cam ( camx. camy. level - camx. camy. )
+: clamp-camera ( camx. camy. level - camx. camy. )
     { 0 0``  pxw 2@ gamew gameh 2- 0 0 2max 2>p``  2clamp } ;
 
 ec-cell camx

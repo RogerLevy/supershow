@@ -27,7 +27,7 @@ class: %blip  derive %actor  class;
     <left>  held? if  -4. +to camx  then
     <down>  held? if  4. +to camy  then
     <up>    held? if  -4. +to camy  then
-    camx camy the-level clamp-cam  to camy to camx
+    camx camy the-level clamp-camera  to camy to camx
 ;
 
 : think ( - )  step  scroll ;

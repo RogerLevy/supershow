@@ -110,12 +110,6 @@ forth-public
 : *property ( - )
     first-property-seen on
     bl parse parse-meta ( a namelen )
-    2dup sfind if
-        >body valid-classifier? if
-            >pad count fe" '%s' is a classifier name. Use @class, +trait, or \"trait\" syntax."
-            -1 -rot .abort
-        then
-    else drop then
     parse-size
     f" %n nproperty %s" evaluate
     apply-meta ;
@@ -134,8 +128,7 @@ forth-public
     derive-class consume -1 ;
 
 : "trait" ( $ - a len )
-    {: $ :}
-    $ 2 + $ count nip 2 - f" %%%s" ;
+    count 1 -2 2+ ;
 
 : is-trait? ( ? - f )
     dup valid-object? not if drop 0 exit then

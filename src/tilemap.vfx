@@ -8,7 +8,7 @@ import array
 class: %tilemap
     is-a %drawable
     is-a %dimensional
-    \ is-a %iterable
+    is-a %iterable
     prop ta :ref %array
     prop ts :ref %tileset
     prop snapshot-data :addr
@@ -309,14 +309,14 @@ public
     loop drop
     vdecl-arr  s/vertex  al_create_vertex_decl  to prim-decl ;
 
-\ %tilemap :: each ( xt - ) ( ... ? - ... ) 
-\     ta @ each ;
+%tilemap :: each ( xt - ) ( ... ? - ... ) 
+    ta @ each ;
 
-\ %tilemap :: !each ( xt - ) ( ... ? - ?' ... ) 
-\     ta @ !each ;
+%tilemap :: !each ( xt - ) ( ... ? - ?' ... ) 
+    ta @ !each ;
 
-\ %tilemap :: .items ( - )
-\     ta @ .items ;
+%tilemap :: .items ( - )
+    ta @ .items ;
 
 fast}
 

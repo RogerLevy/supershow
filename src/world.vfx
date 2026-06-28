@@ -52,11 +52,11 @@ public
 %denizen :: entity-box    ( n - %box )    drop nul-box ;
 %denizen :: entity-sprite ( n - %sprite ) drop nul-sprite ;
 
-\ Emit each of this system's sprites to xt ( %sprite - ). One entity may emit
+\ Emit each of this system's sprites via xt ( %sprite - ). One entity may emit
 \ several (e.g. a body + a shadow). Default maps entity-sprite over entity-count.
 %denizen :: entity-sprites ( xt - )
-    {: emit :}
-    this entity-count for  i this entity-sprite emit execute  loop ;
+    {: xt :}
+    this entity-count for  i this entity-sprite xt execute  loop ;
 
 : clear-world ( - )
     ['] withdraw  staff each
@@ -93,7 +93,7 @@ public
 : just ( - )
     clear-stage 
     clear-world
-    gamew 2 / gameh 2 / at  
+    center at
 ;
 
 : manager: ( class <name> - ) ( - system )
