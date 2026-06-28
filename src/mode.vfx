@@ -31,7 +31,7 @@ default-mode gamemode !
     gamemode @ -> drw @ draw-tv ;
 
 : supershow ( - )
-    gamemode @ >r default-mode gamemode !
+    gamemode @ >r                  \ run the frame under the CURRENT mode (gs etc. use their own)
     [:
         catchup @ if
             catchup off
@@ -56,3 +56,8 @@ redef : show> ( <code;> - )
 
 :noname ( - addr )  gamemode @ >_zoom ; is user-zoom
 :noname ( - addr )  gamemode @ >_tv  ; is tv
+
+\ Engineer's cartridge/ldp calls reset-mode on (re)load so a freshly-loaded game
+\ runs in the pristine default-mode, not whatever mode the previous program left
+\ active (e.g. the editor's own mode).
+:noname ( - )  default-mode gamemode ! ; is reset-mode

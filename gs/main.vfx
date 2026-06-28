@@ -18,12 +18,19 @@ include %idir%/editor.vfx
 include %idir%/maped.vfx
 include %idir%/tiles.vfx
 
-: save ( - )
+command : save ( - )
+    \ Save the current level.
     save-current ;
+
+\ The editor runs in its OWN mode so its zoom/tv (and draw vector) never pollute
+\ default-mode -- games loaded afterward (via ldp/cartridge, which resets to
+\ default-mode) get a clean display config.
+%mode object gs-mode
 
 : main ( - )
     display al_show_mouse_cursor
     s" ^ gs" evaluate  \ fixes wrong search order in turnkey
+    gs-mode gamemode !
     2 user-zoom !
     tv off
     debug @ if                                              \ dev: open a sample level

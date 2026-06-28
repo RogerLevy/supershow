@@ -7,6 +7,8 @@ variable 'show ( - ) \ app logic and rendering
 \ defer desktop ( - ) \ default behavior of SHOW (restored on EMPTY)
 defer boot ( - ) \ app startup code like loading assets
 ['] noop is boot
+defer reset-mode ( - ) \ reset the active game mode on (re)load; bound by Supershow
+['] noop is reset-mode
 defer onSwitchIn ( - ) \ Window gets focus
 variable going
 create funcs 256 12 * allot&erase

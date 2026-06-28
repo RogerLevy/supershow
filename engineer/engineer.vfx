@@ -142,7 +142,7 @@ redef : empty ( - )
 
 also moduleing
 : cartridge ( - )
-    empty hold off
+    empty hold off  reset-mode
     project-file$ c@ if
         project-file$ count project$ count f" %s/%s" 2dup last-file$ place old-included
         current-module ?dup if
