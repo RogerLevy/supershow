@@ -25,13 +25,31 @@ public
     clamp-camera  -1 
 ;
 
-: ?grid-move ( - )   \ arrow keys nudge the camera by one grid cell
+\ Round a fixed pixel coord to a multiple of t pixels (t = a tile dimension).
+: down-tile ( n. t - n'. )  >p tuck p/ pfloor p* ;
+: up-tile   ( n. t - n'. )  swap negate swap  down-tile  negate ;
+: near-tile ( n. t - n'. )  dup 2 / >p  rot +  swap  down-tile ;
+
+: cam-aligned? ( - flag )   \ camera sitting on the current layer's tile grid?
+    camx tilew down-tile camx =  camy tileh down-tile camy =  and ;
+
+\ shift+arrow: if the camera is off the current layer's tile grid, snap it onto
+\ the grid -- toward the arrow on its axis, nearest on the other to finish the
+\ alignment. If already aligned, step one grid cell as before.
+: ?grid-move ( - )
     shift? -exit
-    <left>  pressed? if  gridw negate >p  camx +  camx!  then
-    <right> pressed? if  gridw        >p  camx +  camx!  then
-    <up>    pressed? if  gridh negate >p  camy +  camy!  then
-    <down>  pressed? if  gridh        >p  camy +  camy!  then
-    clamp-camera 
+    cam-aligned? if
+        <left>  pressed? if  gridw negate >p  camx +  camx!  then
+        <right> pressed? if  gridw        >p  camx +  camx!  then
+        <up>    pressed? if  gridh negate >p  camy +  camy!  then
+        <down>  pressed? if  gridh        >p  camy +  camy!  then
+    else
+        <left>  pressed? if  camx tilew down-tile camx!  camy tileh near-tile camy!  then
+        <right> pressed? if  camx tilew up-tile   camx!  camy tileh near-tile camy!  then
+        <up>    pressed? if  camy tileh down-tile camy!  camx tilew near-tile camx!  then
+        <down>  pressed? if  camy tileh up-tile   camy!  camx tilew near-tile camx!  then
+    then
+    clamp-camera
 ;
 
 : ?scroll ( - )
