@@ -164,12 +164,19 @@ public
 
 : ~info ( - )
     vga-8x8 default-font!  15 color
-    0 gameh 8 - at
+    0` gameh 8 -` at
+    brushh  brushw  
+    mouse-cell the-layer tile@ 
     mouse-cell swap             \ ( row col ) -> cursor cell, col on top
     camy >i  camx >i
-    brushh  brushw  layer# 1 +`
-    the-layer >vis @ if f" layer %n  " else f" (layer %n)" then
-    f" %s brush %n x %n  cam %n,%n  cell %n,%n" print
+    the-layer >name$ count 
+    layer# 1 +
+        the-layer >vis @ if f" %n" else f" (%n)" then
+    lvl-path$ count -path
+    m{ >r 0e 0e 0.5e 1e 0e transform
+        fe" %s  %s \"%s\"  cam %n,%n  loc %n,%n  und %n  brsh %nx%n" print
+    r> m}
+    \ f" %s cam %n,%n cell %n,%n" print
 ;
 
 : ~border

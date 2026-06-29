@@ -39,7 +39,7 @@ public
     sheet-cols * +
     0 max  the-tileset >#tiles @ 1 - min ;
 
-: pick-single ( - )  sheet-cell sheet-index load-brush-1  ->maped ;
+: pick-single ( - )  sheet-cell sheet-index load-brush-1  maped ;
 
 \ ---- shift-drag rectangle pick -----------------------------------------------
 
@@ -68,7 +68,7 @@ public
         loop
     loop
     -1 to pick-startc
-    ->maped
+    maped
 ;
 
 : change-tileset ( - )   \ Ctrl+O: load a PNG tileset onto the current layer

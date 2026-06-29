@@ -95,8 +95,8 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
 0 value maped-xt              \ assigned by gs/maped.vfx
 0 value tiles-xt              \ assigned by gs/tiles.vfx
 
-: ->maped ( - )  maped-xt to cur-screen ;
-: ->tiles ( - )  tiles-xt to cur-screen ;
+: maped ( - )  maped-xt to cur-screen ;
+: tilesel ( - )  tiles-xt to cur-screen ;
 
 : fit-display ( - )
     winw zoom @ /  dup to appw  to gamew
@@ -145,20 +145,20 @@ the-level { slots layers ! }                       \ its layers ARE the fixed sl
     n to layer#  blink! ;
 
 : ?layer-keys ( - )
-    <1> pressed? if 0 set-layer ->maped then
-    <2> pressed? if 1 set-layer ->maped then
-    <3> pressed? if 2 set-layer ->maped then
-    <4> pressed? if 3 set-layer ->maped then
-    <5> pressed? if 4 set-layer ->maped then
-    <6> pressed? if 5 set-layer ->maped then
-    <7> pressed? if 6 set-layer ->maped then
-    <8> pressed? if 7 set-layer ->maped then
-    <9> pressed? if 8 set-layer ->maped then
-    <`> pressed? if scratch# set-layer ->maped then ;
+    <1> pressed? if 0 set-layer maped then
+    <2> pressed? if 1 set-layer maped then
+    <3> pressed? if 2 set-layer maped then
+    <4> pressed? if 3 set-layer maped then
+    <5> pressed? if 4 set-layer maped then
+    <6> pressed? if 5 set-layer maped then
+    <7> pressed? if 6 set-layer maped then
+    <8> pressed? if 7 set-layer maped then
+    <9> pressed? if 8 set-layer maped then
+    <`> pressed? if scratch# set-layer maped then ;
 
 : ?global-keys ( - )   \ screen-switch + info, active on every screen
-    <F1> pressed? if ->maped then
-    <F2> pressed? if ->tiles then
+    <F1> pressed? if maped then
+    <F2> pressed? if tilesel then
     <I>  pressed? if info? not to info? then
     ?layer-keys ;
 
@@ -649,3 +649,6 @@ command : resize ( cols rows - )
     the-layer resize-tilemap
     rebound ;
 
+command : rename ( <name> - )
+    \ Rename active layer
+    0 parse the-layer >name$ place ;

@@ -38,7 +38,7 @@ command : save ( - )
     else                                                    \ turnkey: start a fresh level
         new-level-or-quit
     then
-    ->maped
+    maped
     show> editor-frame ;
 
 debug @ [if] main [then]
