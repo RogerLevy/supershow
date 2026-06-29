@@ -64,7 +64,7 @@ class;
     lvl-json "maintileset" ?j>z ?dup if _?tileset else _first-tileset then main-ts !
 ;
 
-trait: %collidable
+trait: %kinetic
 
     4 cells nprop hitbox
     4 cells nprop hurtbox
@@ -98,10 +98,10 @@ $80000000 constant LAYER_BG
         'tread @ execute
 ;
 
-c: %actor  "%collidable" ;  \ Lets actors gracefully work with members of %collidable
+c: %actor  "%kinetic" ;  \ Lets actors gracefully work with members of %collidable
 
 class: %character  derive %actor
-    is-a %collidable
+    is-a %kinetic
 
     template {
         LAYER_BG msk or!    \ By default, characters collide with the background.
@@ -161,8 +161,11 @@ class;
     <down>  held? if  2. vy ! then    
 ;
 
-: debug ( actor - )
+: freemove ( actor - )
     as act> debug-controls ;
+
+: spispopd ( - )
+    me freemove  simple-motion ;
 
 : scrolled ( - )
     center 2>p  scrollx@ scrolly@  2-  2p>f  1e 1e 0e  transform ;
@@ -214,8 +217,8 @@ class;
 ;
 
 : mogogame ( - )
-    320 to appw   240 to apph  
-    320 to gamew  240 to gameh
+    320 to appw    240 to apph  
+    appw to gamew  apph to gameh
     user-zoom off  tv on
     show>
         ~level

@@ -25,6 +25,8 @@ c: %mogo %character ;
     walk-rt.anm pose 
     -7 -8 7 9 hitbox!
     -6 -7 6 8 hurtbox! 
+    3 fudge !
+    me freemove 
 ;
 
 : spawn-mogo  one to mogo  mogo to subject  drop -1 ;
@@ -39,6 +41,5 @@ spawners;
     1-1 enter
 ;
 
-\ fullscreen winmode
 main
-mogo ?dup [if] debug [then]
+
