@@ -470,7 +470,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
 
 : load-level ( cjson - )   \ refill the slot pool from a cjson root; enable used slots
     {: cjson | layersj n :}
-    cjson the-level >src !
+    %jsonfile hmake dup the-level >src !  { cjson json ! }   \ wrap the loose cjson in a jsonfile (heap; leaks on exit)
     cjson "layers" j>j to layersj
     layersj jsize to n
     scratch# for
@@ -590,7 +590,7 @@ create gs-pathbuf  256 allot     \ picked tileset source path (counted)
     scratch# slot >en @ if  scratch# slot layer>json  "scratchlayer"  root cjson-add-item  then
     *editor-json  "editor"  root cjson-add-item
     the-level root add-properties-to            \ middleware <save props (editor knows the class)
-    the-level >src @ ?dup if  root merge-missing  then   \ carry over keys gs doesn't model
+    the-level >src @ ?dup if  >json @  root merge-missing  then   \ carry over keys gs doesn't model
     root ;
 
 || : .json? ( a u - flag )   \ does the path already end in ".json"?
