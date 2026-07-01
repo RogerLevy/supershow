@@ -88,6 +88,9 @@ $0202 constant GL_EQUAL
 $1E00 constant GL_KEEP
 $1E01 constant GL_REPLACE
 
+\ Depth
+$0100 constant GL_DEPTH_BUFFER_BIT
+
 \ Allegro lock constants used with al_lock_bitmap
 1  constant ALLEGRO_LOCK_READONLY
 

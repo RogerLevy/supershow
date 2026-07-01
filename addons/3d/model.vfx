@@ -60,6 +60,11 @@ create axis s/v3d allot
        aspect focal f*  focal fnegate  32768e  al_perspective_transform
     p al_use_projection_transform
     ALLEGRO_DEPTH_TEST 1 al_set_render_state
+    \ clip{ (and now reset-render-state) narrow ALLEGRO_WRITE_MASK to RGBA-only
+    \ for 2D drawing (depth test is off there); that mask excludes ALLEGRO_MASK_DEPTH,
+    \ which also blocks al_clear_depth_buffer (GL clears respect the depth write
+    \ mask). Widen it back before clearing/using the depth buffer here.
+    ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA ALLEGRO_MASK_DEPTH or al_set_render_state
     1e al_clear_depth_buffer
 ;
 

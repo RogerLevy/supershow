@@ -141,30 +141,29 @@ redef : cls ( - )
     ec>
     2swap atp
     save-cliprect
-    \ Clear stencil to 0 (enable writes first, reset clipping rect)
-    $FF glStencilMask
+    $FF glStencilMask  \ Clear stencil to 0 (enable writes first, reset clipping rect)
     al_reset_clipping_rectangle
-    GL_STENCIL_BUFFER_BIT glClear
-    \ Enable stencil test
-    GL_STENCIL_TEST glEnable
-    \ Always pass, write 1 to stencil
-    GL_ALWAYS 1 $FF glStencilFunc
+    \ Clear stencil AND depth together: on a combined depth-stencil buffer (used
+    \ whenever a 3D program shares the display), clearing just one plane can
+    \ desync the driver's compression/fast-clear metadata for the pair, corrupting
+    \ later depth-test results once 3D rendering resumes. Depth test is off during
+    \ 2D drawing, so clearing depth here has no effect on this scope's own drawing.
+    GL_STENCIL_BUFFER_BIT GL_DEPTH_BUFFER_BIT or glClear
+    GL_STENCIL_TEST glEnable  \ Enable stencil test
+    GL_ALWAYS 1 $FF glStencilFunc  \ Always pass, write 1 to stencil
     GL_KEEP GL_KEEP GL_REPLACE glStencilOp
     $FF glStencilMask
-    \ Disable color writes for mask
-    ALLEGRO_WRITE_MASK 0 al_set_render_state
-    \ Draw mask rectangle (writes 1 to stencil where drawn)
-    -1 rgba8
+    ALLEGRO_WRITE_MASK 0 al_set_render_state \ Disable color writes for mask
+    $FFFFFFFF rgba8  \ Draw mask rectangle (writes 1 to stencil where drawn)
     at@f   at@p 2+ 2p>f   rgba@sf al_draw_filled_rectangle
-    \ Re-enable color writes
-    ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA al_set_render_state
-    \ Only pass where stencil == 1
-    GL_EQUAL 1 $FF glStencilFunc
+    ALLEGRO_WRITE_MASK ALLEGRO_MASK_RGBA al_set_render_state \ Re-enable color writes
+    GL_EQUAL 1 $FF glStencilFunc  \ Only pass where stencil == 1
     GL_KEEP GL_KEEP GL_KEEP glStencilOp
     0 glStencilMask ;
 
 : clip} ( - )
     GL_STENCIL_TEST glDisable
+    $FF glStencilMask
     restore-cliprect ;
 
 \ =============================================================================
