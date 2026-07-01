@@ -23,6 +23,7 @@ cell field mod.priv-wl       \ private wordlist handle
 cell field mod.imports       \ linked list head of imports (0 = none)
 cell field mod.reexports     \ linked list head of reexports (0 = none)
 cell field mod.stg           \ private stage for this module (0 = use default-stage)
+cell field mod.dispname       \ dict-allocated bracketed display name override (0 = use own name)
 0 field mod.srcfile          \ inline zstring (source file name, last field)
 drop
 
@@ -197,6 +198,7 @@ create qname-buf 256 allot
     0 ,                     \ mod.imports
     0 ,                     \ mod.reexports
     0 ,                     \ mod.stg
+    0 ,                     \ mod.dispname
     CurrSourceName drop zcount 1+ dup allot here over - swap move  \ mod.srcfile (inline zstring)
     immediate
     does-module
@@ -256,7 +258,7 @@ create qualified-key-buf 256 allot
     name count find-module-qualified to mod
     mod 0= if
         save-order  current-module >r
-        path count expanded included   \ file must call `module`
+        path count expanded required   \ file must call `module`
         current-module to loaded-mod
         r> to current-module  restore-order
         name count find-module-qualified to mod
@@ -299,26 +301,44 @@ only forth definitions also moduleing
 synonym resolve-module find-module-qualified
 synonym bare-module-name? bare-name?
 
+: >dispname ( mod - a u )
+    \ Display name (bracketed, same contract as body>name): the alias-derived
+    \ override set by import-as if one exists, else the module's own name.
+    {: mod | dn :}
+    mod mod.dispname @ to dn
+    dn if dn count exit then
+    mod body>name ;
+
+: set-dispname ( a u mod - )
+    \ Dict-allocate a permanent copy of the bracketed name and install as
+    \ mod's display override.
+    {: a u mod | dest :}
+    here mod mod.dispname !
+    u c,
+    here to dest
+    u allot
+    a dest u move ;
+
 \ ------------------------------------------------------------------------------
 \ Diagnostics
 \ ------------------------------------------------------------------------------
 
 : module-imports. ( mod - )
     {: mod | node :}
-    mod body>name type ."  imports:" cr
+    mod >dispname type ."  imports:" cr
     mod mod.imports @ to node
     begin node while
-        ."   " node imp.mod @ body>name type cr
+        ."   " node imp.mod @ >dispname type cr
         node imp.next @ to node
     repeat ;
 
 
 : module-reexports. ( mod - )
     {: mod | node :}
-    mod body>name type ."  reexports:" cr
+    mod >dispname type ."  reexports:" cr
     mod mod.reexports @ to node
     begin node while
-        ."   " node imp.mod @ body>name type cr
+        ."   " node imp.mod @ >dispname type cr
         node imp.next @ to node
     repeat ;
 
@@ -357,30 +377,66 @@ redef : module ( - )
 redef : global ( - )
     only forth definitions  0 to current-module ;
 
-: ^ ( - <name> )
-    {: | name[ 256 ] path[ 256 ] mod :}
-    bl parse >module-name name[ place
-    name[ count bare-name? if
-        s" %idir%/" path[ place
-        name[ count path[ append
-        s" .vfx" path[ append
-        path[ count expanded fileexists? 0= if
-            name[ count path[ place
-        then
+\ ------------------------------------------------------------------------------
+\ ^ : deep alias search
+\ import-as registers its module under a path-derived key, not the name the
+\ file itself declares -- the only public trace of it is a `[localname]` alias
+\ (an `aka`) living in the private wordlist of whichever module ran the
+\ import-as. Ordinary lookup (find-module-qualified) never sees it. `^` is a
+\ dev-time drill-down tool, so it searches the whole import graph's private
+\ wordlists (not just reexports) to find these aliases wherever they live.
+\ ------------------------------------------------------------------------------
+
+: >leaf-name ( a u - a' u' )
+    \ Substring after the last '.', or the whole string if no dot.
+    {: a u | i :}
+    u to i
+    begin i while
+        a i 1- + c@ '.' = if a i + u i - exit then
+        i 1- to i
+    repeat
+    a u ;
+
+: alias-in ( a u mod - mod' | 0 )
+    \ Does mod's own private wordlist hold a word named [a u]?
+    {: a u mod :}
+    a u >bracket-name mod mod.priv-wl @ search-wordlist
+    dup -exit
+    drop >body ;
+
+: deep-find-alias ( a u mod - mod' | 0 )
+    \ Search mod's private wordlist, then recurse into its whole import graph.
+    {: a u mod | node found :}
+    a u mod alias-in ?dup if exit then
+    mod mod.imports @ to node
+    begin node while
+        a u node imp.mod @ recurse to found
+        found if found exit then
+        node imp.next @ to node
+    repeat
+    0 ;
+
+: resolve-deep ( a u - mod | 0 )
+    {: a u | pkg-a pkg-u root :}
+    a u s" ." search nip nip if
+        a u module-name>package to pkg-u to pkg-a
+        pkg-a pkg-u find-module-qualified to root
+        root 0= if 0 exit then
+        a u >leaf-name root deep-find-alias
     else
-        name[ count path[ place
-        path[ count s" .vfx" strin? 0= if s" .vfx" path[ append then
-    then
+        current-module ?dup 0= if 0 exit then
+        to root
+        a u root deep-find-alias
+    then ;
+
+: ^ ( - <name> )
+    {: | name[ 256 ] mod :}
+    bl parse >module-name name[ place
     name[ count find-module-qualified to mod
-    mod 0= if
-        save-order current-module >r
-        path[ count expanded included
-        current-module to mod
-        r> to current-module restore-order
-        mod 0= if abort" ^ : file did not declare a module." then
-    then
+    mod 0= if  name[ count resolve-deep to mod  then
+    mod 0= abort" ^ : module not found."
     mod open-module
-    ." Current module: " current-module .name cr ;
+    cr ." Current module: " current-module >dispname lctype cr ;
 
 redef : public ( - )
     -1 to section-declared?
@@ -437,7 +493,7 @@ redef : forth-public ( - )
     mod do-import ;
 
 : import-as ( - <[name]> <[localname]> )
-    {: | name[ 256 ] cmd[ 256 ] key[ 256 ] saved-key[ 256 ] mod save-qi :}
+    {: | name[ 256 ] cmd[ 256 ] key[ 256 ] saved-key[ 256 ] local[ 256 ] mod save-qi :}
 
     \ parse source module name
     bl parse >module-name name[ place
@@ -454,7 +510,7 @@ redef : forth-public ( - )
         0 qualified-key-buf c!
         -1 to qualified-import?
         save-order  current-module >r
-            name[ count expanded included   \ module populates qualified-key-buf
+            name[ count expanded required   \ module populates qualified-key-buf
         r> to current-module  restore-order
         qualified-key-buf count key[ place   \ copy into local before restoring
         save-qi to qualified-import?
@@ -469,7 +525,7 @@ redef : forth-public ( - )
     mod do-import
 
     \ create [localname] alias in private wordlist via aka
-    bl parse >module-name >bracket-name   \ normalize then re-bracket for alias
+    bl parse >module-name 2dup local[ place >bracket-name   \ keep plain name for dispname; re-bracket for alias
     get-current >r
     current-module mod.priv-wl @ set-current
     also forth                              \ ensure forth-wordlist is searchable for aka
@@ -479,7 +535,19 @@ redef : forth-public ( - )
     key[ count >bracket-name cmd[ append \ then existing [qualified-name]
     cmd[ count evaluate
     previous
-    r> set-current ;
+    r> set-current
+
+    \ First alias wins: give the module a "parent.localname" display name
+    \ (matches how you'd actually reach it via ^), instead of its raw
+    \ path-derived registry key.
+    mod mod.dispname @ 0= if
+        current-module ?dup if
+            >dispname >bare-name cmd[ place
+            s" ." cmd[ append
+            local[ count cmd[ append
+            cmd[ count >bracket-name mod set-dispname
+        then
+    then ;
 
 : reexport ( - <[name]> )
     {: | mod a u :}

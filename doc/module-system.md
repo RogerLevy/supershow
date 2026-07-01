@@ -102,16 +102,23 @@ Special form: interprets `word` in the Forth wordlist directly. Use to call a gl
 
 ```forth
 ^ name
-^ path/to/file.vfx
+^ pkg.name
 ```
 
-Opens a module at the REPL: sets `current-module` to it and rebuilds the search order. Brackets are not required. If the module isn't loaded yet, the file is included first (the file must declare a `module`). `.vfx` extension is optional for bare names.
+Opens a module at the REPL: sets `current-module` to it and rebuilds the search order. Brackets are not required.
 
-`^` never creates a new module — it aborts if the file doesn't declare one.
+`^` never loads files — it only finds modules that are already loaded. If the name can't be resolved, it aborts with "module not found."
+
+Resolution order:
+1. Exact/package-qualified match via `find-module-qualified` (same rule `import` uses: bare names try as-is, then `current-package.name`; dotted names match exactly).
+2. **Deep alias search.** `import-as` registers its module under a path-derived key, not the name the file declares — the only public trace of it is a `[localname]` alias (an `aka`) sitting in the *private* wordlist of whichever module ran the `import-as`. Since `^` exists specifically to drill into modules for interactive testing, it searches for these aliases across the whole import graph, not just reexports:
+   - `^ leaf` (bare, no dot) searches `current-module`'s private wordlist, then recurses into everything `current-module` imports (transitively), looking for `[leaf]` in each one's private wordlist.
+   - `^ pkg.leaf` (dotted) first resolves `pkg` as a real module (via step 1), then does the same recursive private-wordlist search rooted at `pkg`.
 
 ```forth
-^ tilemap          \ opens [tilemap] (loads %idir%/tilemap.vfx if needed)
-^ engine/foo.vfx   \ opens module declared in that file
+^ supershow           \ opens [supershow]
+^ tilemap             \ from inside [supershow]: finds [supershow.assets]'s import-as alias for tilemap.vfx
+^ supershow.tilemap   \ same, from anywhere: resolves [supershow] first, then searches its import graph
 ```
 
 ---
