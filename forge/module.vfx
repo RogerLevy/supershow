@@ -6,6 +6,7 @@
 0 value current-module       \ currently active module (0 = top-level / [forth])
 create current-package 256 allot  \ package prefix of current module (counted string)
 0 value section-declared?   \ set by public/private/forth-public/module within an include
+0 value modules-head         \ head of a linked list of every module ever made (mod.chain)
 
 save-order vocabulary moduleing
 
@@ -24,6 +25,7 @@ cell field mod.imports       \ linked list head of imports (0 = none)
 cell field mod.reexports     \ linked list head of reexports (0 = none)
 cell field mod.stg           \ private stage for this module (0 = use default-stage)
 cell field mod.dispname       \ dict-allocated bracketed display name override (0 = use own name)
+cell field mod.chain          \ next module in the global modules-head list (0 = end)
 0 field mod.srcfile          \ inline zstring (source file name, last field)
 drop
 
@@ -167,6 +169,23 @@ create qname-buf 256 allot
     a u qname-buf append
     qname-buf count find-module-exact ;
 
+create fmbs-a$ 256 allot
+create fmbs-b$ 256 allot
+: find-module-by-srcfile ( a u - mod | 0 )
+    \ Format/case-insensitive match against every module's recorded source
+    \ file. Lets a caller recognize a module that's already loaded even when
+    \ the name it imported by doesn't match what the file itself declared
+    \ (e.g. required silently skipped a repeat load under a mismatched name).
+    {: a u | mod :}
+    a u expanded normalize fmbs-a$ place  fmbs-a$ count >lowercase 2drop
+    modules-head to mod
+    begin mod while
+        mod mod.srcfile zcount expanded normalize fmbs-b$ place  fmbs-b$ count >lowercase 2drop
+        fmbs-a$ count fmbs-b$ count s= if mod exit then
+        mod mod.chain @ to mod
+    repeat
+    0 ;
+
 : interpret-word-in ( a u wid - )
     {: wid | word[ 64 ] :}
     word[ place
@@ -199,9 +218,11 @@ create qname-buf 256 allot
     0 ,                     \ mod.reexports
     0 ,                     \ mod.stg
     0 ,                     \ mod.dispname
+    modules-head ,          \ mod.chain (link into global module registry)
     CurrSourceName drop zcount 1+ dup allot here over - swap move  \ mod.srcfile (inline zstring)
     immediate
     does-module
+    dup to modules-head
     restore-order ;
 
 \ ------------------------------------------------------------------------------
@@ -254,19 +275,23 @@ create qualified-key-buf 256 allot
 
 : find-or-load ( name path - mod )
     \ name: registry name (bare or dotted)  path: file path to load if needed
-    {: name path | mod loaded-mod :}
+    \
+    \ Never trust current-module after `required`: it may have silently
+    \ skipped the load (file already loaded once, under a different name),
+    \ in which case current-module is just whatever it was before the call.
+    \ Verify independently by name and by source file instead.
+    {: name path | mod :}
     name count find-module-qualified to mod
-    mod 0= if
-        save-order  current-module >r
+    mod if mod exit then
+    path count find-module-by-srcfile to mod
+    mod if mod exit then
+    save-order  current-module >r
         path count expanded required   \ file must call `module`
-        current-module to loaded-mod
-        r> to current-module  restore-order
-        name count find-module-qualified to mod
-        mod 0= if
-            loaded-mod ?dup 0= abort" Imported file did not declare a module."
-            to mod
-        then
-    then
+    r> to current-module  restore-order
+    name count find-module-qualified to mod
+    mod if mod exit then
+    path count find-module-by-srcfile to mod
+    mod 0= abort" Imported file did not declare a module."
     mod ;
 
 : check-import ( mod - mod )
