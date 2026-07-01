@@ -2,6 +2,8 @@
 \ Stage - Actor System
 \ ------------------------------------------------------------------------------
 
+import [cjson]
+
 public
 
 class: %stage
@@ -227,6 +229,21 @@ actors value default-stage
 
 : .stage ( - )
     [: .summary cr ;] stg@ each ;
+
+\ =============================================================================
+\ Actor JSON instantiation
+\ =============================================================================
+
+\ Instantiate + configure an actor from its JSON object. Does NOT start it —
+\ starting is a separate phase so all actors exist (resolvable by id) first.
+: json>actor ( cjson - actor )
+    {: cjson :}
+    cjson "class" j>s evaluate one
+    dup cjson swap read-props ;
+
+\ Instantiate every actor in a JSON array, without starting them.
+: jmany ( jarray - )
+    [: json>actor drop ;] jeach-fast ;
 
 \ || cstring update-name$
 \ : update ( - [<class>] )
