@@ -106,9 +106,12 @@ public
     reset-rootec
     'show off ;
 
+modules-head value fresh-modules-head
+
 : reset-engineer ( - )
     init-nibs
     reset-system-classifiers
+    fresh-modules-head to modules-head
     ['] noop is onSwitchIn
     ['] run-main is boot
     honing off 
